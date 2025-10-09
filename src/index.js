@@ -3,6 +3,10 @@ import db from "./Config/db.js";
 import dotenv from "dotenv";
 import cors from "cors";
 
+// importo las rutas
+import registerRoutes from "./Routes/register.routes.js";
+import loginRoutes from "./Routes/login.routes.js";
+
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
 
@@ -32,6 +36,11 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Rutas
+// rutas register
+app.use("/api/register/v1", registerRoutes);
+
+// rutas login
+app.use("/api/login/v1", loginRoutes);
 
 // Iniciar el servidor
 app.listen(PORT, () => {
