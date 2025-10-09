@@ -55,3 +55,21 @@ export const register = (req, res) => {
     });
   });
 };
+
+
+// trear usuarios 
+
+export const traerUsuarios = (req, res) => {
+  const traerQuery = `
+    SELECT idUsuario, MailUsuario, RolUsuario, IsActive
+    FROM usuarios
+    `;
+  db.query(traerQuery, (err, results) => {
+    if (err) {
+      console.error("Error en la consulta de usuarios:", err);
+      return res.status(500).json({ message: "Error en el servidor" });
+    }
+    return res.status(200).json(results);
+  });
+  
+}

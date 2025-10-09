@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 
 // importo las rutas
-import registerRoutes from "./Routes/register.routes.js";
+import usuariosRoutes from "./Routes/usuarios.routes.js";
 import loginRoutes from "./Routes/login.routes.js";
 
 // Inicializo dotenv para leer las variables de entorno
@@ -37,7 +37,7 @@ app.use(express.json());
 
 // Rutas
 // rutas register
-app.use("/api/register/v1", registerRoutes);
+app.use("/api/usuarios/v1", usuariosRoutes);
 
 // rutas login
 app.use("/api/login/v1", loginRoutes);
