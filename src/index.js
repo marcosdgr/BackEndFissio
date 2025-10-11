@@ -1,7 +1,9 @@
-import express from "express";
-import db from "./Config/db.js";
-import dotenv from "dotenv";
-import cors from "cors";
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import db from './config/db.js';
+
+import obrasSocialesRoutes from './Routes/obrassociales.routes.js';
 
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
@@ -20,7 +22,7 @@ db.connect((err) => {
 const app = express();
 
 // Aqui se va a configurar CORS
-
+app.use(cors());
 
 
 // Confiruacion de puerto
@@ -32,6 +34,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Rutas
+app.use('/api/obras-sociales/v1', obrasSocialesRoutes);
 
 // Iniciar el servidor
 app.listen(PORT, () => {
