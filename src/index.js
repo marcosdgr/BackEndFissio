@@ -3,6 +3,9 @@ import db from "./Config/db.js";
 import dotenv from "dotenv";
 import cors from "cors";
 
+
+// importo ruta de pago 
+import pagosRoutes from "./Routes/pagos.routes.js";
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
 
@@ -19,6 +22,7 @@ db.connect((err) => {
 // Inicializo express
 const app = express();
 
+
 // Aqui se va a configurar CORS
 
 
@@ -32,6 +36,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Rutas
+app.use("/api/pagos/v1", pagosRoutes);
 
 // Iniciar el servidor
 app.listen(PORT, () => {
