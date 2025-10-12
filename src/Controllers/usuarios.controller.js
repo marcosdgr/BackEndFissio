@@ -147,3 +147,43 @@ export const actualizarRolUsuario = (req, res) => {
     });
   });
 };
+
+// borrado logico de usuario
+export const borrarUsuario = (req, res) => {
+  const { idUsuario } = req.params;
+  const borrarQuery = `
+    UPDATE usuarios
+    SET IsActive = 0
+    WHERE idUsuario = ?
+  `;
+  db.query(borrarQuery, [idUsuario], (err, results) => {
+    if (err) {
+      console.error("Error al borrar usuario:", err);
+      return res.status(500).json({ message: "Error en el servidor" });
+    }
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+    return res.status(200).json({ message: "Usuario borrado exitosamente" });
+  });
+};
+
+// activar usuario
+export const activarUsuario = (req, res) => {
+  const { idUsuario } = req.params;
+  const activarQuery = `
+    UPDATE usuarios
+    SET IsActive = 1
+    WHERE idUsuario = ?
+  `;
+  db.query(activarQuery, [idUsuario], (err, results) => {
+    if (err) {
+      console.error("Error al activar usuario:", err);
+      return res.status(500).json({ message: "Error en el servidor" });
+    }
+    if (results.affectedRows === 0) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+    return res.status(200).json({ message: "Usuario activado exitosamente" });
+  });
+};
