@@ -56,8 +56,7 @@ export const register = (req, res) => {
   });
 };
 
-
-// trear usuarios 
+// traer usuarios
 
 export const traerUsuarios = (req, res) => {
   const traerQuery = `
@@ -71,5 +70,80 @@ export const traerUsuarios = (req, res) => {
     }
     return res.status(200).json(results);
   });
-  
-}
+};
+
+// actualizar rol de usuario (solo admin)
+export const actualizarRolUsuario = (req, res) => {
+  const { idUsuario } = req.params;
+  const { RolUsuario } = req.body;
+
+  // 1- Validar que se proporcionen los datos necesarios
+  if (!idUsuario || !RolUsuario) {
+    return res
+      .status(400)
+      .json({ message: "ID de usuario y nuevo rol son requeridos" });
+  }
+
+  // 2- Validar que el rol sea válido
+  const rolesPermitidos = ["Paciente", "Secretaria", "Kinesiologia"];
+  if (!rolesPermitidos.includes(RolUsuario)) {
+    return res.status(400).json({
+      message:
+        "Rol no válido. Roles permitidos: Paciente, Secretaria, Kinesiologia",
+    });
+  }
+
+  // 3- Verificar que el usuario existe
+  const verificarUsuario = `
+    SELECT idUsuario, RolUsuario
+    FROM usuarios
+    WHERE idUsuario = ?
+    LIMIT 1
+  `;
+
+  db.query(verificarUsuario, [idUsuario], (err, results) => {
+    if (err) {
+      console.error("Error al verificar usuario:", err);
+      return res.status(500).json({ message: "Error en el servidor" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    const usuarioActual = results[0];
+
+    // 4- Verificar si el rol ya es el mismo
+    if (usuarioActual.RolUsuario === RolUsuario) {
+      return res
+        .status(400)
+        .json({ message: `El usuario ya tiene el rol de ${RolUsuario}` });
+    }
+
+    // 5- Actualizar el rol del usuario
+    const actualizarRol = `
+      UPDATE usuarios 
+      SET RolUsuario = ?
+      WHERE idUsuario = ?
+    `;
+
+    db.query(actualizarRol, [RolUsuario, idUsuario], (err, results) => {
+      if (err) {
+        console.error("Error al actualizar rol:", err);
+        return res.status(500).json({ message: "Error en el servidor" });
+      }
+
+      if (results.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ message: "No se pudo actualizar el usuario" });
+      }
+
+      return res.status(200).json({
+        message: `Rol actualizado exitosamente a ${RolUsuario}`,
+        idUsuario: idUsuario,
+        nuevoRol: RolUsuario,
+      });
+    });
+  });
+};

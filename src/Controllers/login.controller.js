@@ -48,14 +48,11 @@ export const login = (req, res) => {
       }
 
       // 7- si todo está bien, retorno el id y rol del usuario
-      return res
-        .status(200)
-        .json({ 
-          message: "Login exitoso",
-          idUsuario: user.idUsuario, 
-          RolUsuario: user.RolUsuario 
-        });
+      return res.status(200).json({
+        message: "Login exitoso",
+        idUsuario: user.idUsuario,
+        RolUsuario: user.RolUsuario,
+      });
     });
-
   });
 };
