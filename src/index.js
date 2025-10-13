@@ -1,39 +1,42 @@
 import express from "express";
-import db from "./Config/db.js";
 import dotenv from "dotenv";
+import db from "./config/db.js";
 import cors from "cors";
+// import de rutas
+import comentarioRoutes from "./Routes/comentarioRoutes.js";
 
-// Inicializo dotenv para leer las variables de entorno
+// inicio dotenv para llamar las variables de entorno desde el archivo .env
 dotenv.config();
 
 // creao la conexion a la base de datos
 db.connect((err) => {
   if (err) {
-    console.error("Error de conexión: ❌", err);
+    console.error("Error de conexion a la base de datos: ", err);
     return;
   }
-  console.log("✅ Conexión a MySQL exitosa ");
+  console.log("Conexion a la DB exitosa");
 });
 
-
-// Inicializo express
+// inicializo express
 const app = express();
 
-// Aqui se va a configurar CORS
+//configuro cors (permitir requests desde cualquier origen, ya que no hay frontend aún)
+app.use(cors({
+  origin: '*',
+  credentials: true
+}));
 
-
-
-// Confiruacion de puerto
-
+// configuracion del puerto
 const PORT = process.env.PORT || 3000;
 
-
-// Middlewares
+// middlewares
 app.use(express.json());
 
-// Rutas
+// rutas
+    // comentarios
+app.use("/api/comentarios/v1", comentarioRoutes);
 
-// Iniciar el servidor
+// inicializo el servidor
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT} ✅`);
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
