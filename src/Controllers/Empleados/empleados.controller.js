@@ -18,7 +18,7 @@ export const obtenerEmpleados = async (req, res) => {
 export const obtenerEmpleadoPorId = async (req, res) => {
   try {
     const { idEmpleado } = req.params;
-    const obtenerEmpleado = 'SELECT * FROM empleados WHERE id = ?';
+    const obtenerEmpleado = 'SELECT * FROM empleados WHERE idEmpleado = ?';
     db.query(obtenerEmpleado, [idEmpleado], (error, results) => {
       if (error) {
         console.error('Error al obtener el empleado por ID:', error);
@@ -107,11 +107,27 @@ export const buscarEmpleadosPorApellido = async (req, res) => {
   }
 };
 
+export const obtenerEmpleadosInactivos = async (req, res) => {
+    try {
+        const obtenerEmpleadosInactivos = 'SELECT * FROM empleados WHERE IsActive = 0';
+        db.query(obtenerEmpleadosInactivos, (error, results) => {
+            if (error) {
+                console.error('Error al obtener empleados inactivos:', error);
+                res.status(500).json({ error: 'Error al obtener empleados inactivos' });
+                return;
+            }
+            res.status(200).json(results);
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Error del servidor' });
+    }
+};
+
 export const crearEmpleado = async (req, res) => {
   try {
-    const { DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,IsActive,idLocalidad,idUsuario,idCatEmpleado, } = req.body;
-    const nuevoEmpleado = 'INSERT INTO empleados (DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,IsActive,idLocalidad,idUsuario,idCatEmpleado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    db.query(nuevoEmpleado, [DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,IsActive,idLocalidad,idUsuario,idCatEmpleado], (error, results) => {
+    const { DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,idLocalidad,idUsuario,idCatEmpleado, } = req.body;
+    const nuevoEmpleado = 'INSERT INTO empleados (DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,idLocalidad,idUsuario,idCatEmpleado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    db.query(nuevoEmpleado, [DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,idLocalidad,idUsuario,idCatEmpleado], (error, results) => {
       if (error) {
         console.error('Error al crear el empleado:', error);
         res.status(500).json({ error: 'Error al crear el empleado' });
@@ -128,7 +144,7 @@ export const actualizarEmpleado = async (req, res) => {
   try {
     const { idEmpleado } = req.params;
     const { DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,idLocalidad,idUsuario,idCatEmpleado, } = req.body;
-    const actualizarEmpleado = 'UPDATE empleados SET DNI = ?,NombreEmpleado = ?,ApellidoEmpleado = ?,FechaNacEmpleado = ?,TelefonoEmpleado = ?,DireccionEmpleado = ?,SalarioEmpleado = ?,idLocalidad = ?,idUsuario = ?,idCatEmpleado = ? WHERE id = ?';
+    const actualizarEmpleado = 'UPDATE empleados SET DNI = ?,NombreEmpleado = ?,ApellidoEmpleado = ?,FechaNacEmpleado = ?,TelefonoEmpleado = ?,DireccionEmpleado = ?,SalarioEmpleado = ?,idLocalidad = ?,idUsuario = ?,idCatEmpleado = ? WHERE idEmpleado = ?';
     db.query(actualizarEmpleado, [DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,idLocalidad,idUsuario,idCatEmpleado, idEmpleado], (error, results) => {
       if (error) {
         console.error('Error al actualizar el empleado:', error);
@@ -145,7 +161,7 @@ export const actualizarEmpleado = async (req, res) => {
 export const borradoLogicoEmpleado = async (req, res) => {
   try {
     const { idEmpleado } = req.params;
-    const actualizarEmpleado = 'UPDATE empleados SET IsActive = 0 WHERE id = ?';
+    const actualizarEmpleado = 'UPDATE empleados SET IsActive = 0 WHERE idEmpleado = ?';
     db.query(actualizarEmpleado, [idEmpleado], (error, results) => {
       if (error) {
         console.error('Error al realizar el borrado lógico del empleado:', error);

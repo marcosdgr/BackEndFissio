@@ -1,19 +1,21 @@
 import { Router } from "express";
-import { actualizarEmpleado, borradoLogicoEmpleado, buscarEmpleadoPorDNI, buscarEmpleadosPorApellido, buscarEmpleadosPorNombre, crearEmpleado, obtenerEmpleadoPorId, obtenerEmpleados, obtenerEmpleadosActivos } from "../../Controllers/Empleados/empleados.controller.js";
+import { actualizarEmpleado, borradoLogicoEmpleado, buscarEmpleadoPorDNI, buscarEmpleadosPorApellido, buscarEmpleadosPorNombre, crearEmpleado, obtenerEmpleadoPorId, obtenerEmpleados, obtenerEmpleadosActivos, obtenerEmpleadosInactivos } from "../../Controllers/Empleados/empleados.controller.js";
 
 
 
 const router = Router();
 
-
+// Rutas específicas primero
 router.get("/", obtenerEmpleados);
-router.get("/:idEmpleado", obtenerEmpleadoPorId);
-router.get("/:DNI", buscarEmpleadoPorDNI);
 router.get("/activos", obtenerEmpleadosActivos);
-router.get("/nombres", buscarEmpleadosPorNombre);
-router.get("/apellidos", buscarEmpleadosPorApellido);
-router.post("/crearEmpleado", crearEmpleado);
-router.put("/actualizarEmpleado/:idEmpleado", actualizarEmpleado);
-router.delete("/borradoLogicoEmpleado/:idEmpleado", borradoLogicoEmpleado);
+router.get("/inactivos", obtenerEmpleadosInactivos);
+router.get("/buscar/dni/:DNI", buscarEmpleadoPorDNI);
+router.get("/buscar/nombre/:NombreEmpleado", buscarEmpleadosPorNombre);
+router.get("/buscar/apellido/:ApellidoEmpleado", buscarEmpleadosPorApellido);
+router.post("/", crearEmpleado);
+router.put("/desactivar/:idEmpleado", borradoLogicoEmpleado);
+router.put("/:idEmpleado", actualizarEmpleado);
+// Ruta dinámica al final
+router.get("/:idEmpleado", obtenerEmpleadoPorId);
 
 export default router;
