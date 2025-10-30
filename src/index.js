@@ -3,8 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import db from './config/db.js';
 
-import obrasSocialesRoutes from './Routes/obrassociales.routes.js';
-import planObraRoutes from './Routes/planObra.routes.js';
+import obrasSocialesRoutes from './Routes/ObrasSociales/obrassociales.routes.js';
+import planObraRoutes from './Routes/ObrasSociales/planObra.routes.js';
 
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();

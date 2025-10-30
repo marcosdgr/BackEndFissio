@@ -1,4 +1,4 @@
-import db from '../config/db.js';
+import db from '../../config/db.js';
 
 export const obtenerObrasSociales = async (req, res) => {
         try {
@@ -38,9 +38,9 @@ export const obtenerObraSocialPorId = async (req, res) => {
 };
 export const crearObraSocial = async (req, res) => {
     try {
-        const { nombreObraSocial, telefonoContacto, emailContacto, paginaWeb, estado } = req.body;
-        const nuevaObraSocial = 'INSERT INTO obraSociales (nombreObraSocial, telefonoContacto, emailContacto, paginaWeb, estado) VALUES (?, ?, ?, ?, ?)';
-        db.query(nuevaObraSocial, [nombreObraSocial, telefonoContacto, emailContacto, paginaWeb, estado], (err, results) => {
+        const { NombreObraSocial, TelefonoObra, EmailObra, PaginaWebObra, EstadoObra } = req.body;
+        const nuevaObraSocial = 'INSERT INTO obraSociales (NombreObraSocial, TelefonoObra, EmailObra, PaginaWebObra, EstadoObra) VALUES (?, ?, ?, ?, ?)';
+        db.query(nuevaObraSocial, [NombreObraSocial, TelefonoObra, EmailObra, PaginaWebObra, EstadoObra], (err, results) => {
             if (err) {
                 console.error('Error al crear la obra social:', err);
                 res.status(500).json({ error: 'Error al crear la obra social' });
@@ -64,9 +64,9 @@ export const crearObraSocial = async (req, res) => {
 export const actualizarObraSocial = async (req, res) => {
     try {
         const { idObraSocial } = req.params;    
-        const { nombreObraSocial, telefonoContacto, emailContacto, paginaWeb, estado } = req.body;
-        const actualizarObraSocial = 'UPDATE obraSociales SET nombreObraSocial = ?, telefonoContacto = ?, emailContacto = ?, paginaWeb = ?, estado = ? WHERE idObraSocial = ?';
-        db.query(actualizarObraSocial, [nombreObraSocial, telefonoContacto, emailContacto, paginaWeb, estado, idObraSocial], (error, results) => {
+        const { NombreObraSocial, TelefonoObra, EmailObra, PaginaWebObra, EstadoObra } = req.body;
+        const actualizarObraSocial = 'UPDATE obraSociales SET NombreObraSocial = ?, TelefonoObra = ?, EmailObra = ?, PaginaWebObra = ?, EstadoObra = ? WHERE idObraSocial = ?';
+        db.query(actualizarObraSocial, [NombreObraSocial, TelefonoObra, EmailObra, PaginaWebObra, EstadoObra, idObraSocial], (error, results) => {
             if (error) {
                 console.error('Error al actualizar la obra social:', error);
                 res.status(500).json({ error: 'Error al actualizar la obra social' });

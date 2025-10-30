@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 //importo las funciones del controlador
-import { actualizarObraSocial, borradoLogicoObraSocial, crearObraSocial, obtenerObraSocialPorId, obtenerObrasSociales } from '../Controllers/obrassociales.controller.js';
+import { actualizarObraSocial, borradoLogicoObraSocial, crearObraSocial, obtenerObraSocialPorId, obtenerObrasSociales } from '../../Controllers/ObrasSociales/obrassociales.controller.js';
 
 const router = Router();
 
