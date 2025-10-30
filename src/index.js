@@ -35,8 +35,9 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Rutas
-app.use("/api/empleados/v1", empleadoRoutes);
 app.use("/api/empleados/v1/categorias", categoriaEmpleadoRoutes);
+app.use("/api/empleados/v1", empleadoRoutes);
+
 
 // Iniciar el servidor
 app.listen(PORT, () => {

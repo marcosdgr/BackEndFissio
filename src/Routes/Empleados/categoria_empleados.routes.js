@@ -3,11 +3,10 @@ import { actualizarCategoriaEmpleado, borradoLogicoCategoriaEmpleado, crearCateg
 
 const router = Router();
 
-
 router.get("/", obtenerCategoriasEmpleados);
-router.get("/:idCatEmpleado", obtenerCategoriaEmpleadoPorId);
-router.post("/crearCategoriaEmpleado", crearCategoriaEmpleado);
-router.put("/actualizarCategoriaEmpleado/:idCatEmpleado", actualizarCategoriaEmpleado);
-router.delete("/borradoLogicoCategoriaEmpleado/:idCatEmpleado", borradoLogicoCategoriaEmpleado);
+router.post("/crearCat", crearCategoriaEmpleado);
+router.put("/actualizarCat/:idCatEmpleado", actualizarCategoriaEmpleado);
+router.put("/borrarCat/:idCatEmpleado", borradoLogicoCategoriaEmpleado);
+router.get("/obtenerCat/:idCatEmpleado", obtenerCategoriaEmpleadoPorId);
 
 export default router;
