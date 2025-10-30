@@ -36,6 +36,77 @@ export const obtenerEmpleadoPorId = async (req, res) => {
   }
 };
 
+export const buscarEmpleadoPorDNI = async (req, res) => {
+  try {
+    const { DNI } = req.params;
+    const buscarEmpleado = 'SELECT * FROM empleados WHERE DNI = ?';
+    db.query(buscarEmpleado, [DNI], (error, results) => {
+      if (error) {
+        console.error('Error al buscar el empleado por DNI:', error);
+        res.status(500).json({ error: 'Error al buscar el empleado por DNI' });
+        return;
+      }
+      if (results.length === 0) {
+        res.status(404).json({ error: 'Empleado no encontrado' });
+        return;
+      }
+      res.status(200).json(results[0]);
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+};
+
+export const obtenerEmpleadosActivos = async (req, res) => {
+  try {
+    const obtenerEmpleadosActivos = 'SELECT * FROM empleados WHERE IsActive = 1';
+    db.query(obtenerEmpleadosActivos, (error, results) => {
+      if (error) {
+        console.error('Error al obtener empleados activos:', error);
+        res.status(500).json({ error: 'Error al obtener empleados activos' });
+        return;
+      }
+      res.status(200).json(results);
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+};
+
+export const buscarEmpleadosPorNombre = async (req, res) => {
+  try {
+    const { NombreEmpleado } = req.params;
+    const buscarEmpleados = 'SELECT * FROM empleados WHERE NombreEmpleado LIKE ?';
+    db.query(buscarEmpleados, [`%${NombreEmpleado}%`], (error, results) => {
+      if (error) {
+        console.error('Error al buscar empleados por nombre:', error);
+        res.status(500).json({ error: 'Error al buscar empleados por nombre' });
+        return;
+      }
+        res.status(200).json(results);
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+};
+
+export const buscarEmpleadosPorApellido = async (req, res) => {
+  try {
+    const { ApellidoEmpleado } = req.params;
+    const buscarEmpleados = 'SELECT * FROM empleados WHERE ApellidoEmpleado LIKE ?';
+    db.query(buscarEmpleados, [`%${ApellidoEmpleado}%`], (error, results) => {
+      if (error) {
+        console.error('Error al buscar empleados por apellido:', error);
+        res.status(500).json({ error: 'Error al buscar empleados por apellido' });
+        return;
+      }
+      res.status(200).json(results);
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+};
+
 export const crearEmpleado = async (req, res) => {
   try {
     const { DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,IsActive,idLocalidad,idUsuario,idCatEmpleado, } = req.body;
