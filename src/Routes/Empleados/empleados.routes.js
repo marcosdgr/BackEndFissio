@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { obtenerEmpleados } from "../../Controllers/Empleados/empleados.controller";
+import { actualizarEmpleado, borradoLogicoEmpleado, buscarEmpleadoPorDNI, buscarEmpleadosPorApellido, buscarEmpleadosPorNombre, crearEmpleado, obtenerEmpleadoPorId, obtenerEmpleados, obtenerEmpleadosActivos } from "../../Controllers/Empleados/empleados.controller.js";
+
 
 
 const router = Router();

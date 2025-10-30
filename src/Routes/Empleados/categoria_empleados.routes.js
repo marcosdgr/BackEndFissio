@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { obtenerCategoriasEmpleados } from "../../Controllers/Empleados/categoria_empleados.controller";
+import { actualizarCategoriaEmpleado, borradoLogicoCategoriaEmpleado, crearCategoriaEmpleado, obtenerCategoriaEmpleadoPorId, obtenerCategoriasEmpleados } from "../../Controllers/Empleados/categoria_empleados.controller.js";
 
 const router = Router();
 
