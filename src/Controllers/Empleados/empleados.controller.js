@@ -125,20 +125,69 @@ export const obtenerEmpleadosInactivos = async (req, res) => {
 
 export const crearEmpleado = async (req, res) => {
   try {
-    const { DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,idLocalidad,idUsuario,idCatEmpleado, } = req.body;
-    const nuevoEmpleado = 'INSERT INTO empleados (DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,idLocalidad,idUsuario,idCatEmpleado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    db.query(nuevoEmpleado, [DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,idLocalidad,idUsuario,idCatEmpleado], (error, results) => {
-      if (error) {
-        console.error('Error al crear el empleado:', error);
-        res.status(500).json({ error: 'Error al crear el empleado' });
-        return;
+    const { DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, idUsuario, idCatEmpleado } = req.body;
+    
+    // 1. Validar campos obligatorios
+    if (!DNI || !NombreEmpleado || !ApellidoEmpleado || !FechaNacEmpleado || !SalarioEmpleado || !idCatEmpleado) {
+      return res.status(400).json({ error: 'Todos los campos obligatorios deben ser completados' });
+    }
+
+    // 2. Validar formato de DNI (solo números, 7-8 dígitos)
+    const dniRegex = /^\d{7,8}$/;
+    if (!dniRegex.test(DNI)) {
+      return res.status(400).json({ error: 'El DNI debe contener entre 7 y 8 dígitos numéricos' });
+    }
+
+    // 3. Validar que el salario sea positivo
+    if (SalarioEmpleado <= 0) {
+      return res.status(400).json({ error: 'El salario debe ser un número positivo' });
+    }
+
+    // 4. Validar teléfono si existe (solo números y guiones)
+    if (TelefonoEmpleado) {
+      const telefonoRegex = /^[\d\-\s()]+$/;
+      if (!telefonoRegex.test(TelefonoEmpleado)) {
+        return res.status(400).json({ error: 'El formato del teléfono no es válido' });
       }
-      res.status(201).json({ message: 'Empleado creado exitosamente', id: results.insertId });
+    }
+
+    // 5. Verificar que el DNI no exista ya
+    const verificarDNI = 'SELECT * FROM empleados WHERE DNI = ?';
+    db.query(verificarDNI, [DNI], (error, results) => {
+      if (error) {
+        console.error('Error al verificar DNI:', error);
+        return res.status(500).json({ error: 'Error al verificar DNI' });
+      }
+      
+      if (results.length > 0) {
+        return res.status(409).json({ error: 'Ya existe un empleado con ese DNI' });
+      }
+
+      // 6. Crear el empleado
+      const nuevoEmpleado = 'INSERT INTO empleados (DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, idUsuario, idCatEmpleado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      db.query(nuevoEmpleado, [DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, idUsuario, idCatEmpleado], (error, results) => {
+        if (error) {
+          console.error('Error al crear el empleado:', error);
+          // Error de FK
+          if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+            return res.status(400).json({ error: 'Una o más referencias (categoría, localidad, usuario) no existen' });
+          }
+          return res.status(500).json({ error: 'Error al crear el empleado' });
+        }
+        res.status(201).json({ 
+          message: 'Empleado creado exitosamente', 
+          id: results.insertId,
+          empleado: { DNI, NombreEmpleado, ApellidoEmpleado }
+        });
+      });
     });
   } catch (error) {
+    console.error('Error al crear el empleado:', error);
     res.status(500).json({ error: 'Error del servidor' });
   }
 };
+
+// Actualizar empleado
 
 export const actualizarEmpleado = async (req, res) => {
   try {
