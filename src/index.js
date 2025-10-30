@@ -4,6 +4,8 @@ import db from "./config/db.js";
 import cors from "cors";
 // import de rutas
 import comentarioRoutes from "./Routes/comentarioRoutes.js";
+import historiaClinicaRoutes from "./Routes/historiaClinica.routes.js";
+import salaRoutes from "./Routes/salaRoutes.js";
 
 // inicio dotenv para llamar las variables de entorno desde el archivo .env
 dotenv.config();
@@ -35,6 +37,8 @@ app.use(express.json());
 // rutas
     // comentarios
 app.use("/api/comentarios/v1", comentarioRoutes);
+app.use("/api/historiasClinicas/v1", historiaClinicaRoutes);
+app.use("/api/salas/v1", salaRoutes);
 
 // inicializo el servidor
 app.listen(PORT, () => {

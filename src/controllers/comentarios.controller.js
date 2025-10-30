@@ -16,7 +16,7 @@ export const crearComentario = async (req, res) => {
 
       // Obtener el comentario creado con info del paciente
       const selectQuery = `
-        SELECT c.*, p.nombre AS pacienteNombre
+        SELECT c.*, p.NombrePaciente AS pacienteNombre
         FROM comentarios c
         JOIN pacientes p ON c.idPaciente = p.idPaciente
         WHERE c.idComentario = ?
@@ -39,7 +39,7 @@ export const crearComentario = async (req, res) => {
 export const traerComentariosActivos = async (req, res) => {
   try {
     const query = `
-      SELECT c.*, p.nombre AS pacienteNombre
+      SELECT c.*, p.NombrePaciente AS pacienteNombre
       FROM comentarios c
       JOIN pacientes p ON c.idPaciente = p.idPaciente
       WHERE c.IsActive = 1
@@ -63,7 +63,7 @@ export const traerComentarioPorId = async (req, res) => {
   try {
     const { id } = req.params;
     const query = `
-      SELECT c.*, p.nombre AS pacienteNombre
+      SELECT c.*, p.NombrePaciente AS pacienteNombre
       FROM comentarios c
       JOIN pacientes p ON c.idPaciente = p.idPaciente
       WHERE c.idComentario = ? AND c.IsActive = 1
@@ -71,9 +71,9 @@ export const traerComentarioPorId = async (req, res) => {
     db.query(query, [id], (err, comentarios) => {
       if (err) {
         console.error("Error al traer comentario por ID: ", err);
-        res.status(500).json({ message: "Error al traer comentario por ID" });
+        return res.status(500).json({ message: "Error al traer comentario por ID" });
       }
-      if (comentarios.length === 0) {
+      if (!comentarios || comentarios.length === 0) { 
         return res.status(404).json({ mensaje: 'Comentario no encontrado' });
       }
       res.status(200).json(comentarios[0]);
@@ -106,7 +106,7 @@ export const actualizarComentario = async (req, res) => {
       
       // Obtener el actualizado
       const selectQuery = `
-        SELECT c.*, p.nombre AS pacienteNombre
+        SELECT c.*, p.NombrePaciente AS pacienteNombre
         FROM comentarios c
         JOIN pacientes p ON c.idPaciente = p.idPaciente
         WHERE c.idComentario = ?
