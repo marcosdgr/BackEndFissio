@@ -6,6 +6,9 @@ import cors from "cors";
 
 // importo ruta de pago 
 import pagosRoutes from "./Routes/pagos.routes.js";
+
+// importo ruta de horarios de trabajo
+import horariosTrabajoRoutes from "./Routes/HorarioTrabajoRoutes/horariosTrabajo.routes.js";
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
 
@@ -37,6 +40,8 @@ app.use(express.json());
 
 // Rutas
 app.use("/api/pagos/v1", pagosRoutes);
+
+app.use("/api/horariosTrabajo/v1", horariosTrabajoRoutes); //horarios de trabajo  
 
 // Iniciar el servidor
 app.listen(PORT, () => {
