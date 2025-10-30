@@ -3,8 +3,8 @@ import {
   register,
   traerUsuarios,
   actualizarRolUsuario,
-  borrarUsuario,
-  activarUsuario,
+  cambiarEstadoUsuario,
+  
 } from "../Controllers/Usuarios/usuarios.controller.js";
 
 const router = Router();
@@ -16,6 +16,6 @@ router.post("/register", register);
 
 // ruta para admin - seran rutas privadas
 router.put("/rol/:idUsuario", actualizarRolUsuario);
-router.put("/borrar/:idUsuario", borrarUsuario);
-router.put("/activar/:idUsuario", activarUsuario);
+router.put("/estado/:idUsuario", cambiarEstadoUsuario);
+
 export default router;

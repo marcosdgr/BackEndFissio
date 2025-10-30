@@ -110,24 +110,49 @@ export const cambiarEstadoPaciente = async (req, res) => {
       });
     }
 
-    const cambiarEstadoQuery = `
-      UPDATE pacientes 
-      SET IsActive = ?
+    // Primero verificar el estado actual del paciente
+    const verificarEstadoQuery = `
+      SELECT IsActive 
+      FROM pacientes 
       WHERE idPaciente = ?
     `;
 
-    db.query(cambiarEstadoQuery, [IsActive, idPaciente], (error, results) => {
-      if (error) {
-        console.error("Error al cambiar estado del paciente:", error);
-        return res.status(500).json({ message: "Error al cambiar estado del paciente" });
+    db.query(verificarEstadoQuery, [idPaciente], (err, results) => {
+      if (err) {
+        console.error("Error al verificar estado del paciente:", err);
+        return res.status(500).json({ message: "Error al verificar estado del paciente" });
       }
-      
-      if (results.affectedRows === 0) {
+
+      if (results.length === 0) {
         return res.status(404).json({ message: "Paciente no encontrado" });
       }
 
-      const mensaje = IsActive === 1 ? "Paciente activado exitosamente" : "Paciente desactivado exitosamente";
-      res.status(200).json({ message: mensaje });
+      const estadoActual = results[0].IsActive;
+
+      // Validar que el estado nuevo sea diferente al actual
+      if (estadoActual === IsActive) {
+        const estadoTexto = IsActive === 1 ? "activo" : "inactivo";
+        return res.status(400).json({ 
+          message: `El paciente ya se encuentra ${estadoTexto}` 
+        });
+      }
+
+      // Si es diferente, proceder con el cambio
+      const cambiarEstadoQuery = `
+        UPDATE pacientes 
+        SET IsActive = ?
+        WHERE idPaciente = ?
+      `;
+
+      db.query(cambiarEstadoQuery, [IsActive, idPaciente], (error, updateResults) => {
+        if (error) {
+          console.error("Error al cambiar estado del paciente:", error);
+          return res.status(500).json({ message: "Error al cambiar estado del paciente" });
+        }
+
+        const mensaje = IsActive === 1 ? "Paciente activado exitosamente" : "Paciente desactivado exitosamente";
+        res.status(200).json({ message: mensaje });
+      });
     });
   } catch (error) {
     console.error("error del servidor: ", error);
