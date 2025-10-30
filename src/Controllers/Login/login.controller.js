@@ -1,4 +1,4 @@
-import db from "../Config/db.js";
+import db from "../../Config/db.js";
 import bcrypt from "bcryptjs";
 
 export const login = (req, res) => {
@@ -12,9 +12,10 @@ export const login = (req, res) => {
   }
   // 2- verifico que el usuario exista en la base de datos
   const credenciales = `
-    SELECT idUsuario, RolUsuario, PasswordUsuario, IsActive
-    FROM usuarios
-    WHERE MailUsuario = ?
+    SELECT u.idUsuario, u.PasswordUsuario, u.IsActive, r.NombreRol
+    FROM usuarios u
+    INNER JOIN roles r ON u.idRol = r.idRol
+    WHERE u.MailUsuario = ?
     LIMIT 1
   `;
   db.query(credenciales, [MailUsuario], (err, results) => {
@@ -51,7 +52,7 @@ export const login = (req, res) => {
       return res.status(200).json({
         message: "Login exitoso",
         idUsuario: user.idUsuario,
-        RolUsuario: user.RolUsuario,
+        NombreRol: user.NombreRol,
       });
     });
   });

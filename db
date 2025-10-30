@@ -1,0 +1,378 @@
+create database fissio2;
+use fissio2;
+CREATE TABLE roles (
+  idRol INT PRIMARY KEY AUTO_INCREMENT,
+  NombreRol VARCHAR(50) NOT NULL UNIQUE
+) ;
+
+CREATE TABLE usuarios (
+  idUsuario INT PRIMARY KEY AUTO_INCREMENT,
+  MailUsuario VARCHAR(100) NOT NULL UNIQUE,
+  PasswordUsuario VARCHAR(250) NOT NULL,
+  idRol INT NOT NULL,
+  IsActive TINYINT DEFAULT 1,
+  FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_usuarios_rol
+    FOREIGN KEY (idRol) REFERENCES roles(idRol)
+     
+) ;
+
+-- Localidades (opcional, pero recomendado para normalizar)
+CREATE TABLE localidades (
+  idLocalidad INT PRIMARY KEY AUTO_INCREMENT,
+  NombreLocalidad VARCHAR(100) NOT NULL UNIQUE,
+  IsActive TINYINT DEFAULT 1
+) ;
+
+-- Pacientes
+CREATE TABLE pacientes (
+  idPaciente INT PRIMARY KEY AUTO_INCREMENT,
+  DNI VARCHAR(20) NOT NULL UNIQUE,
+  NombrePaciente VARCHAR(50) NOT NULL,
+  ApellidoPaciente VARCHAR(50) NOT NULL,
+  FechaNacPaciente DATE NOT NULL,
+  TelefonoPaciente VARCHAR(20) NOT NULL,
+  DireccionPaciente VARCHAR(100) NOT NULL,
+  Sexo ENUM('Femenino','Masculino','Otro') NOT NULL,
+  idLocalidad INT NOT NULL,
+  IsActive TINYINT DEFAULT 1,
+  idUsuario INT NOT NULL,
+  FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_pacientes_usuarios
+    FOREIGN KEY (idUsuario) REFERENCES usuarios(idUsuario),
+  CONSTRAINT fk_pacientes_localidades
+    FOREIGN KEY (idLocalidad) REFERENCES localidades(idLocalidad)
+      
+) ;
+
+-- Categoría de empleados
+CREATE TABLE catEmpleados (
+  idCatEmpleado INT PRIMARY KEY AUTO_INCREMENT,
+  NombreCat VARCHAR(200) NOT NULL UNIQUE,
+  IsActive TINYINT DEFAULT 1
+) ;
+
+-- Empleados 
+CREATE TABLE empleados (
+  idEmpleado INT PRIMARY KEY AUTO_INCREMENT,
+  DNI VARCHAR(20) NOT NULL UNIQUE,
+  NombreEmpleado VARCHAR(50) NOT NULL,
+  ApellidoEmpleado VARCHAR(50) NOT NULL,
+  FechaNacEmpleado DATE NOT NULL,
+  TelefonoEmpleado VARCHAR(20) NOT NULL,
+  DireccionEmpleado VARCHAR(100) NOT NULL,
+  idLocalidad INT NOT NULL,
+  SalarioEmpleado DECIMAL(10,2) NOT NULL,
+  IsActive TINYINT DEFAULT 1,
+  idUsuario INT NOT NULL,
+  idCatEmpleado INT NOT NULL,
+  FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_empleados_usuarios
+    FOREIGN KEY (idUsuario) REFERENCES usuarios(idUsuario),
+  CONSTRAINT fk_empleados_cat
+    FOREIGN KEY (idCatEmpleado) REFERENCES catEmpleados(idCatEmpleado),
+  CONSTRAINT fk_empleados_localidades
+    FOREIGN KEY (idLocalidad) REFERENCES localidades(idLocalidad)
+     
+) ;
+
+-- Horarios de trabajo
+CREATE TABLE horariosTrabajo (
+  idHorario INT PRIMARY KEY AUTO_INCREMENT,
+  DiaSemana ENUM('Lunes','Martes','Miercoles','Jueves','Viernes','Sabado','Domingo') NOT NULL,
+  HoraEntradaEsperada TIME NOT NULL,
+  HoraSalidaEsperada TIME NOT NULL,
+  DescripcionHorario VARCHAR(250),
+  IsActive TINYINT DEFAULT 1
+) ;
+
+-- Puente Empleado-Horario
+CREATE TABLE empleados_horarios (
+  idEmpHor INT PRIMARY KEY AUTO_INCREMENT,
+  idEmpleado INT NOT NULL,
+  idHorario INT NOT NULL,
+  CONSTRAINT fk_eh_empleado
+    FOREIGN KEY (idEmpleado) REFERENCES empleados(idEmpleado),
+  CONSTRAINT fk_eh_horario
+    FOREIGN KEY (idHorario) REFERENCES horariosTrabajo(idHorario)
+  
+) ;
+
+-- Asistencias
+CREATE TABLE asistencias (
+  idAsistencia INT PRIMARY KEY AUTO_INCREMENT,
+  Fecha DATE NOT NULL,
+  HoraEntrada TIME,
+  HoraSalida TIME,
+  Observaciones VARCHAR(200),
+  idEmpleado INT NOT NULL,
+  CONSTRAINT fk_asistencias_empleados
+    FOREIGN KEY (idEmpleado) REFERENCES empleados(idEmpleado)
+);
+
+-- Obras Sociales
+CREATE TABLE obraSociales (
+  idObraSocial INT PRIMARY KEY AUTO_INCREMENT,
+  NombreObraSocial VARCHAR(100) NOT NULL UNIQUE,
+  TelefonoContacto VARCHAR(20),
+  EmailContacto VARCHAR(100),
+  PaginaWeb VARCHAR(200),
+  Estado ENUM('Activa', 'Suspendida', 'Baja') DEFAULT 'Activa',
+  IsActive TINYINT DEFAULT 1
+) ;
+
+-- Obra Social x Paciente
+CREATE TABLE obraSocial_Paciente (
+  idPacienteObra INT PRIMARY KEY AUTO_INCREMENT,
+  idPaciente INT NOT NULL,
+  idObraSocial INT NOT NULL,
+  PlanObraSocial VARCHAR(50),
+  NumeroAfiliado VARCHAR(30),
+  EstadoPlan ENUM('activo','suspendido','baja') DEFAULT 'activo',
+  CONSTRAINT fk_os_pac_paciente
+    FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente),
+  CONSTRAINT fk_os_pac_obra
+    FOREIGN KEY (idObraSocial) REFERENCES obraSociales(idObraSocial)
+  
+) ;
+
+
+
+-- Salas
+CREATE TABLE salas (
+  idSala INT PRIMARY KEY AUTO_INCREMENT,
+  NombreSala VARCHAR(50) NOT NULL UNIQUE,
+  Capacidad INT NOT NULL,
+  IsActive TINYINT DEFAULT 1
+) ;
+
+-- Tratamientos y Servicios
+CREATE TABLE tratamientos (
+  idTratamiento INT PRIMARY KEY AUTO_INCREMENT,
+  NombreTratamiento VARCHAR(50) NOT NULL UNIQUE,
+  DescripcionTratamiento TEXT NOT NULL,
+  DuracionTratamiento INT NOT NULL,
+  InformeTratamiento TEXT,
+  IsActive TINYINT DEFAULT 1
+) ;
+
+CREATE TABLE servicios (
+  idServicio INT PRIMARY KEY AUTO_INCREMENT,
+  NombreServicio VARCHAR(50) NOT NULL,
+  DescripcionServicio VARCHAR(200) NOT NULL,
+  IsActive TINYINT DEFAULT 1,
+  idTratamiento INT NOT NULL,
+  CONSTRAINT fk_servicios_tratamientos
+    FOREIGN KEY (idTratamiento) REFERENCES tratamientos(idTratamiento)
+      ON UPDATE CASCADE ON DELETE RESTRICT,
+  UNIQUE KEY uk_servicio_nombre_trat (NombreServicio, idTratamiento)
+) ;
+
+-- Turnos (sin idServicio directo; usaremos puente turno_servicios)
+CREATE TABLE turnos (
+  idTurno INT PRIMARY KEY AUTO_INCREMENT,
+  FechaSolicitudTurno DATE NOT NULL,
+  FechaRequeridaTurno DATE NOT NULL,
+  HorarioRequeridoTurno TIME NOT NULL,
+  HorarioInicioTurno TIME NOT NULL,
+  HorarioFinTurno TIME NOT NULL,
+  InformeTurno VARCHAR(250),
+  EstadoTurno ENUM('Pendiente','Cancelado','Finalizado') NOT NULL,
+  idPaciente INT NOT NULL,
+  idEmpleado INT NOT NULL,
+  idSala INT NOT NULL,
+  CONSTRAINT fk_turnos_paciente
+    FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente),
+  CONSTRAINT fk_turnos_empleado
+    FOREIGN KEY (idEmpleado) REFERENCES empleados(idEmpleado),
+  CONSTRAINT fk_turnos_sala
+    FOREIGN KEY (idSala) REFERENCES salas(idSala)
+      
+) ;
+
+-- Puente Turno-Servicios (permite 1..N)
+CREATE TABLE turno_servicios (
+  idTurnoServicio INT PRIMARY KEY AUTO_INCREMENT,
+  idTurno INT NOT NULL,
+  idServicio INT NOT NULL,
+  Cantidad INT DEFAULT 1,
+  PrecioUnitario DECIMAL(10,2) DEFAULT NULL, -- si querés capturar precio histórico
+  CONSTRAINT fk_ts_turno
+    FOREIGN KEY (idTurno) REFERENCES turnos(idTurno),
+  CONSTRAINT fk_ts_servicio
+    FOREIGN KEY (idServicio) REFERENCES servicios(idServicio)
+     
+) ;
+-- Catálogos de pagos/cobros 
+CREATE TABLE catMediosPago (
+  idMedioPago INT PRIMARY KEY AUTO_INCREMENT,
+  NombreMedio VARCHAR(50) NOT NULL UNIQUE
+) ;
+
+CREATE TABLE catTiposPago (
+  idTipoPago INT PRIMARY KEY AUTO_INCREMENT,
+  NombreTipo VARCHAR(50) NOT NULL UNIQUE
+) ;
+
+
+-- Cobros (relacionados al turno)
+CREATE TABLE cobros (
+  idCobro INT PRIMARY KEY AUTO_INCREMENT,
+  FechaCobro DATETIME NOT NULL,
+  TipoCobro ENUM('Paciente','Otro') NOT NULL DEFAULT 'Paciente',
+  idMedioPago INT NOT NULL,
+  MontoCobro DECIMAL(10,2) NOT NULL,
+  EstadoCobro ENUM('Cobrado','Pendiente') NOT NULL,
+  Descripcion TEXT,
+  idTurno INT NOT NULL,
+  CONSTRAINT fk_cobros_turno
+    FOREIGN KEY (idTurno) REFERENCES turnos(idTurno),
+  CONSTRAINT fk_cobros_medio
+    FOREIGN KEY (idMedioPago) REFERENCES catMediosPago(idMedioPago)
+      
+) ;
+
+-- Pagos (gastos)
+CREATE TABLE pagos (
+  idPago INT PRIMARY KEY AUTO_INCREMENT,
+  FechaPago DATETIME NOT NULL,
+  idTipoPago INT NOT NULL,
+  Descripcion TEXT,
+  idMedioPago INT NOT NULL,
+  MontoPago DECIMAL(10,2) NOT NULL,
+  EstadoPago ENUM('Pagado','Pendiente') NOT NULL DEFAULT 'Pendiente',
+  CONSTRAINT fk_pagos_tipo
+    FOREIGN KEY (idTipoPago) REFERENCES catTiposPago(idTipoPago),
+  CONSTRAINT fk_pagos_medio
+    FOREIGN KEY (idMedioPago) REFERENCES catMediosPago(idMedioPago)
+      
+) ;
+
+-- Historias clínicas
+CREATE TABLE historiasClinicas (
+  idHistoriaClinica INT PRIMARY KEY AUTO_INCREMENT,
+  FechaInicio DATETIME NOT NULL,
+  Diagnostico VARCHAR(100),
+  Observaciones VARCHAR(500),
+  FechaActualizacion DATETIME NOT NULL,
+  CreadoPor INT NOT NULL,
+  ActualizadoPor INT NOT NULL,
+  IsActive TINYINT DEFAULT 1,
+  idPaciente INT NOT NULL,
+  CONSTRAINT fk_hc_paciente
+    FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente),
+  CONSTRAINT fk_hc_empleado_crea
+    FOREIGN KEY (CreadoPor) REFERENCES empleados(idEmpleado),
+  CONSTRAINT fk_hc_empleado_act
+    FOREIGN KEY (ActualizadoPor) REFERENCES empleados(idEmpleado)
+  
+) ;
+
+-- Comentarios (opcional vincular al turno)
+CREATE TABLE comentarios (
+  idComentario INT PRIMARY KEY AUTO_INCREMENT,
+  CalificacionComentario INT NOT NULL,
+  FechaComentario DATETIME DEFAULT CURRENT_TIMESTAMP,
+  Comentario VARCHAR(300),
+  IsActive TINYINT DEFAULT 1,
+  idPaciente INT NOT NULL,
+  CONSTRAINT fk_com_paciente
+    FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente)
+) ;
+
+-- Notificaciones: entre usuarios + destinatarios M:N
+CREATE TABLE notificaciones (
+  idNotificacion INT PRIMARY KEY AUTO_INCREMENT,
+  idRemitente INT NOT NULL,
+  Mensaje TEXT NOT NULL,
+  FechaEnvio DATETIME DEFAULT CURRENT_TIMESTAMP,
+  Leido TINYINT DEFAULT 0,
+  CONSTRAINT fk_notif_remitente
+    FOREIGN KEY (idRemitente) REFERENCES usuarios(idUsuario)
+      
+) ;
+
+CREATE TABLE notificaciones_destinatarios (
+  idNotDest INT PRIMARY KEY AUTO_INCREMENT,
+  idNotificacion INT NOT NULL,
+  idUsuarioDestinatario INT NOT NULL,
+  CONSTRAINT fk_notdest_notif
+    FOREIGN KEY (idNotificacion) REFERENCES notificaciones(idNotificacion),
+  CONSTRAINT fk_notdest_usuario
+    FOREIGN KEY (idUsuarioDestinatario) REFERENCES usuarios(idUsuario)
+
+) ;
+
+-- Recordatorios y encuestas (por turno)
+CREATE TABLE recordatorios (
+  idRecordatorio INT PRIMARY KEY AUTO_INCREMENT,
+  TipoNotificacion ENUM('Recordatorio','Aviso','Otro') NOT NULL DEFAULT 'Recordatorio',
+  Mensaje TEXT NOT NULL,
+  FechaEnvio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  Enviado TINYINT DEFAULT 0,
+  idTurno INT NOT NULL,
+  CONSTRAINT fk_recordatorios_turnos
+    FOREIGN KEY (idTurno) REFERENCES turnos(idTurno)
+) ;
+
+CREATE TABLE encuestasSatisfaccion (
+  idEncuesta INT PRIMARY KEY AUTO_INCREMENT,
+  Calificacion INT NOT NULL,
+  Comentario TEXT,
+  FechaRespuesta DATETIME DEFAULT CURRENT_TIMESTAMP,
+  idTurno INT NOT NULL,
+  CONSTRAINT fk_encuestas_turnos
+    FOREIGN KEY (idTurno) REFERENCES turnos(idTurno)
+) ;
+
+-- Estudios del paciente
+CREATE TABLE estudios_paciente (
+  idEstudio INT PRIMARY KEY AUTO_INCREMENT,
+  idPaciente INT NOT NULL,
+  ArchivoURL TEXT NOT NULL,         
+  FechaEstudio DATETIME NOT NULL,
+  Descripcion TEXT,
+  CONSTRAINT fk_estudios_paciente
+    FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente)
+);
+
+-- Chatbot
+CREATE TABLE chatbot_mensajes (
+  idMensaje INT PRIMARY KEY AUTO_INCREMENT,
+  idPaciente INT NULL,           
+  idSesion INT NULL,             
+  Remitente ENUM('Usuario','Chatbot') NOT NULL,
+  Mensaje TEXT NOT NULL,
+  FechaHora DATETIME DEFAULT CURRENT_TIMESTAMP,
+  IntentoReconocido VARCHAR(100), 
+  RespuestaAutomatica TINYINT DEFAULT 1,
+  CONSTRAINT fk_chatbot_paciente
+    FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente)
+);
+
+CREATE TABLE metricasDiarias (
+  idMetrica INT AUTO_INCREMENT PRIMARY KEY,
+  FechaBalance DATE NOT NULL UNIQUE,
+
+  -- Totales de dinero
+  IngresosCobrados DECIMAL(12,2) DEFAULT 0.00,
+  IngresosPendientes DECIMAL(12,2) DEFAULT 0.00,
+  EgresosPagados DECIMAL(12,2) DEFAULT 0.00,
+  EgresosPendientes DECIMAL(12,2) DEFAULT 0.00,
+
+  -- Turnos
+  TurnosProgramados INT DEFAULT 0,
+  TurnosAtendidos INT DEFAULT 0,
+  TurnosCancelados INT DEFAULT 0,
+
+  idTurno INT NOT NULL,
+  idPago INT NOT NULL,
+  idCobro INT NOT NULL,
+	CONSTRAINT fk_metricas_turnos
+    FOREIGN KEY (idTurno) REFERENCES turnos(idTurno),
+    CONSTRAINT fk_metricas_pagos
+    FOREIGN KEY (idPago) REFERENCES pagos(idPago),
+    CONSTRAINT fk_metricas_cobros
+    FOREIGN KEY (idCobro) REFERENCES cobros(idCobro)
+);
+

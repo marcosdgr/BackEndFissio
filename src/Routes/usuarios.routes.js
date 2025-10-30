@@ -5,7 +5,7 @@ import {
   actualizarRolUsuario,
   borrarUsuario,
   activarUsuario,
-} from "../Controllers/usuarios.controller.js";
+} from "../Controllers/Usuarios/usuarios.controller.js";
 
 const router = Router();
 // rutas GET

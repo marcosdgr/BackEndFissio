@@ -6,6 +6,7 @@ import cors from "cors";
 // importo las rutas
 import usuariosRoutes from "./Routes/usuarios.routes.js";
 import loginRoutes from "./Routes/login.routes.js";
+import pacientesRoutes from "./Routes/pacientes.routes.js";
 
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
@@ -41,6 +42,9 @@ app.use("/api/usuarios/v1", usuariosRoutes);
 
 // rutas login
 app.use("/api/login/v1", loginRoutes);
+
+// rutas pacientes
+app.use("/api/pacientes/v1", pacientesRoutes);
 
 // Iniciar el servidor
 app.listen(PORT, () => {
