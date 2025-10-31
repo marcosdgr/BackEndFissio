@@ -60,15 +60,12 @@ export const actualizarPaciente = async (req, res) => {
 
           // Manejo SIMPLE de errores comunes para actualización
           if (error.code === "ER_DUP_ENTRY") {
-            if (error.message.includes("DNI") || error.sqlMessage?.includes("DNI")) {
+            if (error.message.includes("DNI")) {
               return res.status(400).json({
                 message: "El DNI ya está registrado por otro paciente",
               });
             }
-            if (error.message.includes("TelefonoPaciente") || 
-                error.sqlMessage?.includes("TelefonoPaciente") ||
-                error.message.includes("telefono") ||
-                error.sqlMessage?.includes("telefono")) {
+            if (error.message.includes("TelefonoPaciente")) {
               return res.status(400).json({
                 message: "El teléfono ya está registrado por otro paciente",
               });
@@ -96,7 +93,6 @@ export const actualizarPaciente = async (req, res) => {
   }
 };
 
-
 // cambiar estado del paciente (activar/desactivar)
 export const cambiarEstadoPaciente = async (req, res) => {
   try {
@@ -105,8 +101,8 @@ export const cambiarEstadoPaciente = async (req, res) => {
 
     // Validar que IsActive sea un valor válido
     if (IsActive !== 0 && IsActive !== 1) {
-      return res.status(400).json({ 
-        message: "IsActive debe ser 0 (inactivo) o 1 (activo)" 
+      return res.status(400).json({
+        message: "IsActive debe ser 0 (inactivo) o 1 (activo)",
       });
     }
 
@@ -120,7 +116,9 @@ export const cambiarEstadoPaciente = async (req, res) => {
     db.query(verificarEstadoQuery, [idPaciente], (err, results) => {
       if (err) {
         console.error("Error al verificar estado del paciente:", err);
-        return res.status(500).json({ message: "Error al verificar estado del paciente" });
+        return res
+          .status(500)
+          .json({ message: "Error al verificar estado del paciente" });
       }
 
       if (results.length === 0) {
@@ -132,8 +130,8 @@ export const cambiarEstadoPaciente = async (req, res) => {
       // Validar que el estado nuevo sea diferente al actual
       if (estadoActual === IsActive) {
         const estadoTexto = IsActive === 1 ? "activo" : "inactivo";
-        return res.status(400).json({ 
-          message: `El paciente ya se encuentra ${estadoTexto}` 
+        return res.status(400).json({
+          message: `El paciente ya se encuentra ${estadoTexto}`,
         });
       }
 
@@ -144,18 +142,27 @@ export const cambiarEstadoPaciente = async (req, res) => {
         WHERE idPaciente = ?
       `;
 
-      db.query(cambiarEstadoQuery, [IsActive, idPaciente], (error, updateResults) => {
-        if (error) {
-          console.error("Error al cambiar estado del paciente:", error);
-          return res.status(500).json({ message: "Error al cambiar estado del paciente" });
-        }
+      db.query(
+        cambiarEstadoQuery,
+        [IsActive, idPaciente],
+        (error, updateResults) => {
+          if (error) {
+            console.error("Error al cambiar estado del paciente:", error);
+            return res
+              .status(500)
+              .json({ message: "Error al cambiar estado del paciente" });
+          }
 
-        const mensaje = IsActive === 1 ? "Paciente activado exitosamente" : "Paciente desactivado exitosamente";
-        res.status(200).json({ message: mensaje });
-      });
+          const mensaje =
+            IsActive === 1
+              ? "Paciente activado exitosamente"
+              : "Paciente desactivado exitosamente";
+          res.status(200).json({ message: mensaje });
+        }
+      );
     });
   } catch (error) {
     console.error("error del servidor: ", error);
     res.status(500).json({ message: "Error del servidor" });
   }
-};  
+};
