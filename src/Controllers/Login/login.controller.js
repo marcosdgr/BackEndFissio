@@ -58,7 +58,7 @@ export const login = (req, res) => {
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
-          expiresIn: "24h", // Token expira en 24 horas
+          expiresIn: "24h", 
         });
 
         // 8- retorno el token y la información del usuario
