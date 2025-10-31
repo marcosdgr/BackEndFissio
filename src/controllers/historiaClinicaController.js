@@ -18,7 +18,7 @@ export const crearHistoriaClinica = async (req, res) => {
       return res.status(400).json({ mensaje: "Faltan campos obligatorios" });
     }
 
-    const query = `
+    const CrearHistoriaClinicaQuery = `
       INSERT INTO historiasClinicas (
         FechaInicio, Diagnostico, Observaciones, FechaActualizacion,
         CreadoPor, ActualizadoPor, IsActive, idPaciente
@@ -26,7 +26,7 @@ export const crearHistoriaClinica = async (req, res) => {
     `;
 
     db.query(
-      query,
+      CrearHistoriaClinicaQuery,
       [FechaInicio, Diagnostico, Observaciones, FechaActualizacion, CreadoPor, ActualizadoPor, idPaciente],
       (err, result) => {
         if (err) {
@@ -38,7 +38,7 @@ export const crearHistoriaClinica = async (req, res) => {
         }
 
         // Obtener la historia clínica creada con nombres
-        const selectQuery = `
+        const ObtenerHistoriaCreadaQuery = `
           SELECT 
             hc.*,
             p.NombrePaciente, p.ApellidoPaciente,
@@ -51,7 +51,7 @@ export const crearHistoriaClinica = async (req, res) => {
           WHERE hc.idHistoriaClinica = ?
         `;
 
-        db.query(selectQuery, [result.insertId], (errSelect, historia) => {
+        db.query(ObtenerHistoriaCreadaQuery, [result.insertId], (errSelect, historia) => {
           if (errSelect) {
             console.error("Error al obtener historia clínica: ", errSelect);
             return res.status(500).json({ mensaje: "Error al obtener historia clínica" });
@@ -72,7 +72,7 @@ export const crearHistoriaClinica = async (req, res) => {
 // traer todas las historias clínicas activas
 export const traerHistoriasClinicasActivas = async (req, res) => {
   try {
-    const query = `
+    const ListarHistoriasActivasQuery = `
       SELECT 
         hc.*,
         p.NombrePaciente, p.ApellidoPaciente,
@@ -86,7 +86,7 @@ export const traerHistoriasClinicasActivas = async (req, res) => {
       ORDER BY hc.FechaActualizacion DESC
     `;
 
-    db.query(query, (err, historias) => {
+    db.query(ListarHistoriasActivasQuery, (err, historias) => {
       if (err) {
         console.error("Error al traer historias clínicas: ", err);
         return res.status(500).json({ mensaje: "Error al traer historias clínicas" });
@@ -100,11 +100,10 @@ export const traerHistoriasClinicasActivas = async (req, res) => {
 };
 
 // traer por id 
-
 export const traerHistoriaClinicaPorId = async (req, res) => {
   try {
     const { id } = req.params;
-    const query = `
+    const ObtenerHistoriaPorIdQuery = `
       SELECT 
         hc.*,
         p.NombrePaciente, p.ApellidoPaciente,
@@ -117,7 +116,7 @@ export const traerHistoriaClinicaPorId = async (req, res) => {
       WHERE hc.idHistoriaClinica = ? AND hc.IsActive = 1
     `;
 
-    db.query(query, [id], (err, historias) => {
+    db.query(ObtenerHistoriaPorIdQuery, [id], (err, historias) => {
       if (err) {
         console.error("Error al traer historia por ID: ", err);
         return res.status(500).json({ mensaje: "Error al traer historia por ID" });
@@ -134,7 +133,6 @@ export const traerHistoriaClinicaPorId = async (req, res) => {
 };
 
 //actualizar
-
 export const actualizarHistoriaClinica = async (req, res) => {
   try {
     const { id } = req.params;
@@ -149,14 +147,14 @@ export const actualizarHistoriaClinica = async (req, res) => {
       return res.status(400).json({ mensaje: "Faltan campos obligatorios para actualizar" });
     }
 
-    const query = `
+    const ActualizarHistoriaClinicaQuery = `
       UPDATE historiasClinicas 
       SET Diagnostico = ?, Observaciones = ?, FechaActualizacion = ?, ActualizadoPor = ?
       WHERE idHistoriaClinica = ? AND IsActive = 1
     `;
 
     db.query(
-      query,
+      ActualizarHistoriaClinicaQuery,
       [Diagnostico, Observaciones, FechaActualizacion, ActualizadoPor, id],
       (err, result) => {
         if (err) {
@@ -164,7 +162,7 @@ export const actualizarHistoriaClinica = async (req, res) => {
           if (err.code === 'ER_NO_REFERENCED_ROW_2') {
             return res.status(400).json({ mensaje: "Empleado no encontrado" });
           }
-          return res.status(500).json({ mensaje: "Error al actualizar historia clínica" });
+          return res.status(500).json({ mensaje: "Error al actualizar historia área" });
         }
 
         if (result.affectedRows === 0) {
@@ -172,7 +170,7 @@ export const actualizarHistoriaClinica = async (req, res) => {
         }
 
         // Devolver actualizada
-        const selectQuery = `
+        const ObtenerHistoriaActualizadaQuery = `
           SELECT 
             hc.*,
             p.NombrePaciente, p.ApellidoPaciente,
@@ -185,7 +183,7 @@ export const actualizarHistoriaClinica = async (req, res) => {
           WHERE hc.idHistoriaClinica = ?
         `;
 
-        db.query(selectQuery, [id], (errSelect, historia) => {
+        db.query(ObtenerHistoriaActualizadaQuery, [id], (errSelect, historia) => {
           if (errSelect) {
             console.error("Error al obtener historia actualizada: ", errSelect);
             return res.status(500).json({ mensaje: "Error al obtener historia actualizada" });
@@ -206,9 +204,9 @@ export const actualizarHistoriaClinica = async (req, res) => {
 export const borradoLogicoHistoriaClinica = async (req, res) => {
   try {
     const { id } = req.params;
-    const query = `UPDATE historiasClinicas SET IsActive = 0 WHERE idHistoriaClinica = ?`;
+    const EliminarLogicoHistoriaClinicaQuery = `UPDATE historiasClinicas SET IsActive = 0 WHERE idHistoriaClinica = ?`;
 
-    db.query(query, [id], (err, result) => {
+    db.query(EliminarLogicoHistoriaClinicaQuery, [id], (err, result) => {
       if (err) {
         console.error("Error al eliminar historia clínica: ", err);
         return res.status(500).json({ mensaje: "Error al eliminar historia clínica" });

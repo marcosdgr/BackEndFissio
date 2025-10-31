@@ -4,19 +4,19 @@ import db from "../config/db.js";
 export const crearSala = async (req, res) => {
   try {
     const { NombreSala, Capacidad } = req.body;
-    const query = `
+    const CrearSalaQuery = `
       INSERT INTO salas (NombreSala, Capacidad, IsActive)
       VALUES (?, ?, 1)
     `;
 
-    db.query(query, [NombreSala, Capacidad], (err, result) => {
+    db.query(CrearSalaQuery, [NombreSala, Capacidad], (err, result) => {
       if (err) {
         console.error("Error al crear sala: ", err);
         return res.status(500).json({ message: "Error al crear sala" });
       }
 
-      const selectQuery = `SELECT * FROM salas WHERE idSala = ?`;
-      db.query(selectQuery, [result.insertId], (errSelect, sala) => {
+      const ObtenerSalaCreadaQuery = `SELECT * FROM salas WHERE idSala = ?`;
+      db.query(ObtenerSalaCreadaQuery, [result.insertId], (errSelect, sala) => {
         if (errSelect) {
           return res.status(500).json({ message: "Error al obtener sala" });
         }
@@ -35,8 +35,8 @@ export const crearSala = async (req, res) => {
 // Traer todas activas
 export const traerSalasActivas = async (req, res) => {
   try {
-    const query = `SELECT * FROM salas WHERE IsActive = 1 ORDER BY NombreSala`;
-    db.query(query, (err, salas) => {
+    const ListarSalasActivasQuery = `SELECT * FROM salas WHERE IsActive = 1 ORDER BY NombreSala`;
+    db.query(ListarSalasActivasQuery, (err, salas) => {
       if (err) {
         console.error("Error al traer salas: ", err);
         return res.status(500).json({ message: "Error al traer salas" });
@@ -53,8 +53,8 @@ export const traerSalasActivas = async (req, res) => {
 export const traerSalaPorId = async (req, res) => {
   try {
     const { id } = req.params;
-    const query = `SELECT * FROM salas WHERE idSala = ? AND IsActive = 1`;
-    db.query(query, [id], (err, salas) => {
+    const ObtenerSalaPorIdQuery = `SELECT * FROM salas WHERE idSala = ? AND IsActive = 1`;
+    db.query(ObtenerSalaPorIdQuery, [id], (err, salas) => {
       if (err) {
         return res.status(500).json({ message: "Error al traer sala" });
       }
@@ -92,9 +92,9 @@ export const actualizarSala = async (req, res) => {
     }
 
     valores.push(id);
-    const query = `UPDATE salas SET ${campos.join(", ")} WHERE idSala = ? AND IsActive = 1`;
+    const ActualizarSalaQuery = `UPDATE salas SET ${campos.join(", ")} WHERE idSala = ? AND IsActive = 1`;
 
-    db.query(query, valores, (err, result) => {
+    db.query(ActualizarSalaQuery, valores, (err, result) => {
       if (err) {
         return res.status(500).json({ message: "Error al actualizar sala" });
       }
@@ -102,8 +102,8 @@ export const actualizarSala = async (req, res) => {
         return res.status(404).json({ mensaje: "Sala no encontrada" });
       }
 
-      const selectQuery = `SELECT * FROM salas WHERE idSala = ?`;
-      db.query(selectQuery, [id], (errSelect, sala) => {
+      const ObtenerSalaActualizadaQuery = `SELECT * FROM salas WHERE idSala = ?`;
+      db.query(ObtenerSalaActualizadaQuery, [id], (errSelect, sala) => {
         if (errSelect) {
           return res.status(500).json({ message: "Error al obtener sala actualizada" });
         }
@@ -123,8 +123,8 @@ export const actualizarSala = async (req, res) => {
 export const borradoLogicoSala = async (req, res) => {
   try {
     const { id } = req.params;
-    const query = `UPDATE salas SET IsActive = 0 WHERE idSala = ?`;
-    db.query(query, [id], (err, result) => {
+    const EliminarLogicoSalaQuery = `UPDATE salas SET IsActive = 0 WHERE idSala = ?`;
+    db.query(EliminarLogicoSalaQuery, [id], (err, result) => {
       if (err) {
         return res.status(500).json({ message: "Error al eliminar sala" });
       }
