@@ -1,32 +1,19 @@
 // Middleware para validar que el usuario solo puede enviar mensajes como él mismo
+// YA NO SE USA porque el idRemitente viene automáticamente del token
 export const validarRemitenteAutenticado = (req, res, next) => {
-  const { idRemitente } = req.body;
-  const idUsuarioAutenticado = req.usuarioAutenticado?.idUsuario;
-
-  if (!idUsuarioAutenticado) {
-    return res.status(401).json({ 
-      message: 'Usuario no autenticado' 
-    });
-  }
-
-  // El remitente debe ser el usuario autenticado
-  if (parseInt(idRemitente) !== parseInt(idUsuarioAutenticado)) {
-    return res.status(403).json({ 
-      message: 'No puedes enviar mensajes en nombre de otro usuario' 
-    });
-  }
-
+  // Este middleware ya no es necesario porque no aceptamos idRemitente del body
+  // El idRemitente se toma automáticamente de req.usuarioAutenticado
   next();
 };
 
 // Middleware para validar datos al enviar mensaje
 export const validarEnviarMensaje = (req, res, next) => {
-  const { idRemitente, mensaje, destinatarios } = req.body;
+  const { mensaje, destinatarios } = req.body;
 
-  // Validar campos obligatorios
-  if (!idRemitente || !mensaje || !Array.isArray(destinatarios)) {
+  // Validar campos obligatorios (idRemitente ya no viene del body)
+  if (!mensaje || !Array.isArray(destinatarios)) {
     return res.status(400).json({ 
-      message: 'Datos incompletos. Se requiere: idRemitente, mensaje y destinatarios' 
+      message: 'Datos incompletos. Se requiere: mensaje y destinatarios' 
     });
   }
 

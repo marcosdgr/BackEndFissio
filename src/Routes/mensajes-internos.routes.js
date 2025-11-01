@@ -1,6 +1,6 @@
 import express from "express";
 import { enviarNotificacion, marcarLeido, obtenerConversacion } from "../Controllers/mensajes-internos.controller.js";
-import { verificarAutenticacion } from "../Middlewares/mensajeriaInterna/autenticar.js";
+import { autenticar } from "../Middlewares/mensajeriaInterna/autenticar.js";
 import { 
   validarEnviarMensaje, 
   validarRemitenteAutenticado, 
@@ -11,7 +11,7 @@ import {
 const router = express.Router();
 
 // Todas las rutas requieren autenticación
-router.use(verificarAutenticacion);
+router.use(autenticar);
 
 // Enviar mensaje - valida datos y que el remitente sea el usuario autenticado
 router.post("/enviar", validarEnviarMensaje, validarRemitenteAutenticado, enviarNotificacion);
