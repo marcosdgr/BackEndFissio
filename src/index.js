@@ -4,9 +4,10 @@ import dotenv from "dotenv";
 import cors from "cors";
 
 // importo las rutas
-import usuariosRoutes from "./Routes/usuarios.routes.js";
-import loginRoutes from "./Routes/login.routes.js";
-import pacientesRoutes from "./Routes/pacientes.routes.js";
+import usuariosRoutes from "./Routes/Usuarios/usuarios.routes.js";
+import loginRoutes from "./Routes/Login/login.routes.js";
+import pacientesRoutes from "./Routes/Pacientes/pacientes.routes.js";
+import turnosRoutes from "./Routes/Turnos/turnos.routes.js";
 
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
@@ -45,6 +46,10 @@ app.use("/api/login/v1", loginRoutes);
 
 // rutas pacientes
 app.use("/api/pacientes/v1", pacientesRoutes);
+
+// rutas para turnos
+
+app.use("/api/turnos/v1", turnosRoutes);
 
 // Iniciar el servidor
 app.listen(PORT, () => {

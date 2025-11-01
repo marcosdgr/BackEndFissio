@@ -1,9 +1,14 @@
 create database fissio2;
 use fissio2;
+
+
 CREATE TABLE roles (
   idRol INT PRIMARY KEY AUTO_INCREMENT,
   NombreRol VARCHAR(50) NOT NULL UNIQUE
 ) ;
+select * from roles;
+INSERT INTO roles (NombreRol) VALUES ('Paciente');
+INSERT INTO roles (NombreRol) VALUES ('Admin');
 
 CREATE TABLE usuarios (
   idUsuario INT PRIMARY KEY AUTO_INCREMENT,
@@ -16,6 +21,7 @@ CREATE TABLE usuarios (
     FOREIGN KEY (idRol) REFERENCES roles(idRol)
      
 ) ;
+select * from usuarios;
 
 -- Localidades (opcional, pero recomendado para normalizar)
 CREATE TABLE localidades (
@@ -23,7 +29,8 @@ CREATE TABLE localidades (
   NombreLocalidad VARCHAR(100) NOT NULL UNIQUE,
   IsActive TINYINT DEFAULT 1
 ) ;
-
+INSERT INTO localidades (NombreLocalidad) VALUES ('San Miguel de Tucuman');
+select * from localidades;
 -- Pacientes
 CREATE TABLE pacientes (
   idPaciente INT PRIMARY KEY AUTO_INCREMENT,
@@ -44,6 +51,7 @@ CREATE TABLE pacientes (
     FOREIGN KEY (idLocalidad) REFERENCES localidades(idLocalidad)
       
 ) ;
+
 
 -- Categoría de empleados
 CREATE TABLE catEmpleados (
@@ -174,13 +182,13 @@ CREATE TABLE turnos (
   FechaSolicitudTurno DATE NOT NULL,
   FechaRequeridaTurno DATE NOT NULL,
   HorarioRequeridoTurno TIME NOT NULL,
-  HorarioInicioTurno TIME NOT NULL,
-  HorarioFinTurno TIME NOT NULL,
+  HorarioInicioTurno TIME NULL,
+  HorarioFinTurno TIME NULL,
   InformeTurno VARCHAR(250),
-  EstadoTurno ENUM('Pendiente','Cancelado','Finalizado') NOT NULL,
+  EstadoTurno ENUM('Solicitado','Pendiente','Cancelado','Finalizado') NOT NULL default 'Solicitado',
   idPaciente INT NOT NULL,
-  idEmpleado INT NOT NULL,
-  idSala INT NOT NULL,
+  idEmpleado INT  NULL,
+  idSala INT  NULL,
   CONSTRAINT fk_turnos_paciente
     FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente),
   CONSTRAINT fk_turnos_empleado
@@ -189,6 +197,9 @@ CREATE TABLE turnos (
     FOREIGN KEY (idSala) REFERENCES salas(idSala)
       
 ) ;
+
+
+
 
 -- Puente Turno-Servicios (permite 1..N)
 CREATE TABLE turno_servicios (
