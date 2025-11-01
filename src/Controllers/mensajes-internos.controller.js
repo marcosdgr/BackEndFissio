@@ -80,6 +80,12 @@ export const marcarLeido = (req, res) => {
     const { idNotificacion, idEmpleadoDestinatario } = req.body;
     const idEmpleadoAutenticado = req.usuarioAutenticado.idEmpleado;
     
+    // DEBUG: Ver qué valores estamos comparando
+    console.log('🔍 DEBUG marcarLeido:');
+    console.log('  - idEmpleadoDestinatario (body):', idEmpleadoDestinatario, typeof idEmpleadoDestinatario);
+    console.log('  - idEmpleadoAutenticado (token):', idEmpleadoAutenticado, typeof idEmpleadoAutenticado);
+    console.log('  - ¿Son iguales?:', parseInt(idEmpleadoDestinatario) === idEmpleadoAutenticado);
+    
     if (!idNotificacion || !idEmpleadoDestinatario) {
       return res.status(400).json({ 
         message: "Faltan datos: idNotificacion e idEmpleadoDestinatario son requeridos" 

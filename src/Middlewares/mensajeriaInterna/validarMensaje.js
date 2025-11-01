@@ -83,24 +83,28 @@ export const validarAccesoMensaje = (req, res, next) => {
 // Middleware para validar marcar como leído
 export const validarMarcarLeido = (req, res, next) => {
   const { idNotificacion, idEmpleadoDestinatario } = req.body;
-  const idUsuarioAutenticado = req.usuarioAutenticado?.idUsuario;
+  const idEmpleadoAutenticado = req.usuarioAutenticado?.idEmpleado;
 
-  if (!idUsuarioAutenticado) {
-    return res.status(401).json({ 
-      message: 'Usuario no autenticado' 
-    });
-  }
+  console.log('🔍 DEBUG validarMarcarLeido:');
+  console.log('  - idEmpleadoDestinatario (body):', idEmpleadoDestinatario);
+  console.log('  - idEmpleadoAutenticado (token):', idEmpleadoAutenticado);
 
-  // Solo el destinatario puede marcar como leído
-  if (parseInt(idEmpleadoDestinatario) !== parseInt(idUsuarioAutenticado)) {
+  if (!idEmpleadoAutenticado) {
     return res.status(403).json({ 
-      message: 'Solo puedes marcar como leídos tus propios mensajes' 
+      message: 'Solo empleados pueden marcar mensajes como leídos' 
     });
   }
 
   if (!idNotificacion || !idEmpleadoDestinatario) {
     return res.status(400).json({ 
       message: 'Faltan datos: idNotificacion e idEmpleadoDestinatario son requeridos' 
+    });
+  }
+
+  // Solo el destinatario puede marcar como leído (comparar idEmpleado, no idUsuario)
+  if (parseInt(idEmpleadoDestinatario) !== parseInt(idEmpleadoAutenticado)) {
+    return res.status(403).json({ 
+      message: 'Solo puedes marcar como leídos tus propios mensajes' 
     });
   }
 
