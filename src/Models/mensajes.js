@@ -62,7 +62,7 @@ const mensajesInternos = {
         n.FechaEnvio,
         n.Leido,
         n.idRemitente,
-        u1.NombreUsuario AS Remitente,
+        u1.MailUsuario AS RemitenteEmail,
         e.NombreEmpleado AS NombreDestinatario,
         e.ApellidoEmpleado AS ApellidoDestinatario,
         nd.idEmpleadoDestinatario
