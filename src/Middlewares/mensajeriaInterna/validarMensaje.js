@@ -101,7 +101,7 @@ export const validarMarcarLeido = (req, res, next) => {
     });
   }
 
-  // Solo el destinatario puede marcar como leído (comparar idEmpleado, no idUsuario)
+  // Solo el empleado receptor es el que puede marcar como leído
   if (parseInt(idEmpleadoDestinatario) !== parseInt(idEmpleadoAutenticado)) {
     return res.status(403).json({ 
       message: 'Solo puedes marcar como leídos tus propios mensajes' 

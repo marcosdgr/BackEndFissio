@@ -1,6 +1,6 @@
 import mensajesInternos from '../Models/mensajes.js';
 
-
+// El idRemitente viene del token JWT (usuario autenticado)
 export const enviarNotificacion = (req, res) => {
   try {
     const { mensaje, destinatarios } = req.body;
@@ -14,7 +14,7 @@ export const enviarNotificacion = (req, res) => {
       });
     }
 
-    // Validar que destinatarios sean IDs de empleados válidos
+    // Validar que destinatarios sean identificadores de empleados válidos
     if (!destinatarios.every(id => Number.isInteger(id) && id > 0)) {
       return res.status(400).json({ 
         message: "Los destinatarios deben ser IDs de empleados válidos" 
@@ -44,6 +44,9 @@ export const enviarNotificacion = (req, res) => {
   }
 };
 
+
+
+// los participantes de la conversación son idUser1 e idUser2, pueden ver la conversacion
 export const obtenerConversacion = (req, res) => {
   try {
     const { idUser1, idUser2 } = req.params;
@@ -75,16 +78,13 @@ export const obtenerConversacion = (req, res) => {
   }
 };
 
+
+
+// el empleado destinatario es el que marca como leido el mensaje
 export const marcarLeido = (req, res) => {
   try {
     const { idNotificacion, idEmpleadoDestinatario } = req.body;
     const idEmpleadoAutenticado = req.usuarioAutenticado.idEmpleado;
-    
-    // DEBUG: Ver qué valores estamos comparando
-    console.log('🔍 DEBUG marcarLeido:');
-    console.log('  - idEmpleadoDestinatario (body):', idEmpleadoDestinatario, typeof idEmpleadoDestinatario);
-    console.log('  - idEmpleadoAutenticado (token):', idEmpleadoAutenticado, typeof idEmpleadoAutenticado);
-    console.log('  - ¿Son iguales?:', parseInt(idEmpleadoDestinatario) === idEmpleadoAutenticado);
     
     if (!idNotificacion || !idEmpleadoDestinatario) {
       return res.status(400).json({ 
