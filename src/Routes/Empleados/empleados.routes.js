@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { actualizarEmpleado, borradoLogicoEmpleado, buscarEmpleadoPorDNI, buscarEmpleadosPorApellido, buscarEmpleadosPorNombre, crearEmpleado, obtenerEmpleadoPorId, obtenerEmpleados, obtenerEmpleadosActivos, obtenerEmpleadosInactivos } from "../../Controllers/Empleados/empleados.controller.js";
+import { actualizarEmpleado, borradoLogicoEmpleado, buscarEmpleadoPorDNI, buscarEmpleadosPorApellido, buscarEmpleadosPorNombre, cambiarEstadoEmpleado, crearEmpleado, obtenerEmpleadoPorId, obtenerEmpleados, obtenerEmpleadosActivos, obtenerEmpleadosInactivos } from "../../Controllers/Empleados/empleados.controller.js";
 
 
 
@@ -13,6 +13,7 @@ router.get("/buscar/dni/:DNI", buscarEmpleadoPorDNI);
 router.get("/buscar/nombre/:NombreEmpleado", buscarEmpleadosPorNombre);
 router.get("/buscar/apellido/:ApellidoEmpleado", buscarEmpleadosPorApellido);
 router.post("/", crearEmpleado);
+router.put("/cambiar-estado/:idEmpleado", cambiarEstadoEmpleado);
 router.put("/desactivar/:idEmpleado", borradoLogicoEmpleado);
 router.put("/:idEmpleado", actualizarEmpleado);
 // Ruta dinámica al final

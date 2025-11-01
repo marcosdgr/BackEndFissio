@@ -1,20 +1,32 @@
 import db from '../../config/db.js';
 
+
+
+// obtener todos los empleados
 export const obtenerEmpleados = async (req, res) => {
   try {
-    db.query('SELECT * FROM empleados', (error, results) => {
+    const obtenerEmpleadosQuery = `
+      SELECT e.idEmpleado, e.DNI, e.NombreEmpleado, e.ApellidoEmpleado, e.FechaNacEmpleado,
+             e.TelefonoEmpleado, e.DireccionEmpleado, e.SalarioEmpleado, 
+             l.NombreLocalidad, c.NombreCat, e.IsActive
+      FROM empleados e
+      LEFT JOIN localidades l ON e.idLocalidad = l.idLocalidad
+      INNER JOIN catEmpleados c ON e.idCatEmpleado = c.idCatEmpleado
+    `;
+    db.query(obtenerEmpleadosQuery, (error, results) => {
       if (error) {
         console.error('Error al obtener empleados:', error);
-        res.status(500).json({ error: 'Error al obtener empleados' });
-        return;
+        return res.status(500).json({ message: 'Error en el servidor' });
       }
-      res.status(200).json(results);
+      return res.status(200).json(results);
     });
   } catch (error) {
-    res.status(500).json({ error: 'Error del servidor' });
+    console.error('Error del servidor:', error);
+    res.status(500).json({ message: 'Error del servidor' });
   }
 };
 
+// obtener empleado por ID
 export const obtenerEmpleadoPorId = async (req, res) => {
   try {
     const { idEmpleado } = req.params;
@@ -36,6 +48,7 @@ export const obtenerEmpleadoPorId = async (req, res) => {
   }
 };
 
+// obtener empleado por DNI
 export const buscarEmpleadoPorDNI = async (req, res) => {
   try {
     const { DNI } = req.params;
@@ -57,6 +70,7 @@ export const buscarEmpleadoPorDNI = async (req, res) => {
   }
 };
 
+// obtener empleados activos
 export const obtenerEmpleadosActivos = async (req, res) => {
   try {
     const obtenerEmpleadosActivos = 'SELECT * FROM empleados WHERE IsActive = 1';
@@ -73,6 +87,24 @@ export const obtenerEmpleadosActivos = async (req, res) => {
   }
 };
 
+//Obtener empleados inactivos
+export const obtenerEmpleadosInactivos = async (req, res) => {
+    try {
+        const obtenerEmpleadosInactivos = 'SELECT * FROM empleados WHERE IsActive = 0';
+        db.query(obtenerEmpleadosInactivos, (error, results) => {
+            if (error) {
+                console.error('Error al obtener empleados inactivos:', error);
+                res.status(500).json({ error: 'Error al obtener empleados inactivos' });
+                return;
+            }
+            res.status(200).json(results);
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Error del servidor' });
+    }
+};
+
+//obtener empleados por nombre
 export const buscarEmpleadosPorNombre = async (req, res) => {
   try {
     const { NombreEmpleado } = req.params;
@@ -90,6 +122,7 @@ export const buscarEmpleadosPorNombre = async (req, res) => {
   }
 };
 
+//obtener empleados por apellido
 export const buscarEmpleadosPorApellido = async (req, res) => {
   try {
     const { ApellidoEmpleado } = req.params;
@@ -107,22 +140,7 @@ export const buscarEmpleadosPorApellido = async (req, res) => {
   }
 };
 
-export const obtenerEmpleadosInactivos = async (req, res) => {
-    try {
-        const obtenerEmpleadosInactivos = 'SELECT * FROM empleados WHERE IsActive = 0';
-        db.query(obtenerEmpleadosInactivos, (error, results) => {
-            if (error) {
-                console.error('Error al obtener empleados inactivos:', error);
-                res.status(500).json({ error: 'Error al obtener empleados inactivos' });
-                return;
-            }
-            res.status(200).json(results);
-        });
-    } catch (error) {
-        res.status(500).json({ error: 'Error del servidor' });
-    }
-};
-
+// Crear nuevo empleado
 export const crearEmpleado = async (req, res) => {
   try {
     const { DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, idUsuario, idCatEmpleado } = req.body;
@@ -192,18 +210,115 @@ export const crearEmpleado = async (req, res) => {
 export const actualizarEmpleado = async (req, res) => {
   try {
     const { idEmpleado } = req.params;
-    const { DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,idLocalidad,idUsuario,idCatEmpleado, } = req.body;
-    const actualizarEmpleado = 'UPDATE empleados SET DNI = ?,NombreEmpleado = ?,ApellidoEmpleado = ?,FechaNacEmpleado = ?,TelefonoEmpleado = ?,DireccionEmpleado = ?,SalarioEmpleado = ?,idLocalidad = ?,idUsuario = ?,idCatEmpleado = ? WHERE idEmpleado = ?';
-    db.query(actualizarEmpleado, [DNI,NombreEmpleado,ApellidoEmpleado,FechaNacEmpleado,TelefonoEmpleado,DireccionEmpleado,SalarioEmpleado,idLocalidad,idUsuario,idCatEmpleado, idEmpleado], (error, results) => {
+    const { DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, idUsuario, idCatEmpleado } = req.body;
+    
+    const actualizarEmpleadoQuery = `
+      UPDATE empleados 
+      SET DNI = ?, NombreEmpleado = ?, ApellidoEmpleado = ?, FechaNacEmpleado = ?, 
+          TelefonoEmpleado = ?, DireccionEmpleado = ?, SalarioEmpleado = ?, 
+          idLocalidad = ?, idUsuario = ?, idCatEmpleado = ? 
+      WHERE idEmpleado = ?
+    `;
+    
+    db.query(actualizarEmpleadoQuery, [DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, idUsuario, idCatEmpleado, idEmpleado], (error, results) => {
       if (error) {
         console.error('Error al actualizar el empleado:', error);
-        res.status(500).json({ error: 'Error al actualizar el empleado' });
-        return;
+
+        // Manejo de errores comunes para actualización
+        if (error.code === 'ER_DUP_ENTRY') {
+          if (error.message.includes('DNI') || error.sqlMessage?.includes('DNI')) {
+            return res.status(400).json({
+              message: 'El DNI ya está registrado por otro empleado'
+            });
+          }
+          if (error.message.includes('TelefonoEmpleado') || 
+              error.sqlMessage?.includes('TelefonoEmpleado') ||
+              error.message.includes('telefono') ||
+              error.sqlMessage?.includes('telefono')) {
+            return res.status(400).json({
+              message: 'El teléfono ya está registrado por otro empleado'
+            });
+          }
+          return res.status(400).json({
+            message: 'Los datos ya están registrados por otro empleado'
+          });
+        }
+
+        return res.status(500).json({ message: 'Error al actualizar empleado' });
       }
+
+      if (results.affectedRows === 0) {
+        return res.status(404).json({ message: 'Empleado no encontrado' });
+      }
+
       res.status(200).json({ message: 'Empleado actualizado exitosamente' });
     });
   } catch (error) {
-    res.status(500).json({ error: 'Error del servidor' });
+    console.error('Error del servidor:', error);
+    res.status(500).json({ message: 'Error del servidor' });
+  }
+};
+
+// Cambiar estado del empleado (activar/desactivar)
+export const cambiarEstadoEmpleado = async (req, res) => {
+  try {
+    const { idEmpleado } = req.params;
+    const { IsActive } = req.body;
+
+    // Validar que IsActive sea un valor válido
+    if (IsActive !== 0 && IsActive !== 1) {
+      return res.status(400).json({ 
+        message: 'IsActive debe ser 0 (inactivo) o 1 (activo)' 
+      });
+    }
+
+    // Primero verificar el estado actual del empleado
+    const verificarEstadoQuery = `
+      SELECT IsActive 
+      FROM empleados 
+      WHERE idEmpleado = ?
+    `;
+
+    db.query(verificarEstadoQuery, [idEmpleado], (err, results) => {
+      if (err) {
+        console.error('Error al verificar estado del empleado:', err);
+        return res.status(500).json({ message: 'Error al verificar estado del empleado' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'Empleado no encontrado' });
+      }
+
+      const estadoActual = results[0].IsActive;
+
+      // Validar que el estado nuevo sea diferente al actual
+      if (estadoActual === IsActive) {
+        const estadoTexto = IsActive === 1 ? 'activo' : 'inactivo';
+        return res.status(400).json({ 
+          message: `El empleado ya se encuentra ${estadoTexto}` 
+        });
+      }
+
+      // Si es diferente, proceder con el cambio
+      const cambiarEstadoQuery = `
+        UPDATE empleados 
+        SET IsActive = ?
+        WHERE idEmpleado = ?
+      `;
+
+      db.query(cambiarEstadoQuery, [IsActive, idEmpleado], (error, updateResults) => {
+        if (error) {
+          console.error('Error al cambiar estado del empleado:', error);
+          return res.status(500).json({ message: 'Error al cambiar estado del empleado' });
+        }
+
+        const mensaje = IsActive === 1 ? 'Empleado activado exitosamente' : 'Empleado desactivado exitosamente';
+        res.status(200).json({ message: mensaje });
+      });
+    });
+  } catch (error) {
+    console.error('Error del servidor:', error);
+    res.status(500).json({ message: 'Error del servidor' });
   }
 };
 

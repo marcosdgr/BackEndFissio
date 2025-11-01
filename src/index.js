@@ -5,6 +5,7 @@ import cors from "cors";
 
 import empleadoRoutes from "./Routes/Empleados/empleados.routes.js";
 import categoriaEmpleadoRoutes from "./Routes/Empleados/categoria_empleados.routes.js";
+import usuariosRoutes from "./Routes/usuarios.routes.js";
 
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
@@ -35,6 +36,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Rutas
+app.use("/api/usuarios/v1", usuariosRoutes);
 app.use("/api/empleados/v1/categorias", categoriaEmpleadoRoutes);
 app.use("/api/empleados/v1", empleadoRoutes);
 
