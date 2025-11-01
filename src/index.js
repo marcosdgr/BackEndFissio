@@ -1,8 +1,10 @@
 import express from "express";
 import db from "./Config/db.js";
-import dotenv from "dotenv";
-import cors from "cors";
+import dotenv from "dotenv";      
+import cors from "cors";  
 
+import authRoutes from "./Routes/auth.routes.js";
+import mensajesInternos from "./Routes/mensajes-internos.routes.js";
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
 
@@ -32,7 +34,8 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Rutas
-
+app.use("/api/auth", authRoutes);
+app.use("/api/mensajes-internos/v1", mensajesInternos);
 // Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT} ✅`);
