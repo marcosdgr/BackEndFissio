@@ -1,7 +1,9 @@
 import express from "express";
-import db from "./config/db.js";
+import db from "./Config/db.js";
 import dotenv from "dotenv";
 import cors from "cors";
+
+import serviciosRoutes from "./Routes/Servicios/servicios.routes.js";
 
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
@@ -32,6 +34,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Rutas
+app.use("/api/servicios/v1", serviciosRoutes);
 
 // Iniciar el servidor
 app.listen(PORT, () => {
