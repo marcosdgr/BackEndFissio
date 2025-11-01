@@ -321,20 +321,3 @@ export const cambiarEstadoEmpleado = async (req, res) => {
     res.status(500).json({ message: 'Error del servidor' });
   }
 };
-
-export const borradoLogicoEmpleado = async (req, res) => {
-  try {
-    const { idEmpleado } = req.params;
-    const actualizarEmpleado = 'UPDATE empleados SET IsActive = 0 WHERE idEmpleado = ?';
-    db.query(actualizarEmpleado, [idEmpleado], (error, results) => {
-      if (error) {
-        console.error('Error al realizar el borrado lógico del empleado:', error);
-        res.status(500).json({ error: 'Error al realizar el borrado lógico del empleado' });
-        return;
-      }
-      res.status(200).json({ message: 'Empleado borrado lógicamente exitosamente' });
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Error del servidor' });
-  }
-};

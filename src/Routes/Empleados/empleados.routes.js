@@ -14,7 +14,6 @@ router.get("/buscar/nombre/:NombreEmpleado", buscarEmpleadosPorNombre);
 router.get("/buscar/apellido/:ApellidoEmpleado", buscarEmpleadosPorApellido);
 router.post("/", crearEmpleado);
 router.put("/cambiar-estado/:idEmpleado", cambiarEstadoEmpleado);
-router.put("/desactivar/:idEmpleado", borradoLogicoEmpleado);
 router.put("/:idEmpleado", actualizarEmpleado);
 // Ruta dinámica al final
 router.get("/:idEmpleado", obtenerEmpleadoPorId);
