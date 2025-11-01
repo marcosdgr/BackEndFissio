@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 
 import serviciosRoutes from "./Routes/Servicios/servicios.routes.js";
+import turnosServiciosRoutes from "./Routes/Servicios/turnos_servicios.routes.js";
 
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
@@ -35,6 +36,7 @@ app.use(express.json());
 
 // Rutas
 app.use("/api/servicios/v1", serviciosRoutes);
+app.use("/api/turnos-servicios/v1", turnosServiciosRoutes);
 
 // Iniciar el servidor
 app.listen(PORT, () => {
