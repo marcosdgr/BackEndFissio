@@ -1,21 +1,22 @@
 import e from "cors";
-import db from "../Config/db.js";
+import db from "../../Config/db.js";
 
 // Traer todos los pagos 
 
 export const obtenerPagos = async (req, res) => {
     try {
-        const obtenerTodosLosPagos = "SELECT * FROM pagos";
+        const obtenerTodosLosPagos = "SELECT p.idPago, p.FechaPago,p.MontoPago,p.Descripcion,p.EstadoPago,mp.NombreMedio as MedioPago, tp.NombreTipo as TipoPago FROM pagos p JOIN catMediosPago mp ON p.idMedioPago = mp.idMedioPago JOIN catTiposPago tp ON p.idTipoPago = tp.idTipoPago ORDER BY P.FechaPago DESC";
+
         db.query(obtenerTodosLosPagos, (error, results) => {
             if (error) {
-                console.error("Error al obtener todos los pagos: ", error);
-                res.status(500).json({ error: "Error del servidor al obtener todos los pagos" });
+                console.error("Error al obtener los pagos: ", error);
+                return res.status(500).json({ error: "Error del servidor al obtener los pagos" });
             }
             res.status(200).json(results);
         });
-
     } catch (error) {
         res.status(500).json({ error: "Error del servidor" });
+
     }
 }
 
@@ -24,7 +25,7 @@ export const obtenerPagos = async (req, res) => {
 export const obtenerPagoPorId = async (req, res) => {
     try {
         const { idPago } = req.params;
-        const obtenerUnPagoId = "SELECT * FROM pagos WHERE idPago = ?";
+        const obtenerUnPagoId = "SELECT p.idPago, p.FechaPago,p.MontoPago,p.Descripcion,p.EstadoPago,mp.NombreMedio AS MedioPago, tp.NombreTipo AS TipoPago FROM pagos p JOIN catMediosPago mp ON p.idMedioPago = mp.idMedioPago JOIN catTiposPago tp ON p.idTipoPago = tp.idTipoPago WHERE p.idPago = ?";
         db.query(obtenerUnPagoId, [idPago], (error, results) => {
             if (error) {
                 console.error("Error al obtener el pago por ID: ", error);
@@ -40,40 +41,6 @@ export const obtenerPagoPorId = async (req, res) => {
     }
 }
 
-// Filtro para traer los pagos activos
-
-export const obtenerPagosActivos = async (req, res) => {
-    try {
-        const obtenerTodosPagosActivos = "SELECT * FROM pagos WHERE IsActive = 1";
-        db.query(obtenerTodosPagosActivos, (error, results) => {
-            if (error) {
-                console.error("Error al obtener los pagos activos: ", error);
-                res.status(500).json({ error: "Error del servidor al obtener los pagos activos" });
-            }
-            res.status(200).json(results);
-        });
-    } catch (error) {
-        res.status(500).json({ error: "Error del servidor" });
-    }
-}
-
-// Filtro para traer los pagos inactivos
-
-export const obtenerPagosInactivos = async (req, res) => {
-    try {
-        const obtenerTodosPagosInactivos = "SELECT * FROM pagos WHERE IsActive = 0";
-        db.query(obtenerTodosPagosInactivos, (error, results) => {
-            if (error) {
-                console.error("Error al obtener los pagos inactivos: ", error);
-                res.status(500).json({ error: "Error del servidor al obtener los pagos inactivos" });
-            }
-            res.status(200).json(results);
-        });
-    } catch (error) {
-        res.status(500).json({ error: "Error del servidor" });
-    }
-}
-
 // Crear un nuevo pago
 
 export const crearPago = async (req, res) => {
@@ -81,17 +48,17 @@ export const crearPago = async (req, res) => {
         const {
             FechaPago, TipoPago, Descripcion, MedioPago, MontoPago, EstadoPago
         } = req.body
-        const nuevoPago = "INSERT INTO pagos (FechaPago, TipoPago, Descripcion, MedioPago, MontoPago, EstadoPago) VALUES (?, ?, ?, ?, ?, ?)";
+        const nuevoPago = "INSERT INTO pagos (FechaPago, MontoPago, Descripcion, EstadoPago,idMedioPago, idTipoPago) VALUES (?, ?, ?, ?, ?, ?)";
         db.query(nuevoPago, [FechaPago, TipoPago, Descripcion, MedioPago, MontoPago, EstadoPago], (error, results) => {
             if (error) {
                 console.error("Error al crear un nuevo pago: ", error);
                 res.status(500).json({ error: "Error del servidor al crear un nuevo pago" });
             }
             res.status(201).json({ message: "Nuevo pago creado exitosamente", idInsertado: results.insertId });
-        });     
+        });
     } catch (error) {
         res.status(500).json({ error: "Error del servidor" });
-    }     
+    }
 }
 
 // Actualizar un pago 
@@ -99,8 +66,8 @@ export const crearPago = async (req, res) => {
 export const actualizarPago = async (req, res) => {
     try {
         const { idPago } = req.params;
-        const { FechaPago, TipoPago, Descripcion, MedioPago, MontoPago, EstadoPago } = req.body;
-        const actualizarUnPago = "UPDATE pagos SET FechaPago = ?, TipoPago = ?, Descripcion = ?, MedioPago = ?, MontoPago = ?, EstadoPago = ? WHERE idPago = ?";
+        const { FechaPago, MontoPago, Descripcion, EstadoPago,idMedioPago, idTipoPago } = req.body;
+        const actualizarUnPago = "UPDATE pagos SET FechaPago = ?, MontoPago = ?, Descripcion = ?, EstadoPago = ?, idMedioPago = ?, idTipoPago = ? WHERE idPago = ?";
         db.query(actualizarUnPago, [FechaPago, TipoPago, Descripcion, MedioPago, MontoPago, EstadoPago, idPago], (error, results) => {
             if (error) {
                 console.error("Error al actualizar el pago: ", error);
@@ -116,13 +83,13 @@ export const actualizarPago = async (req, res) => {
     }
 }
 
-// Borrado logico de un pago
+// Borrado Fisico de un pago
 
-export const borradoLogicoPago = async (req, res) => {
+export const eliminarPago = async (req, res) => {
     try {
         const { idPago } = req.params;
-        const borradoLogico = "UPDATE pagos SET IsActive = 0 WHERE idPago = ?";
-        db.query(borradoLogico, [idPago], (error, results) => {
+        const eliminar = "DELETE FROM pagos WHERE idPago = ?";
+        db.query(eliminar, [idPago], (error, results) => {
             if (error) {
                 console.error("Error al realizar el borrado logico del pago: ", error);
                 res.status(500).json({ error: "Error del servidor al realizar el borrado logico del pago" });

@@ -2,7 +2,7 @@ import { Router } from "express";
 
 
 // Importaciones de los controladores
-import { obtenerHorariosTrabajo, obtenerHorarioPorId, obtenerHorariosActivos, obtenerHorariosInactivos, crearHorarioTrabajo, actualizarHorarioTrabajo, borradoLogicoHorarioTrabajo, activacionLogicaHorarioTrabajo } from "../../Controllers/HorariosTrabajoController/horariosTrabajo.controller.js";
+import { obtenerHorariosTrabajo, obtenerHorarioPorId, obtenerHorariosActivos, obtenerHorariosInactivos, crearHorarioTrabajo, actualizarHorarioTrabajo, borradoLogicoHorarioTrabajo, activacionLogicaHorarioTrabajo } from "../../Controllers/HorariosTrabajo/horariosTrabajo.controller.js";
 
 const router = Router();
 

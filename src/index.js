@@ -5,10 +5,17 @@ import cors from "cors";
 
 
 // importo ruta de pago 
-import pagosRoutes from "./Routes/pagos.routes.js";
+import pagosRoutes from "./Routes/Pagos/pagos.routes.js";
 
 // importo ruta de horarios de trabajo
-import horariosTrabajoRoutes from "./Routes/HorarioTrabajoRoutes/horariosTrabajo.routes.js";
+import horariosTrabajoRoutes from "./Routes/HorarioTrabajo/horariosTrabajo.routes.js";
+
+// Importo rutas de categorias de medio de pago
+import catMedioPagoRoutes from "./Routes/Pagos/catMedioPago.routes.js";
+
+// Importo rutas de categorias de tipos de pago
+import catTipoPagoRoutes from "./Routes/Pagos/catTipoPago.routes.js"
+
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
 
@@ -40,8 +47,11 @@ app.use(express.json());
 
 // Rutas
 app.use("/api/pagos/v1", pagosRoutes);
-
+app.use("/api/catMedioPago/v1", catMedioPagoRoutes); //categorias de medio de pago
+app.use("/api/catTipoPago/v1", catTipoPagoRoutes); // categorias de tipo de pago
 app.use("/api/horariosTrabajo/v1", horariosTrabajoRoutes); //horarios de trabajo  
+
+
 
 // Iniciar el servidor
 app.listen(PORT, () => {
