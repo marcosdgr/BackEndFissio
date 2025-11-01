@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { actualizarEmpleado, borradoLogicoEmpleado, buscarEmpleadoPorDNI, buscarEmpleadosPorApellido, buscarEmpleadosPorNombre, cambiarEstadoEmpleado, crearEmpleado, obtenerEmpleadoPorId, obtenerEmpleados, obtenerEmpleadosActivos, obtenerEmpleadosInactivos } from "../../Controllers/Empleados/empleados.controller.js";
+import { actualizarEmpleado, buscarEmpleadoPorDNI, buscarEmpleadosPorApellido, buscarEmpleadosPorNombre, cambiarEstadoEmpleado, crearEmpleado, obtenerEmpleadoPorId, obtenerEmpleados, obtenerEmpleadosActivos, obtenerEmpleadosInactivos } from "../../Controllers/Empleados/empleados.controller.js";
 
 
 
