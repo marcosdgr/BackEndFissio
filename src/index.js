@@ -7,14 +7,17 @@ import cors from "cors";
 // importo ruta de pago 
 import pagosRoutes from "./Routes/Pagos/pagos.routes.js";
 
-// importo ruta de horarios de trabajo
-import horariosTrabajoRoutes from "./Routes/HorarioTrabajo/horariosTrabajo.routes.js";
-
 // Importo rutas de categorias de medio de pago
 import catMedioPagoRoutes from "./Routes/Pagos/catMedioPago.routes.js";
 
 // Importo rutas de categorias de tipos de pago
 import catTipoPagoRoutes from "./Routes/Pagos/catTipoPago.routes.js"
+
+// importo ruta de horarios de trabajo
+import horariosTrabajoRoutes from "./Routes/HorarioTrabajo/horariosTrabajo.routes.js";
+
+//importo ruta de empleados horarios
+import empleadosHorariosRoutes from "./Routes/EmpleadosHorarios/empleadoshorarios.routes.js"
 
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
@@ -49,7 +52,9 @@ app.use(express.json());
 app.use("/api/pagos/v1", pagosRoutes);
 app.use("/api/catMedioPago/v1", catMedioPagoRoutes); //categorias de medio de pago
 app.use("/api/catTipoPago/v1", catTipoPagoRoutes); // categorias de tipo de pago
-app.use("/api/horariosTrabajo/v1", horariosTrabajoRoutes); //horarios de trabajo  
+app.use("/api/horariosTrabajo/v1", horariosTrabajoRoutes); //horarios de trabajo
+app.use("/api/empleadosHorarios/v1", empleadosHorariosRoutes); //empleados con horarios
+
 
 
 
