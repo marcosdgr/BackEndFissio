@@ -9,6 +9,9 @@ import loginRoutes from "./Routes/Login/login.routes.js";
 import pacientesRoutes from "./Routes/Pacientes/pacientes.routes.js";
 import turnosRoutes from "./Routes/Turnos/turnos.routes.js";
 
+// importar servicio de recordatorios
+import { iniciarCronRecordatorios } from "./Services/recordatorios.service.js";
+
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
 
@@ -54,4 +57,7 @@ app.use("/api/turnos/v1", turnosRoutes);
 // Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT} ✅`);
+  
+  // Iniciar sistema de recordatorios automáticos
+  iniciarCronRecordatorios();
 });
