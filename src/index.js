@@ -2,10 +2,14 @@ import express from "express";
 import dotenv from "dotenv";
 import db from "./config/db.js";
 import cors from "cors";
+
 // import de rutas
 import comentarioRoutes from "./Routes/comentarioRoutes.js";
 import historiaClinicaRoutes from "./Routes/historiaClinica.routes.js";
 import salaRoutes from "./Routes/salaRoutes.js";
+import metricaDiariaRoutes from "./Routes/metricasDiariasRoutes.js";
+import catFaqsRoutes from "./Routes/catFaqsRoutes.js";
+import faqsRoutes from "./Routes/faqsRoutes.js";
 
 // inicio dotenv para llamar las variables de entorno desde el archivo .env
 dotenv.config();
@@ -37,8 +41,17 @@ app.use(express.json());
 // rutas
     // comentarios
 app.use("/api/comentarios/v1", comentarioRoutes);
+// historias clinicas
 app.use("/api/historiasClinicas/v1", historiaClinicaRoutes);
+    // salas
 app.use("/api/salas/v1", salaRoutes);
+    // metricas diarias
+app.use("/api/metricas/v1", metricaDiariaRoutes);
+//categorias FAQ
+app.use("/api/cat-faqs/v1", catFaqsRoutes);
+    // FAQs
+app.use("/api/faqs/v1", faqsRoutes);
+
 
 // inicializo el servidor
 app.listen(PORT, () => {
