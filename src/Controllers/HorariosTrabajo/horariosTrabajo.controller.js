@@ -79,9 +79,9 @@ export const obtenerHorariosInactivos = async (req, res) => {
 // Crear un nuevo horario de trabajo
 export const crearHorarioTrabajo = async (req, res) => {
     try {
-        const {DiaSemana, HoraEntradaEsperada, HoraSalidaEsperada } = req.body;
+        const {DiaSemana, HoraEntradaEsperada, HoraSalidaEsperada, DescripcionHorario} = req.body;
         const nuevoHorarioTrabajo = "INSERT INTO horariosTrabajo (DiaSemana, HoraEntradaEsperada, HoraSalidaEsperada, DescripcionHorario) VALUES (?, ?, ?, ?)";
-        db.query(nuevoHorarioTrabajo, [DiaSemana, HoraEntradaEsperada, HoraSalidaEsperada, DescripcionHorario ], (error, results) => {
+        db.query(nuevoHorarioTrabajo, [DiaSemana, HoraEntradaEsperada, HoraSalidaEsperada, DescripcionHorario], (error, results) => {
             if (error) {
                 console.error("Error al crear el nuevo horario de trabajo: ", error);
                 return res.status(500).json({ error: "Error del servidor al crear el nuevo horario de trabajo" });
