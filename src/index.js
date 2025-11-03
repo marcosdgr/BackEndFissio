@@ -19,6 +19,9 @@ import horariosTrabajoRoutes from "./Routes/HorarioTrabajo/horariosTrabajo.route
 //importo ruta de empleados horarios
 import empleadosHorariosRoutes from "./Routes/EmpleadosHorarios/empleadoshorarios.routes.js"
 
+// Importo rutas de asistencias
+import asistenciasRoutes from "./Routes/Asistencias/asistencias.routes.js"
+
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
 
@@ -54,6 +57,7 @@ app.use("/api/catMedioPago/v1", catMedioPagoRoutes); //categorias de medio de pa
 app.use("/api/catTipoPago/v1", catTipoPagoRoutes); // categorias de tipo de pago
 app.use("/api/horariosTrabajo/v1", horariosTrabajoRoutes); //horarios de trabajo
 app.use("/api/empleadosHorarios/v1", empleadosHorariosRoutes); //empleados con horarios
+app.use("/api/asistencias/v1", asistenciasRoutes); //asistencias
 
 
 
