@@ -7,7 +7,8 @@ import db from "./Config/db.js";
 
 // importo las rutas principales
 import usuariosRoutes from "./Routes/Usuarios/usuarios.routes.js";
-import loginRoutes from "./Routes/Login/login.routes.js";
+import usuariosRoutesNew from "./Routes/usuarios.routes.js";
+import loginRoutes from "./Routes/login.routes.js";
 import pacientesRoutes from "./Routes/Pacientes/pacientes.routes.js";
 import turnosRoutes from "./Routes/Turnos/turnos.routes.js";
 
@@ -26,6 +27,9 @@ import salaRoutes from "./Routes/salaRoutes.js";
 import metricaDiariaRoutes from "./Routes/metricasDiariasRoutes.js";
 import catFaqsRoutes from "./Routes/catFaqsRoutes.js";
 import faqsRoutes from "./Routes/faqsRoutes.js";
+
+// importo rutas de mensajería interna
+import mensajesInternosRoutes from "./Routes/mensajes-internos.routes.js";
 
 // importar servicio de recordatorios
 import { iniciarCronRecordatorios } from "./Services/recordatorios.service.js";
@@ -77,9 +81,13 @@ app.use("/api/faqs/v1", faqsRoutes);
 
 // rutas principales
 app.use("/api/usuarios/v1", usuariosRoutes);
-app.use("/api/login/v1", loginRoutes);
+app.use("/api/usuarios-new/v1", usuariosRoutesNew);
+app.use("/api/auth/v1", loginRoutes);
 app.use("/api/pacientes/v1", pacientesRoutes);
 app.use("/api/turnos/v1", turnosRoutes);
+
+// rutas de mensajería interna
+app.use("/api/mensajes-internos/v1", mensajesInternosRoutes);
 
 // rutas de servicios
 app.use("/api/servicios/v1", serviciosRoutes);

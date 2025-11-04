@@ -5,9 +5,10 @@ import {
   actualizarRolUsuario,
   cambiarEstadoUsuario,
   
-} from "../Controllers/Usuarios/usuarios.controlles.js";
+} from "../Controllers/Usuarios/usuarios.controller.js";
 
 const router = Router();
+
 // rutas GET
 router.get("/", traerUsuarios);
 
