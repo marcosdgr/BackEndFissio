@@ -109,73 +109,25 @@ export const crearCobro = async (req, res) => {
         res.status(500).json({ error: "Error del servidor" });
     }
 };
-// Actualizar un cobro existente (actualización dinámica con validaciones)
+// Actualizar un cobro existente (el frontend envía todos los campos)
 export const actualizarCobro = async (req, res) => {
     try {
         const { idCobro } = req.params;
         const { FechaCobro, TipoCobro, MontoCobro, EstadoCobro, Descripcion, idMedioPago, idTurno } = req.body;
 
-        // Validar campos críticos para cuando quieran actualizar no se envien vacios o null o negativos
-        if (MontoCobro !== undefined && (MontoCobro === null || MontoCobro === "" || MontoCobro < 0)) {
-            return res.status(400).json({ error: "El MontoCobro debe ser un valor válido mayor o igual a 0" });
-        }
-        if (EstadoCobro !== undefined && (EstadoCobro === null || EstadoCobro === "")) {
-            return res.status(400).json({ error: "El EstadoCobro no puede estar vacío" });
-        }
-        if (idMedioPago !== undefined && (idMedioPago === null || idMedioPago === "" || idMedioPago <= 0)) {
-            return res.status(400).json({ error: "El idMedioPago debe ser un ID válido" });
-        }
-        if (idTurno !== undefined && (idTurno === null || idTurno === "" || idTurno <= 0)) {
-            return res.status(400).json({ error: "El idTurno debe ser un ID válido" });
-        }
-        if (TipoCobro !== undefined && (TipoCobro === null || TipoCobro === "")) {
-            return res.status(400).json({ error: "El TipoCobro no puede estar vacío" });
-        }
-        if (FechaCobro !== undefined && (FechaCobro === null || FechaCobro === "")) {
-            return res.status(400).json({ error: "La FechaCobro no puede estar vacía" });
+        // Validar que se envíen todos los campos obligatorios
+        if (!FechaCobro || !TipoCobro || MontoCobro === undefined || !EstadoCobro || !idMedioPago || !idTurno) {
+            return res.status(400).json({ error: "Todos los campos son obligatorios" });
         }
 
-        // Construir query dinámica
-        const atributos = [];
-        const valores = [];
-
-        if (FechaCobro !== undefined) {
-            atributos.push("FechaCobro = ?");
-            valores.push(FechaCobro);
-        }
-        if (TipoCobro !== undefined) {
-            atributos.push("TipoCobro = ?");
-            valores.push(TipoCobro);
-        }
-        if (MontoCobro !== undefined) {
-            atributos.push("MontoCobro = ?");
-            valores.push(MontoCobro);
-        }
-        if (EstadoCobro !== undefined) {
-            atributos.push("EstadoCobro = ?");
-            valores.push(EstadoCobro);
-        }
-        if (Descripcion !== undefined) { // Descripcion SÍ puede estar vacía 
-            atributos.push("Descripcion = ?");
-            valores.push(Descripcion);
-        }
-        if (idMedioPago !== undefined) {
-            atributos.push("idMedioPago = ?");
-            valores.push(idMedioPago);
-        }
-        if (idTurno !== undefined) {
-            atributos.push("idTurno = ?");
-            valores.push(idTurno);
+        // Validar que los valores sean correctos
+        if (MontoCobro < 0) {
+            return res.status(400).json({ error: "El MontoCobro debe ser mayor o igual a 0" });
         }
 
-        if (atributos.length === 0) {
-            return res.status(400).json({ error: "No se proporcionaron campos para actualizar" });
-        }
-
-        valores.push(idCobro);
-        const actualizarCobro = "UPDATE cobros SET " + atributos.join(", ") + " WHERE idCobro = ?";
-
-        db.query(actualizarCobro, valores, (error, results) => {
+        const actualizarCobro = "UPDATE cobros SET FechaCobro = ?, TipoCobro = ?, MontoCobro = ?, EstadoCobro = ?, Descripcion = ?, idMedioPago = ?, idTurno = ? WHERE idCobro = ?";
+        
+        db.query(actualizarCobro, [FechaCobro, TipoCobro, MontoCobro, EstadoCobro, Descripcion, idMedioPago, idTurno, idCobro], (error, results) => {
             if (error) {
                 console.error("Error al actualizar el cobro: ", error);
                 return res.status(500).json({ error: "Error del servidor al actualizar el cobro" });
