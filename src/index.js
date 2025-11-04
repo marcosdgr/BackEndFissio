@@ -2,6 +2,28 @@ import express from "express";
 
 import dotenv from "dotenv";
 import cors from "cors";
+
+
+// importo ruta de pago 
+import pagosRoutes from "./Routes/Pagos/pagos.routes.js";
+
+// Importo rutas de categorias de medio de pago
+import catMedioPagoRoutes from "./Routes/Pagos/catMedioPago.routes.js";
+
+// Importo rutas de categorias de tipos de pago
+import catTipoPagoRoutes from "./Routes/Pagos/catTipoPago.routes.js"
+
+// importo ruta de horarios de trabajo
+import horariosTrabajoRoutes from "./Routes/HorarioTrabajo/horariosTrabajo.routes.js";
+
+//importo ruta de empleados horarios
+import empleadosHorariosRoutes from "./Routes/EmpleadosHorarios/empleadoshorarios.routes.js"
+
+// Importo rutas de asistencias
+import asistenciasRoutes from "./Routes/Asistencias/asistencias.routes.js"
+
+// Importo rutas de cobros
+import cobrosRoutes from "./Routes/Cobros/cobros.routes.js"
 import db from "./Config/db.js";
 
 // importo las rutas principales
@@ -54,6 +76,7 @@ db.connect((err) => {
 // inicializo express
 const app = express();
 
+
 //configuro cors (permitir requests desde cualquier origen, ya que no hay frontend aún)
 app.use(
   cors({
@@ -102,6 +125,16 @@ app.use("/api/empleados/v1/categorias", categoriaEmpleadoRoutes);
 app.use("/api/empleados/v1", empleadoRoutes);
 
 // Rutas
+app.use("/api/pagos/v1", pagosRoutes);
+app.use("/api/catMedioPago/v1", catMedioPagoRoutes); //categorias de medio de pago
+app.use("/api/catTipoPago/v1", catTipoPagoRoutes); // categorias de tipo de pago
+app.use("/api/horariosTrabajo/v1", horariosTrabajoRoutes); //horarios de trabajo
+app.use("/api/empleadosHorarios/v1", empleadosHorariosRoutes); //empleados con horarios
+app.use("/api/asistencias/v1", asistenciasRoutes); //asistencias
+app.use("/api/cobros/v1", cobrosRoutes); //cobros
+
+
+
 
 app.use("/api/obras-sociales/v1", obrasSocialesRoutes);
 app.use("/api/plan-obra/v1", planObraRoutes);
