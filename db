@@ -1,18 +1,14 @@
 create database fissio2;
 use fissio2;
 
-
 CREATE TABLE roles (
   idRol INT PRIMARY KEY AUTO_INCREMENT,
   NombreRol VARCHAR(50) NOT NULL UNIQUE
 ) ;
-select * from roles;
-INSERT INTO roles (NombreRol) VALUES ('Paciente');
-INSERT INTO roles (NombreRol) VALUES ('Admin');
 
 CREATE TABLE usuarios (
   idUsuario INT PRIMARY KEY AUTO_INCREMENT,
-  MailUsuario VARCHAR(100) NOT NULL UNIQUE,
+  MailUsuario VARCHAR(250) NOT NULL UNIQUE,
   PasswordUsuario VARCHAR(250) NOT NULL,
   idRol INT NOT NULL,
   IsActive TINYINT DEFAULT 1,
@@ -21,16 +17,14 @@ CREATE TABLE usuarios (
     FOREIGN KEY (idRol) REFERENCES roles(idRol)
      
 ) ;
-select * from usuarios;
 
--- Localidades (opcional, pero recomendado para normalizar)
+-- Localidades (opcional, pero recomendado para normalizar) POOR BASE DE DATOS
 CREATE TABLE localidades (
   idLocalidad INT PRIMARY KEY AUTO_INCREMENT,
   NombreLocalidad VARCHAR(100) NOT NULL UNIQUE,
   IsActive TINYINT DEFAULT 1
 ) ;
-INSERT INTO localidades (NombreLocalidad) VALUES ('San Miguel de Tucuman');
-select * from localidades;
+
 -- Pacientes
 CREATE TABLE pacientes (
   idPaciente INT PRIMARY KEY AUTO_INCREMENT,
@@ -38,8 +32,8 @@ CREATE TABLE pacientes (
   NombrePaciente VARCHAR(50) NOT NULL,
   ApellidoPaciente VARCHAR(50) NOT NULL,
   FechaNacPaciente DATE NOT NULL,
-  TelefonoPaciente VARCHAR(20) NOT NULL,
-  DireccionPaciente VARCHAR(100) NOT NULL,
+  TelefonoPaciente VARCHAR(30) NOT NULL,
+  DireccionPaciente VARCHAR(250) NOT NULL,
   Sexo ENUM('Femenino','Masculino','Otro') NOT NULL,
   idLocalidad INT NOT NULL,
   IsActive TINYINT DEFAULT 1,
@@ -52,11 +46,11 @@ CREATE TABLE pacientes (
       
 ) ;
 
-
 -- Categoría de empleados
 CREATE TABLE catEmpleados (
   idCatEmpleado INT PRIMARY KEY AUTO_INCREMENT,
   NombreCat VARCHAR(200) NOT NULL UNIQUE,
+  DescripcionCat varchar(500),
   IsActive TINYINT DEFAULT 1
 ) ;
 
@@ -122,12 +116,14 @@ CREATE TABLE asistencias (
 CREATE TABLE obraSociales (
   idObraSocial INT PRIMARY KEY AUTO_INCREMENT,
   NombreObraSocial VARCHAR(100) NOT NULL UNIQUE,
-  TelefonoContacto VARCHAR(20),
-  EmailContacto VARCHAR(100),
-  PaginaWeb VARCHAR(200),
-  Estado ENUM('Activa', 'Suspendida', 'Baja') DEFAULT 'Activa',
+  TelefonoObra VARCHAR(30) unique,
+  EmailObra VARCHAR(100) unique,
+  PaginaWebObra VARCHAR(200) unique,
+  EstadoObra ENUM('Activa', 'Suspendida', 'Baja') DEFAULT 'Activa',
   IsActive TINYINT DEFAULT 1
 ) ;
+
+
 
 -- Obra Social x Paciente
 CREATE TABLE obraSocial_Paciente (
@@ -137,12 +133,14 @@ CREATE TABLE obraSocial_Paciente (
   PlanObraSocial VARCHAR(50),
   NumeroAfiliado VARCHAR(30),
   EstadoPlan ENUM('activo','suspendido','baja') DEFAULT 'activo',
+  IsActive TINYINT DEFAULT 1,
   CONSTRAINT fk_os_pac_paciente
     FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente),
   CONSTRAINT fk_os_pac_obra
     FOREIGN KEY (idObraSocial) REFERENCES obraSociales(idObraSocial)
   
 ) ;
+
 
 
 
@@ -154,7 +152,7 @@ CREATE TABLE salas (
   IsActive TINYINT DEFAULT 1
 ) ;
 
--- Tratamientos y Servicios
+-- Tratamientos y Servicios -- falta
 CREATE TABLE tratamientos (
   idTratamiento INT PRIMARY KEY AUTO_INCREMENT,
   NombreTratamiento VARCHAR(50) NOT NULL UNIQUE,
@@ -168,13 +166,9 @@ CREATE TABLE servicios (
   idServicio INT PRIMARY KEY AUTO_INCREMENT,
   NombreServicio VARCHAR(50) NOT NULL,
   DescripcionServicio VARCHAR(200) NOT NULL,
-  IsActive TINYINT DEFAULT 1,
-  idTratamiento INT NOT NULL,
-  CONSTRAINT fk_servicios_tratamientos
-    FOREIGN KEY (idTratamiento) REFERENCES tratamientos(idTratamiento)
-      ON UPDATE CASCADE ON DELETE RESTRICT,
-  UNIQUE KEY uk_servicio_nombre_trat (NombreServicio, idTratamiento)
+  IsActive TINYINT DEFAULT 1
 ) ;
+
 
 -- Turnos (sin idServicio directo; usaremos puente turno_servicios)
 CREATE TABLE turnos (
@@ -182,24 +176,23 @@ CREATE TABLE turnos (
   FechaSolicitudTurno DATE NOT NULL,
   FechaRequeridaTurno DATE NOT NULL,
   HorarioRequeridoTurno TIME NOT NULL,
-  HorarioInicioTurno TIME NULL,
-  HorarioFinTurno TIME NULL,
+  HorarioInicioTurno TIME NOT NULL,
+  HorarioFinTurno TIME NOT NULL,
   InformeTurno VARCHAR(250),
   EstadoTurno ENUM('Solicitado','Pendiente','Cancelado','Finalizado') NOT NULL default 'Solicitado',
   idPaciente INT NOT NULL,
   idEmpleado INT  NULL,
-  idSala INT  NULL,
+  idSala INT NULL,
+  idTratamiento INT NULL,
   CONSTRAINT fk_turnos_paciente
     FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente),
   CONSTRAINT fk_turnos_empleado
     FOREIGN KEY (idEmpleado) REFERENCES empleados(idEmpleado),
   CONSTRAINT fk_turnos_sala
-    FOREIGN KEY (idSala) REFERENCES salas(idSala)
-      
+    FOREIGN KEY (idSala) REFERENCES salas(idSala),
+  CONSTRAINT fk_turnos_tratamientos
+  FOREIGN KEY (idTratamiento) references tratamientos(idTratamiento)
 ) ;
-
-
-
 
 -- Puente Turno-Servicios (permite 1..N)
 CREATE TABLE turno_servicios (
@@ -213,7 +206,7 @@ CREATE TABLE turno_servicios (
   CONSTRAINT fk_ts_servicio
     FOREIGN KEY (idServicio) REFERENCES servicios(idServicio)
      
-) ;
+) ;    
 -- Catálogos de pagos/cobros 
 CREATE TABLE catMediosPago (
   idMedioPago INT PRIMARY KEY AUTO_INCREMENT,
@@ -256,7 +249,6 @@ CREATE TABLE pagos (
     FOREIGN KEY (idTipoPago) REFERENCES catTiposPago(idTipoPago),
   CONSTRAINT fk_pagos_medio
     FOREIGN KEY (idMedioPago) REFERENCES catMediosPago(idMedioPago)
-      
 ) ;
 
 -- Historias clínicas
@@ -278,7 +270,7 @@ CREATE TABLE historiasClinicas (
     FOREIGN KEY (ActualizadoPor) REFERENCES empleados(idEmpleado)
   
 ) ;
-
+-- COMENTARIOS QUE PUEDEN DEJAR LOS PACIENTES Y SE PUEDEN PUBLICAR EN LA PAGINA -- 
 -- Comentarios (opcional vincular al turno)
 CREATE TABLE comentarios (
   idComentario INT PRIMARY KEY AUTO_INCREMENT,
@@ -291,6 +283,7 @@ CREATE TABLE comentarios (
     FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente)
 ) ;
 
+-- MENSAJERIA INTERNA --
 -- Notificaciones: entre usuarios + destinatarios M:N
 CREATE TABLE notificaciones (
   idNotificacion INT PRIMARY KEY AUTO_INCREMENT,
@@ -306,12 +299,11 @@ CREATE TABLE notificaciones (
 CREATE TABLE notificaciones_destinatarios (
   idNotDest INT PRIMARY KEY AUTO_INCREMENT,
   idNotificacion INT NOT NULL,
-  idUsuarioDestinatario INT NOT NULL,
+  idEmpleadoDestinatario INT NOT NULL,
   CONSTRAINT fk_notdest_notif
     FOREIGN KEY (idNotificacion) REFERENCES notificaciones(idNotificacion),
   CONSTRAINT fk_notdest_usuario
-    FOREIGN KEY (idUsuarioDestinatario) REFERENCES usuarios(idUsuario)
-
+    FOREIGN KEY (idempleadoDestinatario) REFERENCES empleados(idEmpleado)
 ) ;
 
 -- Recordatorios y encuestas (por turno)
@@ -347,19 +339,6 @@ CREATE TABLE estudios_paciente (
     FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente)
 );
 
--- Chatbot
-CREATE TABLE chatbot_mensajes (
-  idMensaje INT PRIMARY KEY AUTO_INCREMENT,
-  idPaciente INT NULL,           
-  idSesion INT NULL,             
-  Remitente ENUM('Usuario','Chatbot') NOT NULL,
-  Mensaje TEXT NOT NULL,
-  FechaHora DATETIME DEFAULT CURRENT_TIMESTAMP,
-  IntentoReconocido VARCHAR(100), 
-  RespuestaAutomatica TINYINT DEFAULT 1,
-  CONSTRAINT fk_chatbot_paciente
-    FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente)
-);
 
 CREATE TABLE metricasDiarias (
   idMetrica INT AUTO_INCREMENT PRIMARY KEY,
@@ -386,4 +365,35 @@ CREATE TABLE metricasDiarias (
     CONSTRAINT fk_metricas_cobros
     FOREIGN KEY (idCobro) REFERENCES cobros(idCobro)
 );
+CREATE TABLE cat_faqs (
+  idCatFAQ INT PRIMARY KEY AUTO_INCREMENT,
+  NombreCategoria VARCHAR(100) NOT NULL UNIQUE,
+  IsActive TINYINT DEFAULT 1
+);
 
+CREATE TABLE faqs (
+  idFAQ INT PRIMARY KEY AUTO_INCREMENT,
+  idCatFAQ INT,
+  Pregunta VARCHAR(500) NOT NULL,
+  Respuesta TEXT NOT NULL,
+  Categoria VARCHAR(100),
+  FechaCreacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+  IsActive TINYINT DEFAULT 1,
+  CONSTRAINT fk_faqs_cat 
+  FOREIGN KEY (idCatFAQ) REFERENCES cat_faqs(idCatFAQ)
+);
+
+
+
+-- Chatbot
+CREATE TABLE chatbot (
+  idLog INT AUTO_INCREMENT PRIMARY KEY,
+  sessionId CHAR(36) NOT NULL,                                                                 -- UUID del visitante
+  preguntaUsuario TEXT NOT NULL,                                                               -- Lo que el visitante escribió
+  respuestaBot TEXT,                                                                           -- Respuesta generada por el bot
+  fechaMensaje DATETIME DEFAULT CURRENT_TIMESTAMP,                                             -- Fecha y hora del mensaje
+  origen ENUM('usuario', 'bot') NOT NULL,                                                      -- Quién envió el mensaje
+  categoriaConsulta VARCHAR(100),                                                              -- (Opcional) tipo de consulta detectada
+  INDEX (sessionId),                                                                           -- Para buscar rápido por sesión
+  INDEX (fechaMensaje)
+);
