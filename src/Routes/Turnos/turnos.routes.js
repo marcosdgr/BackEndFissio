@@ -8,7 +8,7 @@ import {
   obtenerSalasDisponibles,
   verificarDisponibilidadHorarios,
   finalizarTurno
-} from '../../Controllers/Turnos/turnos.controllers.js';
+} from '../../Controllers/Turnos/turnos.controller.js';
 import { ejecutarRecordatoriosManual } from '../../Services/recordatorios.service.js';
 import upload from '../../Middlewares/images.js';
 

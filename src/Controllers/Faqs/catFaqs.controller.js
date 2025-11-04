@@ -1,4 +1,4 @@
-import db from "../config/db.js";
+import db from "../../Config/db.js";
 
 // Crear categoría
 export const crearCategoriaFaq = async (req, res) => {

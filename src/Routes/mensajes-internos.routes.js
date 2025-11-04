@@ -1,5 +1,5 @@
 import express from "express";
-import { enviarNotificacion, marcarLeido, obtenerConversacion } from "../Controllers/mensajes-internos.controller.js";
+import { enviarNotificacion, marcarLeido, obtenerConversacion } from "../Controllers/Mensajeria/mensajes-internos.controller.js";
 import { autenticar } from "../Middlewares/mensajeriaInterna/autenticar.js";
 import { 
   validarEnviarMensaje, 

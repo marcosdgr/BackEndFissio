@@ -29,7 +29,7 @@ import db from "./Config/db.js";
 // importo las rutas principales
 import usuariosRoutes from "./Routes/Usuarios/usuarios.routes.js";
 import usuariosRoutesNew from "./Routes/usuarios.routes.js";
-import loginRoutes from "./Routes/login.routes.js";
+import loginRoutes from "./Routes/Login/login.routes.js";
 import pacientesRoutes from "./Routes/Pacientes/pacientes.routes.js";
 import turnosRoutes from "./Routes/Turnos/turnos.routes.js";
 

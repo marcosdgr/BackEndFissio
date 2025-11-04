@@ -6,7 +6,7 @@ import {
   traerHistoriaClinicaPorId,
   actualizarHistoriaClinica,
   borradoLogicoHistoriaClinica,
-} from "../controllers/historiaClinicaController.js";
+} from "../Controllers/Pacientes/historiaClinica.controller.js";
 import {
   validarCrearHistoriaClinica,
   validarActualizarHistoriaClinica,

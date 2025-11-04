@@ -3,7 +3,7 @@ import {
   crearMetricaDiaria,
   traerMetricasDiarias,
   traerMetricaPorFecha
-} from "../controllers/metricasDiariasController.js";
+} from "../Controllers/Metricas/metricasDiarias.controller.js";
 import {
   validarCrearMetrica,
   validarActualizarMetrica
