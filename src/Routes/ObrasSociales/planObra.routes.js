@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { actualizarPlanObra, borradoLogicoPlanObra, crearPlanObra, obtenerPlanesObra, obtenerPlanObraPorId } from "../../Controllers/ObrasSociales/planObra.controller.js";
+import {  borradoLogicoPlanObra, crearPlanObra, obtenerPlanesActivos, obtenerPlanesInactivos, obtenerPlanesObra, obtenerPlanObraPorId } from "../../Controllers/ObrasSociales/planObra.controller.js";
 
 const router = Router();
 // Importo controladores
@@ -8,8 +8,9 @@ const router = Router();
 // Rutas
 router.get ("/",obtenerPlanesObra);
 router.get ("/:idPacienteObra",obtenerPlanObraPorId);
-router.post ("/",crearPlanObra);
-router.put ("/:idPacienteObra",actualizarPlanObra);
+router.post ("/crearPlan",crearPlanObra);
 router.put ("/eliminar/:idPacienteObra",borradoLogicoPlanObra);
+router.get ("/activos",obtenerPlanesActivos);
+router.get ("/inactivos",obtenerPlanesInactivos);
 
 export default router;

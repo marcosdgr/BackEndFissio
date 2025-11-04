@@ -1,4 +1,4 @@
-import db from '../../config/db.js';
+import db from '../../Config/db.js';
 
 
 //obtener todas las obras sociales
@@ -111,7 +111,7 @@ export const crearObraSocial = async (req, res) => {
 
         // Función para crear la obra social
         function crearObraSocialEnDB() {
-            const nuevaObraSocial = 'INSERT INTO obraSociales (NombreObraSocial, TelefonoObra, EmailObra, PaginaWebObra, EstadoObra) VALUES (?, ?, ?, ?, ?)';
+            const nuevaObraSocial = 'INSERT INTO obraSociales (NombreObraSocial, TelefonoObra, EmailObra, PaginaWebObra, EstadoObra, IsActive) VALUES (?, ?, ?, ?, ?, 1)';
             db.query(nuevaObraSocial, [NombreObraSocial, TelefonoObra, EmailObra, PaginaWebObra, EstadoObra], (err, results) => {
                 if (err) {
                     console.error('Error al crear la obra social:', err);
@@ -124,6 +124,7 @@ export const crearObraSocial = async (req, res) => {
                     EmailObra, 
                     PaginaWebObra, 
                     EstadoObra,
+                    IsActive: 1,
                     message: 'Obra social creada exitosamente'
                 });
             });
@@ -228,7 +229,7 @@ export const actualizarObraSocial = async (req, res) => {
 export const borradoLogicoObraSocial = async (req, res) => {
     try {
         const { idObraSocial } = req.params;
-        const actualizarObraSocial = 'UPDATE obraSociales SET isActive = 0 WHERE idObraSocial = ?';
+        const actualizarObraSocial = 'UPDATE obraSociales SET IsActive = 0 WHERE idObraSocial = ?';
         db.query(actualizarObraSocial, [idObraSocial], (error, results) => {
             if (error) {
                 console.error('Error al realizar el borrado lógico de la obra social:', error);
@@ -248,12 +249,14 @@ export const borradoLogicoObraSocial = async (req, res) => {
 //obtener las obras sociales activas
 export const obtenerObraSocialActiva = async (req, res) => {
     try {
-        const obtenerObrasSocialesActivas = 'SELECT * FROM obraSociales WHERE isActive = 1';
+        const obtenerObrasSocialesActivas = 'SELECT * FROM obraSociales WHERE IsActive = 1';
         db.query(obtenerObrasSocialesActivas, (error, results) => {
             if (error) {
                 console.error('Error al obtener obras sociales activas:', error);
                 return res.status(500).json({ error: 'Error al obtener obras sociales activas' });
             }
+            console.log('DEBUG - Obras activas encontradas:', results.length);
+            console.log('DEBUG - Primera obra (si existe):', results[0]);
             res.status(200).json(results);
         });
     } catch (error) {
@@ -264,12 +267,13 @@ export const obtenerObraSocialActiva = async (req, res) => {
 //obtener las obras sociales inactivas
 export const obtenerObraSocialInactiva = async (req, res) => {
     try {
-        const obtenerObrasSocialesInactivas = 'SELECT * FROM obraSociales WHERE isActive = 0';
+        const obtenerObrasSocialesInactivas = 'SELECT * FROM obraSociales WHERE IsActive = 0';
         db.query(obtenerObrasSocialesInactivas, (error, results) => {
             if (error) {
                 console.error('Error al obtener obras sociales inactivas:', error);
                 return res.status(500).json({ error: 'Error al obtener obras sociales inactivas' });
             }
+
             res.status(200).json(results);
         });
     } catch (error) {

@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import db from './config/db.js';
+import db from './Config/db.js';
 
 import obrasSocialesRoutes from './Routes/ObrasSociales/obrassociales.routes.js';
 import planObraRoutes from './Routes/ObrasSociales/planObra.routes.js';
