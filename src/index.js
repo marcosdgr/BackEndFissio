@@ -1,4 +1,5 @@
 import express from "express";
+
 import dotenv from "dotenv";
 import cors from "cors";
 import db from "./Config/db.js";
@@ -34,6 +35,8 @@ import { iniciarCronRecordatorios } from "./Services/recordatorios.service.js";
 
 import obrasSocialesRoutes from "./Routes/ObrasSociales/obrassociales.routes.js";
 import planObraRoutes from "./Routes/ObrasSociales/planObra.routes.js";
+import chatWebRoutes from "./BOT/routes/chatWeb.routes.js";
+
 
 // Inicializo dotenv para leer las variables de entorno
 
@@ -99,8 +102,12 @@ app.use("/api/empleados/v1/categorias", categoriaEmpleadoRoutes);
 app.use("/api/empleados/v1", empleadoRoutes);
 
 // Rutas
+
 app.use("/api/obras-sociales/v1", obrasSocialesRoutes);
 app.use("/api/plan-obra/v1", planObraRoutes);
+
+app.use("/api/chat-web/v1", chatWebRoutes);
+
 
 // Iniciar el servidor
 app.listen(PORT, () => {
