@@ -46,13 +46,30 @@ export const obtenerPagoPorId = async (req, res) => {
 export const crearPago = async (req, res) => {
     try {
         const {
-            FechaPago, TipoPago, Descripcion, MedioPago, MontoPago, EstadoPago
-        } = req.body
-        const nuevoPago = "INSERT INTO pagos (FechaPago, MontoPago, Descripcion, EstadoPago,idMedioPago, idTipoPago) VALUES (?, ?, ?, ?, ?, ?)";
-        db.query(nuevoPago, [FechaPago, TipoPago, Descripcion, MedioPago, MontoPago, EstadoPago], (error, results) => {
+            FechaPago, idTipoPago, Descripcion, idMedioPago, MontoPago, EstadoPago
+        } = req.body;
+        
+        // Validar campos obligatorios
+        if (!FechaPago || !idTipoPago || !idMedioPago || MontoPago === undefined || !EstadoPago) {
+            return res.status(400).json({ error: "Todos los campos obligatorios deben ser completados" });
+        }
+        
+        // Validar que el monto sea positivo
+        if (MontoPago < 0) {
+            return res.status(400).json({ error: "El monto debe ser mayor o igual a 0" });
+        }
+        
+        const nuevoPago = "INSERT INTO pagos (FechaPago, idTipoPago, Descripcion, idMedioPago, MontoPago, EstadoPago) VALUES (?, ?, ?, ?, ?, ?)";
+        db.query(nuevoPago, [FechaPago, idTipoPago, Descripcion, idMedioPago, MontoPago, EstadoPago], (error, results) => {
             if (error) {
                 console.error("Error al crear un nuevo pago: ", error);
-                res.status(500).json({ error: "Error del servidor al crear un nuevo pago" });
+                
+                // Manejar errores de FK
+                if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+                    return res.status(400).json({ error: "El tipo de pago o medio de pago no existe" });
+                }
+                
+                return res.status(500).json({ error: "Error del servidor al crear un nuevo pago" });
             }
             res.status(201).json({ message: "Nuevo pago creado exitosamente", idInsertado: results.insertId });
         });
@@ -66,12 +83,29 @@ export const crearPago = async (req, res) => {
 export const actualizarPago = async (req, res) => {
     try {
         const { idPago } = req.params;
-        const { FechaPago, MontoPago, Descripcion, EstadoPago,idMedioPago, idTipoPago } = req.body;
-        const actualizarUnPago = "UPDATE pagos SET FechaPago = ?, MontoPago = ?, Descripcion = ?, EstadoPago = ?, idMedioPago = ?, idTipoPago = ? WHERE idPago = ?";
-        db.query(actualizarUnPago, [FechaPago, TipoPago, Descripcion, MedioPago, MontoPago, EstadoPago, idPago], (error, results) => {
+        const { FechaPago, MontoPago, Descripcion, EstadoPago, idMedioPago, idTipoPago } = req.body;
+        
+        // Validar campos obligatorios
+        if (!FechaPago || !MontoPago || !EstadoPago || !idMedioPago || !idTipoPago) {
+            return res.status(400).json({ error: "Todos los campos obligatorios deben ser completados" });
+        }
+        
+        // Validar que el monto sea positivo
+        if (MontoPago < 0) {
+            return res.status(400).json({ error: "El monto debe ser mayor o igual a 0" });
+        }
+        
+        const actualizarUnPago = "UPDATE pagos SET FechaPago = ?, idTipoPago = ?, Descripcion = ?, idMedioPago = ?, MontoPago = ?, EstadoPago = ? WHERE idPago = ?";
+        db.query(actualizarUnPago, [FechaPago, idTipoPago, Descripcion, idMedioPago, MontoPago, EstadoPago, idPago], (error, results) => {
             if (error) {
                 console.error("Error al actualizar el pago: ", error);
-                res.status(500).json({ error: "Error del servidor al actualizar el pago" });
+                
+                // Manejar errores de FK
+                if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+                    return res.status(400).json({ error: "El tipo de pago o medio de pago no existe" });
+                }
+                
+                return res.status(500).json({ error: "Error del servidor al actualizar el pago" });
             }
             if (results.affectedRows === 0) {
                 return res.status(404).json({ message: "Pago no encontrado" });

@@ -16,6 +16,8 @@ router.post("/", crearPago);
 
 //Metodo put
 router.put("/:idPago", actualizarPago);
-router.put("/borradoLogico/:idPago", eliminarPago);
+
+//Metodo delete
+router.delete("/:idPago", eliminarPago);
 
 export default router;

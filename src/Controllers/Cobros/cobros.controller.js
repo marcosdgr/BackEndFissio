@@ -3,7 +3,7 @@ import db from '../../Config/db.js';
 //Obtener y listar todos los cobros con datos enriquecidos utilizando join para tener una mejor vista de los datos 
 export const obtenerCobros = async (req, res) => {
     try {
-        const obtenerTodosLosCobros = "SELECT  c.idCobro, c.FechaCobro, c.TipoCobro, c.MontoCobro, c.EstadoCobro, c.Descripcion, mp.NombreMedio AS MedioPago, t.idTurno, CONCAT(p.NombrePaciente, ' ', p.ApellidoPaciente) AS Paciente, CONCAT(e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS Profesional FROM cobros c JOIN catMediosPago mp ON c.idMedioPago = mp.idMedioPago JOIN turnos t ON c.idTurno = t.idTurno JOIN pacientes p ON t.idPaciente = p.idPaciente JOIN empleados e ON t.idEmpleado = e.idEmpleado ORDER BY c.FechaCobro DESC";
+        const obtenerTodosLosCobros = "SELECT c.idCobro, c.FechaCobro, c.TipoCobro, c.MontoCobro, c.EstadoCobro, c.Descripcion, mp.NombreMedio AS MedioPago, t.idTurno, CONCAT(p.NombrePaciente, ' ', p.ApellidoPaciente) AS Paciente, CONCAT(e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS Profesional FROM cobros c JOIN catMediosPago mp ON c.idMedioPago = mp.idMedioPago JOIN turnos t ON c.idTurno = t.idTurno JOIN pacientes p ON t.idPaciente = p.idPaciente LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado ORDER BY c.FechaCobro DESC";
         db.query(obtenerTodosLosCobros, (error, results) => {
             if (error) {
                 console.error("Error al obtener los cobros: ", error);
@@ -20,7 +20,7 @@ export const obtenerCobros = async (req, res) => {
 export const obtenerCobroPorId = async (req, res) => {
     try {
         const { idCobro } = req.params;
-        const obtenerUnCobroId = "SELECT  c.idCobro, c.FechaCobro, c.TipoCobro, c.MontoCobro, c.EstadoCobro, c.Descripcion, mp.NombreMedio AS MedioPago, t.idTurno, CONCAT(p.NombrePaciente, ' ', p.ApellidoPaciente) AS Paciente, CONCAT(e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS Profesional FROM cobros c JOIN catMediosPago mp ON c.idMedioPago = mp.idMedioPago JOIN turnos t ON c.idTurno = t.idTurno JOIN pacientes p ON t.idPaciente = p.idPaciente JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE c.idCobro = ?";
+        const obtenerUnCobroId = "SELECT c.idCobro, c.FechaCobro, c.TipoCobro, c.MontoCobro, c.EstadoCobro, c.Descripcion, mp.NombreMedio AS MedioPago, t.idTurno, CONCAT(p.NombrePaciente, ' ', p.ApellidoPaciente) AS Paciente, CONCAT(e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS Profesional FROM cobros c JOIN catMediosPago mp ON c.idMedioPago = mp.idMedioPago JOIN turnos t ON c.idTurno = t.idTurno JOIN pacientes p ON t.idPaciente = p.idPaciente LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE c.idCobro = ?";
         db.query(obtenerUnCobroId, [idCobro], (error, results) => {
             if (error) {
                 console.error("Error al obtener el cobro por ID: ", error);
@@ -40,7 +40,7 @@ export const obtenerCobroPorId = async (req, res) => {
 export const obtenerCobrosPorEstado = async (req, res) => {
     try {
         const { estado } = req.params; // Cambiado de EstadoCobro a estado (debe coincidir con la ruta)
-        const obtenerCobrosEstado = "SELECT  c.idCobro, c.FechaCobro, c.TipoCobro, c.MontoCobro, c.EstadoCobro, c.Descripcion, mp.NombreMedio AS MedioPago, t.idTurno, CONCAT(p.NombrePaciente, ' ', p.ApellidoPaciente) AS Paciente, CONCAT(e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS Profesional FROM cobros c JOIN catMediosPago mp ON c.idMedioPago = mp.idMedioPago JOIN turnos t ON c.idTurno = t.idTurno JOIN pacientes p ON t.idPaciente = p.idPaciente JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE c.EstadoCobro = ? ORDER BY c.FechaCobro DESC";
+        const obtenerCobrosEstado = "SELECT c.idCobro, c.FechaCobro, c.TipoCobro, c.MontoCobro, c.EstadoCobro, c.Descripcion, mp.NombreMedio AS MedioPago, t.idTurno, CONCAT(p.NombrePaciente, ' ', p.ApellidoPaciente) AS Paciente, CONCAT(e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS Profesional FROM cobros c JOIN catMediosPago mp ON c.idMedioPago = mp.idMedioPago JOIN turnos t ON c.idTurno = t.idTurno JOIN pacientes p ON t.idPaciente = p.idPaciente LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE c.EstadoCobro = ? ORDER BY c.FechaCobro DESC";
         db.query(obtenerCobrosEstado, [estado], (error, results) => {
             if (error) {    
                 console.error("Error al obtener los cobros por estado: ", error);
@@ -57,7 +57,7 @@ export const obtenerCobrosPorEstado = async (req, res) => {
 export const obtenerCobrosPorTurno = async (req, res) => {
     try {
         const { idTurno } = req.params;
-        const obtenerCobrosTurno = "SELECT  c.idCobro, c.FechaCobro, c.TipoCobro, c.MontoCobro, c.EstadoCobro, c.Descripcion, mp.NombreMedio AS MedioPago, t.idTurno, CONCAT(p.NombrePaciente, ' ', p.ApellidoPaciente) AS Paciente, CONCAT(e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS Profesional FROM cobros c JOIN catMediosPago mp ON c.idMedioPago = mp.idMedioPago JOIN turnos t ON c.idTurno = t.idTurno JOIN pacientes p ON t.idPaciente = p.idPaciente JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE c.idTurno = ? ORDER BY c.FechaCobro DESC";
+        const obtenerCobrosTurno = "SELECT c.idCobro, c.FechaCobro, c.TipoCobro, c.MontoCobro, c.EstadoCobro, c.Descripcion, mp.NombreMedio AS MedioPago, t.idTurno, CONCAT(p.NombrePaciente, ' ', p.ApellidoPaciente) AS Paciente, CONCAT(e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS Profesional FROM cobros c JOIN catMediosPago mp ON c.idMedioPago = mp.idMedioPago JOIN turnos t ON c.idTurno = t.idTurno JOIN pacientes p ON t.idPaciente = p.idPaciente LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE c.idTurno = ? ORDER BY c.FechaCobro DESC";
         db.query(obtenerCobrosTurno, [idTurno], (error, results) => {
             if (error) {
                 console.error("Error al obtener los cobros por turno: ", error);
@@ -74,7 +74,7 @@ export const obtenerCobrosPorTurno = async (req, res) => {
 export const obtenerCobrosPorFecha = async (req, res) => {
     try {
         const { fecha } = req.params; // Cambiado de FechaCobro a fecha (debe coincidir con la ruta)
-        const obtenerCobrosFecha = "SELECT  c.idCobro, c.FechaCobro, c.TipoCobro, c.MontoCobro, c.EstadoCobro, c.Descripcion, mp.NombreMedio AS MedioPago, t.idTurno, CONCAT(p.NombrePaciente, ' ', p.ApellidoPaciente) AS Paciente, CONCAT(e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS Profesional FROM cobros c JOIN catMediosPago mp ON c.idMedioPago = mp.idMedioPago JOIN turnos t ON c.idTurno = t.idTurno JOIN pacientes p ON t.idPaciente = p.idPaciente JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE DATE(c.FechaCobro) = ? ORDER BY c.FechaCobro DESC";
+        const obtenerCobrosFecha = "SELECT c.idCobro, c.FechaCobro, c.TipoCobro, c.MontoCobro, c.EstadoCobro, c.Descripcion, mp.NombreMedio AS MedioPago, t.idTurno, CONCAT(p.NombrePaciente, ' ', p.ApellidoPaciente) AS Paciente, CONCAT(e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS Profesional FROM cobros c JOIN catMediosPago mp ON c.idMedioPago = mp.idMedioPago JOIN turnos t ON c.idTurno = t.idTurno JOIN pacientes p ON t.idPaciente = p.idPaciente LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE DATE(c.FechaCobro) = ? ORDER BY c.FechaCobro DESC";
         db.query(obtenerCobrosFecha, [fecha], (error, results) => {
             if (error) {
                 console.error("Error al obtener los cobros por fecha: ", error);
@@ -90,17 +90,28 @@ export const obtenerCobrosPorFecha = async (req, res) => {
 // Crear un nuevo cobro
 export const crearCobro = async (req, res) => {
     try {
-        const { FechaCobro, TipoCobro, MontoCobro, EstadoCobro, Descripcion, idMedioPago, idTurno } = req.body; // idTurno ahora viene del body
+        const { FechaCobro, idTurno, TipoCobro, idMedioPago, MontoCobro, EstadoCobro, Descripcion } = req.body;
         
         // Validar campos obligatorios
-        if (!FechaCobro || !TipoCobro || MontoCobro === undefined || !EstadoCobro || !idMedioPago || !idTurno) {
+        if (!FechaCobro || !idTurno || !TipoCobro || !idMedioPago || MontoCobro === undefined || !EstadoCobro) {
             return res.status(400).json({ error: "Faltan campos obligatorios" });
         }
+        
+        // Validar que el monto sea positivo
+        if (MontoCobro < 0) {
+            return res.status(400).json({ error: "El monto debe ser mayor o igual a 0" });
+        }
 
-        const nuevoCobro = "INSERT INTO cobros (FechaCobro, TipoCobro, MontoCobro, EstadoCobro, Descripcion, idMedioPago, idTurno) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        db.query(nuevoCobro, [FechaCobro, TipoCobro, MontoCobro, EstadoCobro, Descripcion, idMedioPago, idTurno], (error, results) => {
+        const nuevoCobro = "INSERT INTO cobros (FechaCobro, idTurno, TipoCobro, idMedioPago, MontoCobro, EstadoCobro, Descripcion) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        db.query(nuevoCobro, [FechaCobro, idTurno, TipoCobro, idMedioPago, MontoCobro, EstadoCobro, Descripcion], (error, results) => {
             if (error) {
                 console.error("Error al crear un nuevo cobro: ", error);
+                
+                // Manejar errores de FK
+                if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+                    return res.status(400).json({ error: "El turno o medio de pago no existe" });
+                }
+                
                 return res.status(500).json({ error: "Error del servidor al crear un nuevo cobro" });
             }
             res.status(201).json({ message: "Cobro creado exitosamente", idCobro: results.insertId });
@@ -113,11 +124,11 @@ export const crearCobro = async (req, res) => {
 export const actualizarCobro = async (req, res) => {
     try {
         const { idCobro } = req.params;
-        const { FechaCobro, TipoCobro, MontoCobro, EstadoCobro, Descripcion, idMedioPago, idTurno } = req.body;
+        const { FechaCobro, idTurno, TipoCobro, idMedioPago, MontoCobro, EstadoCobro, Descripcion } = req.body;
 
         // Validar que se envíen todos los campos obligatorios
-        if (!FechaCobro || !TipoCobro || MontoCobro === undefined || !EstadoCobro || !idMedioPago || !idTurno) {
-            return res.status(400).json({ error: "Todos los campos son obligatorios" });
+        if (!FechaCobro || !idTurno || !TipoCobro || !idMedioPago || MontoCobro === undefined || !EstadoCobro) {
+            return res.status(400).json({ error: "Todos los campos obligatorios deben ser completados" });
         }
 
         // Validar que los valores sean correctos
@@ -125,11 +136,17 @@ export const actualizarCobro = async (req, res) => {
             return res.status(400).json({ error: "El MontoCobro debe ser mayor o igual a 0" });
         }
 
-        const actualizarCobro = "UPDATE cobros SET FechaCobro = ?, TipoCobro = ?, MontoCobro = ?, EstadoCobro = ?, Descripcion = ?, idMedioPago = ?, idTurno = ? WHERE idCobro = ?";
+        const actualizarCobroQuery = "UPDATE cobros SET FechaCobro = ?, idTurno = ?, TipoCobro = ?, idMedioPago = ?, MontoCobro = ?, EstadoCobro = ?, Descripcion = ? WHERE idCobro = ?";
         
-        db.query(actualizarCobro, [FechaCobro, TipoCobro, MontoCobro, EstadoCobro, Descripcion, idMedioPago, idTurno, idCobro], (error, results) => {
+        db.query(actualizarCobroQuery, [FechaCobro, idTurno, TipoCobro, idMedioPago, MontoCobro, EstadoCobro, Descripcion, idCobro], (error, results) => {
             if (error) {
                 console.error("Error al actualizar el cobro: ", error);
+                
+                // Manejar errores de FK
+                if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+                    return res.status(400).json({ error: "El turno o medio de pago no existe" });
+                }
+                
                 return res.status(500).json({ error: "Error del servidor al actualizar el cobro" });
             }
             if (results.affectedRows === 0) {
@@ -138,9 +155,11 @@ export const actualizarCobro = async (req, res) => {
             res.status(200).json({ message: "Cobro actualizado exitosamente" });
         });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: "Error del servidor" });
     }
 };
+
 // Borrado físico de un cobro
 export const eliminarCobro = async (req, res) => {
     try {

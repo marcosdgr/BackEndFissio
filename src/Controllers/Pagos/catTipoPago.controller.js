@@ -95,14 +95,14 @@ export const eliminarTipoPago = async (req, res) => {
         db.query (borrarTipo, [idTipoPago],(error, results)=>{
             if (error){
                 console.error ("Error al eliminar tipo de pago", error);
-                return res.status(500)({error:"Error del servidor al eliminar tipo de pago"});
+                return res.status(500).json({error:"Error del servidor al eliminar tipo de pago"});
             }
-            if (results === 0) {
-                return res.status (404).json({message: "Tipo de pago no encontrado"});
+            if (results.affectedRows === 0) {
+                return res.status(404).json({message: "Tipo de pago no encontrado"});
             }
-            res.status(200).json({messaje: "Tipo de pago eliminado correctamente"})
+            res.status(200).json({message: "Tipo de pago eliminado correctamente"})
         });
     } catch (error) {
-        res.status(500).json({eroor : "Error del servidor"});
+        res.status(500).json({error: "Error del servidor"});
     }
 }
