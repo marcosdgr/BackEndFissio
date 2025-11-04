@@ -13,14 +13,5 @@ const db = mysql.createConnection({
   database: process.env.DB_NAME,
 });
 
-// Conectar inmediatamente
-db.connect((err) => {
-  if (err) {
-    console.error("Error al conectar a la base de datos:", err.message);
-    process.exit(1);
-  }
-  console.log("Conexión exitosa a la base de datos MySQL");
-});
-
 // Exportamos la conexión
 export default db;

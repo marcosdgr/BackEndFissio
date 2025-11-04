@@ -149,7 +149,7 @@ const iniciarCronRecordatorios = () => {
     timezone: "America/Argentina/Buenos_Aires" // Ajusta según tu zona horaria
   });
 
-  console.log('⚙️ Cron job de recordatorios configurado - Se ejecutará todos los días a las 10:00 AM');
+  // console.log('⚙️ Cron job de recordatorios configurado - Se ejecutará todos los días a las 10:00 AM');
 };
 
 // También permitir ejecución manual para testing
