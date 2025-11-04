@@ -1,4 +1,4 @@
-import db from "../Config/db.js";
+import db from "../../Config/db.js";
 
 const mensajesInternos = {
   crearNotificacion(idRemitente, mensaje, destinatarios, callback) {
