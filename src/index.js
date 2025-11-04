@@ -32,6 +32,9 @@ import mensajesInternosRoutes from "./Routes/mensajes-internos.routes.js";
 // importar servicio de recordatorios
 import { iniciarCronRecordatorios } from "./Services/recordatorios.service.js";
 
+import obrasSocialesRoutes from "./Routes/ObrasSociales/obrassociales.routes.js";
+import planObraRoutes from "./Routes/ObrasSociales/planObra.routes.js";
+
 // Inicializo dotenv para leer las variables de entorno
 
 dotenv.config();
@@ -44,7 +47,6 @@ db.connect((err) => {
   }
   console.log("Conexión exitosa a la base de datos MySQL");
 });
-
 
 // inicializo express
 const app = express();
@@ -95,6 +97,10 @@ app.use("/api/turnos-servicios/v1", turnosServiciosRoutes);
 // rutas de empleados
 app.use("/api/empleados/v1/categorias", categoriaEmpleadoRoutes);
 app.use("/api/empleados/v1", empleadoRoutes);
+
+// Rutas
+app.use("/api/obras-sociales/v1", obrasSocialesRoutes);
+app.use("/api/plan-obra/v1", planObraRoutes);
 
 // Iniciar el servidor
 app.listen(PORT, () => {
