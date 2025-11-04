@@ -37,6 +37,10 @@ import turnosRoutes from "./Routes/Turnos/turnos.routes.js";
 import serviciosRoutes from "./Routes/Servicios/servicios.routes.js";
 import turnosServiciosRoutes from "./Routes/Servicios/turnos_servicios.routes.js";
 
+//Importo rutas de tratamientos
+import tratamientosRoutes from "./Routes/Tratamientos/tratamientos.routes.js";
+import turnosTratamientosRoutes from "./Routes/Tratamientos/turno_tratamiento.routes.js";
+
 // importo rutas de empleados
 import empleadoRoutes from "./Routes/Empleados/empleados.routes.js";
 import categoriaEmpleadoRoutes from "./Routes/Empleados/categoria_empleados.routes.js";
@@ -119,6 +123,10 @@ app.use("/api/mensajes-internos/v1", mensajesInternosRoutes);
 // rutas de servicios
 app.use("/api/servicios/v1", serviciosRoutes);
 app.use("/api/turnos-servicios/v1", turnosServiciosRoutes);
+
+// rutas de tratamientos
+app.use("/api/tratamientos/v1", tratamientosRoutes);
+app.use("/api/turnos-tratamientos/v1", turnosTratamientosRoutes);
 
 // rutas de empleados
 app.use("/api/empleados/v1/categorias", categoriaEmpleadoRoutes);
