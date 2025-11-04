@@ -8,9 +8,13 @@ import usuariosRoutes from "./Routes/Usuarios/usuarios.routes.js";
 import loginRoutes from "./Routes/Login/login.routes.js";
 import pacientesRoutes from "./Routes/Pacientes/pacientes.routes.js";
 import turnosRoutes from "./Routes/Turnos/turnos.routes.js";
+// importo rutas de servicios
+import serviciosRoutes from "./Routes/Servicios/servicios.routes.js";
+import turnosServiciosRoutes from "./Routes/Servicios/turnos_servicios.routes.js";
 
 // importar servicio de recordatorios
 import { iniciarCronRecordatorios } from "./Services/recordatorios.service.js";
+
 
 // Inicializo dotenv para leer las variables de entorno
 dotenv.config();
@@ -24,23 +28,20 @@ db.connect((err) => {
   console.log("✅ Conexión a MySQL exitosa ");
 });
 
-
 // Inicializo express
 const app = express();
 
 // Aqui se va a configurar CORS
 
-
-
 // Confiruacion de puerto
 
 const PORT = process.env.PORT || 3000;
-
 
 // Middlewares
 app.use(express.json());
 
 // Rutas
+
 // rutas register
 app.use("/api/usuarios/v1", usuariosRoutes);
 
@@ -54,10 +55,13 @@ app.use("/api/pacientes/v1", pacientesRoutes);
 
 app.use("/api/turnos/v1", turnosRoutes);
 
+app.use("/api/servicios/v1", serviciosRoutes);
+app.use("/api/turnos-servicios/v1", turnosServiciosRoutes);
+
 // Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT} ✅`);
-  
+
   // Iniciar sistema de recordatorios automáticos
   iniciarCronRecordatorios();
 });
