@@ -5,17 +5,19 @@ import cors from "cors";
 // importo la base de datos
 import db from "./Config/db.js";
 
-// importo las rutas
+// importo las rutas principales
 import usuariosRoutes from "./Routes/Usuarios/usuarios.routes.js";
 import loginRoutes from "./Routes/Login/login.routes.js";
 import pacientesRoutes from "./Routes/Pacientes/pacientes.routes.js";
 import turnosRoutes from "./Routes/Turnos/turnos.routes.js";
+
 // importo rutas de servicios
 import serviciosRoutes from "./Routes/Servicios/servicios.routes.js";
 import turnosServiciosRoutes from "./Routes/Servicios/turnos_servicios.routes.js";
 
-// importar servicio de recordatorios
-import { iniciarCronRecordatorios } from "./Services/recordatorios.service.js";
+// importo rutas de empleados
+import empleadoRoutes from "./Routes/Empleados/empleados.routes.js";
+import categoriaEmpleadoRoutes from "./Routes/Empleados/categoria_empleados.routes.js";
 
 // import de rutas adicionales
 import comentarioRoutes from "./Routes/comentarioRoutes.js";
@@ -25,7 +27,10 @@ import metricaDiariaRoutes from "./Routes/metricasDiariasRoutes.js";
 import catFaqsRoutes from "./Routes/catFaqsRoutes.js";
 import faqsRoutes from "./Routes/faqsRoutes.js";
 
-// inicio dotenv para llamar las variables de entorno desde el archivo .env
+// importar servicio de recordatorios
+import { iniciarCronRecordatorios } from "./Services/recordatorios.service.js";
+
+// Inicializo dotenv para leer las variables de entorno
 
 dotenv.config();
 
@@ -70,21 +75,19 @@ app.use("/api/cat-faqs/v1", catFaqsRoutes);
 // FAQs
 app.use("/api/faqs/v1", faqsRoutes);
 
-// rutas register
+// rutas principales
 app.use("/api/usuarios/v1", usuariosRoutes);
-
-// rutas login
 app.use("/api/login/v1", loginRoutes);
-
-// rutas pacientes
 app.use("/api/pacientes/v1", pacientesRoutes);
-
-// rutas para turnos
-
 app.use("/api/turnos/v1", turnosRoutes);
 
+// rutas de servicios
 app.use("/api/servicios/v1", serviciosRoutes);
 app.use("/api/turnos-servicios/v1", turnosServiciosRoutes);
+
+// rutas de empleados
+app.use("/api/empleados/v1/categorias", categoriaEmpleadoRoutes);
+app.use("/api/empleados/v1", empleadoRoutes);
 
 // Iniciar el servidor
 app.listen(PORT, () => {
