@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
 
 // Función para enviar email de confirmación de turno
 export const enviarEmailConfirmacion = async (emailPaciente, datosTurno) => {
-  const { idTurno, nombrePaciente, apellidoPaciente, fecha, horario, mensaje } = datosTurno;
+  const { idTurno, nombrePaciente, apellidoPaciente, FechaRequeridaTurno, HorarioRequeridoTurno, mensaje } = datosTurno;
   
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -29,8 +29,8 @@ export const enviarEmailConfirmacion = async (emailPaciente, datosTurno) => {
         <h4 style="color: #34495e;">📋 Detalles de tu solicitud:</h4>
         <ul style="list-style-type: none; padding: 0;">
           <li><strong>🔢 Número de solicitud:</strong> #${idTurno}</li>
-          <li><strong>📅 Fecha solicitada:</strong> ${fecha}</li>
-          <li><strong>⏰ Horario solicitado:</strong> ${horario}</li>
+          <li><strong>📅 Fecha solicitada:</strong> ${FechaRequeridaTurno}</li>
+          <li><strong>⏰ Horario solicitado:</strong> ${HorarioRequeridoTurno}</li>
           <li><strong>📌 Estado:</strong> Registrada</li>
         </ul>
       </div>
@@ -72,9 +72,8 @@ export const enviarRecordatorio24h = async (emailPaciente, datosTurno) => {
     idTurno, 
     nombrePaciente, 
     apellidoPaciente, 
-    fecha, 
-    horarioInicio, 
-    horarioFin,
+    FechaRequeridaTurno, 
+    HorarioRequeridoTurno,
     kinesiologoNombre,
     kinesiologoApellido,
     sala 
@@ -93,9 +92,9 @@ export const enviarRecordatorio24h = async (emailPaciente, datosTurno) => {
         <h4 style="color: #34495e;">📋 Detalles de tu turno solicitado:</h4>
         <ul style="list-style-type: none; padding: 0;">
           <li><strong>🔢 Turno #:</strong> ${idTurno}</li>
-          <li><strong>📅 Fecha:</strong> ${fecha}</li>
-          <li><strong>⏰ Horario solicitado:</strong> ${horarioInicio || 'Por confirmar'}</li>
-          <li><strong>� Estado:</strong> Registrado - Preséntate mañana</li>
+          <li><strong>📅 Fecha:</strong> ${FechaRequeridaTurno}</li>
+          <li><strong>⏰ Horario solicitado:</strong> ${HorarioRequeridoTurno}</li>
+          <li><strong>📌 Estado:</strong> Registrado - Preséntate mañana</li>
         </ul>
       </div>
       
@@ -126,7 +125,7 @@ export const enviarRecordatorio24h = async (emailPaciente, datosTurno) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: emailPaciente,
-    subject: `🔔 Recordatorio: Turno mañana ${horarioInicio} - #${idTurno} | Fissio`,
+    subject: `🔔 Recordatorio: Turno mañana ${HorarioRequeridoTurno} - #${idTurno} | Fissio`,
     html: htmlContent
   };
 
@@ -146,9 +145,9 @@ export const enviarEmailConfirmacionFinal = async (emailPaciente, datosTurno) =>
     idTurno, 
     nombrePaciente, 
     apellidoPaciente, 
-    fecha, 
-    horarioInicio, 
-    horarioFin,
+    FechaRequeridaTurno, 
+    HorarioInicioTurno, 
+    HorarioFinTurno,
     kinesiologoNombre,
     kinesiologoApellido,
     sala 
@@ -167,8 +166,8 @@ export const enviarEmailConfirmacionFinal = async (emailPaciente, datosTurno) =>
         <h4 style="color: #34495e;">📋 Detalles de tu turno confirmado:</h4>
         <ul style="list-style-type: none; padding: 0;">
           <li><strong>🔢 Turno #:</strong> ${idTurno}</li>
-          <li><strong>📅 Fecha:</strong> ${fecha}</li>
-          <li><strong>⏰ Horario:</strong> ${horarioInicio} - ${horarioFin}</li>
+          <li><strong>📅 Fecha:</strong> ${FechaRequeridaTurno}</li>
+          <li><strong>⏰ Horario:</strong> ${HorarioInicioTurno} - ${HorarioFinTurno}</li>
           <li><strong>👨‍⚕️ Kinesiólogo:</strong> ${kinesiologoNombre} ${kinesiologoApellido}</li>
           <li><strong>🏥 Sala:</strong> ${sala}</li>
           <li><strong>✅ Estado:</strong> Confirmado</li>
@@ -195,7 +194,7 @@ export const enviarEmailConfirmacionFinal = async (emailPaciente, datosTurno) =>
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: emailPaciente,
-    subject: `✅ Turno Confirmado #${idTurno} - ${fecha} ${horarioInicio} | Fissio`,
+    subject: `✅ Turno Confirmado #${idTurno} - ${FechaRequeridaTurno} ${HorarioInicioTurno} | Fissio`,
     html: htmlContent
   };
 

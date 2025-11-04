@@ -10,6 +10,7 @@ const obtenerTurnosParaRecordatorio = () => {
       SELECT 
         t.idTurno,
         t.FechaRequeridaTurno,
+        t.HorarioRequeridoTurno,
         t.HorarioInicioTurno,
         t.HorarioFinTurno,
         p.NombrePaciente,
@@ -87,10 +88,9 @@ const procesarRecordatorios24h = async () => {
           idTurno: turno.idTurno,
           nombrePaciente: turno.NombrePaciente,
           apellidoPaciente: turno.ApellidoPaciente,
-          fecha: turno.FechaRequeridaTurno,
-          horarioInicio: turno.HorarioRequeridoTurno, // Usar horario solicitado, no asignado
-          horarioFin: null,
-          kinesiologoNombre: null, // No asignado aún
+          FechaRequeridaTurno: turno.FechaRequeridaTurno,
+          HorarioRequeridoTurno: turno.HorarioRequeridoTurno,
+          kinesiologoNombre: null, // No asignado aún en estado 'Solicitado'
           kinesiologoApellido: null,
           sala: null
         };

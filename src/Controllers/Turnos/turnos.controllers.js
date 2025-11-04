@@ -164,8 +164,8 @@ export const solicitarTurno = async (req, res) => {
                 idTurno: turnoId,
                 nombrePaciente: results[0].NombrePaciente,
                 apellidoPaciente: results[0].ApellidoPaciente,
-                fecha: FechaRequeridaTurno,
-                horario: HorarioRequeridoTurno,
+                FechaRequeridaTurno: FechaRequeridaTurno,
+                HorarioRequeridoTurno: HorarioRequeridoTurno,
                 mensaje: "Su solicitud será procesada por nuestro personal. Recibirá confirmación pronto."
               };
 
