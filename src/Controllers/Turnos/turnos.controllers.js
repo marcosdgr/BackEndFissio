@@ -189,8 +189,8 @@ export const solicitarTurno = async (req, res) => {
           });
         }
       );
-      }); // Cerrar callback de verificarDisponibilidadHorario
-    }); // Cerrar callback de verificarPaciente
+      }); 
+    }); 
   } catch (error) {
     console.error("Error en solicitarTurno:", error);
     return res.status(500).json({ message: "Error interno del servidor" });
@@ -266,7 +266,7 @@ export const asignarRecursosDelDia = (req, res) => {
         });
       }
 
-      // Verificar disponibilidad de sala (solo turnos ya procesados con horarios asignados)
+      // Verificar disponibilidad de sala 
       const verificarDisponibilidadSala = `
         SELECT idTurno 
         FROM turnos 
@@ -306,7 +306,7 @@ export const asignarRecursosDelDia = (req, res) => {
             });
           }
 
-          // Verificar disponibilidad del kinesiólogo (solo turnos ya procesados con horarios asignados)
+          // Verificar disponibilidad del kinesiólogo 
           const verificarDisponibilidadEmpleado = `
             SELECT idTurno 
             FROM turnos 
@@ -411,9 +411,9 @@ export const asignarRecursosDelDia = (req, res) => {
   });
 };
 
-// PASO 3A: Listar turnos del día (Para que secretaria vea quién viene HOY)
+// PASO 3A: Listar turnos del día 
 export const listarTurnosDelDia = (req, res) => {
-  const { fecha } = req.query; // Opcional: específica fecha, por defecto HOY
+  const { fecha } = req.query; 
   
   const fechaConsulta = fecha || 'CURDATE()';
   
@@ -461,7 +461,7 @@ export const listarTurnosDelDia = (req, res) => {
 
     res.status(200).json({
       message: "Turnos del día obtenidos exitosamente",
-      fecha: fecha || new Date().toISOString().split('T')[0],
+      fechaConsulta: fecha || new Date().toISOString().split('T')[0],
       turnos: turnosPorEstado,
       resumen: {
         total: results.length,
