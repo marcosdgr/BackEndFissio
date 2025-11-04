@@ -210,46 +210,24 @@ export const registrarSalida = (req, res) => {
     }
 };
 
-// Actualizar una asistencia completa
+// Actualizar una asistencia completa (el frontend envía todos los campos)
 export const actualizarAsistencia = (req, res) => {
     try {
         const { idAsistencia } = req.params;
         const { Fecha, HoraEntrada, HoraSalida, Observaciones, idEmpleado } = req.body;
 
-        // Validación: al menos un campo debe ser proporcionado
-        if (!Fecha && !HoraEntrada && !HoraSalida && !Observaciones && !idEmpleado) {
-            return res.status(400).json({ message: "Debe proporcionar al menos un campo para actualizar" });
+        // Validar campos obligatorios
+        if (!Fecha || !idEmpleado) {
+            return res.status(400).json({ message: "Los campos 'Fecha' e 'idEmpleado' son obligatorios" });
         }
 
-        // Construir query dinámicamente
-        const atributos = []; // guarda las partes del set por ejemplo de ["Fecha = ?", "HoraSalida = ?"]
-        const valores = []; // guarda los valores (ej: ["2024-11-02", "17:00:00", 12])
-
-        if (Fecha) {
-            atributos.push("Fecha = ?");
-            valores.push(Fecha);
-        }
-        if (HoraEntrada !== undefined) { // !==undefined permite enviar valores vacios para borrar el campo, por ejmplo cuando hay un error a la hora de cargar el registro.
-            atributos.push("HoraEntrada = ?");
-            valores.push(HoraEntrada || null);
-        }
-        if (HoraSalida !== undefined) {
-            atributos.push("HoraSalida = ?");
-            valores.push(HoraSalida || null);
-        }
-        if (Observaciones !== undefined) {
-            atributos.push("Observaciones = ?");
-            valores.push(Observaciones || null);
-        }
-        if (idEmpleado && !isNaN(Number(idEmpleado))) {
-            atributos.push("idEmpleado = ?");
-            valores.push(idEmpleado);
+        if (isNaN(Number(idEmpleado))) {
+            return res.status(400).json({ message: "El campo 'idEmpleado' debe ser un número válido" });
         }
 
-        valores.push(idAsistencia);
-
-        const asistenciaActualizada = "UPDATE asistencias SET " + atributos.join(', ') + " WHERE idAsistencia = ?"; // aqui inserto las variables dentro de un string cocatenando. convienrte el array en string separado por comas
-        db.query(asistenciaActualizada, valores, (error, results) => {
+        const asistenciaActualizada = "UPDATE asistencias SET Fecha = ?, HoraEntrada = ?, HoraSalida = ?, Observaciones = ?, idEmpleado = ? WHERE idAsistencia = ?";
+        
+        db.query(asistenciaActualizada, [Fecha, HoraEntrada || null, HoraSalida || null, Observaciones || null, idEmpleado, idAsistencia], (error, results) => {
             if (error) {
                 console.error("Error al actualizar la asistencia:", error);
                 return res.status(500).json({ error: "Error del servidor al actualizar la asistencia" });
