@@ -3,7 +3,7 @@ import {
   crearCategoriaFaq,
   traerCategoriasActivas,
   actualizarCategoriaFaq
-} from "../controllers/catFaqsController.js";
+} from "../Controllers/Faqs/catFaqs.controller.js";
 import {
   validarCrearCategoria,
   validarActualizarCategoria

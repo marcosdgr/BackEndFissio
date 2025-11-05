@@ -1,4 +1,4 @@
-import db from "../config/db.js";
+import db from "../../Config/db.js";
 
 // crear historia clínica
 export const crearHistoriaClinica = async (req, res) => {

@@ -5,7 +5,7 @@ import {
   actualizarPaciente,
   cambiarEstadoPaciente,
   traerPacientes,
-} from "../../Controllers/Pacientes/pacientes.controllers.js";
+} from "../../Controllers/Pacientes/pacientes.controller.js";
 
 const router = Router();
 

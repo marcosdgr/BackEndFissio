@@ -5,7 +5,7 @@ import {
   traerSalaPorId,
   actualizarSala,
   borradoLogicoSala,
-} from "../controllers/salaController.js";
+} from "../Controllers/Salas/salaController.js";
 import {
   validarCrearSala,
   validarActualizarSala,

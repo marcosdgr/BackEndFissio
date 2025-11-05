@@ -1,4 +1,4 @@
-import mensajesInternos from '../Models/mensajes.js';
+import mensajesInternos from '../../Models/mensajes.js';
 
 // El idRemitente viene del token JWT (usuario autenticado)
 export const enviarNotificacion = (req, res) => {

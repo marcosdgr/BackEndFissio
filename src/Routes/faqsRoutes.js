@@ -3,7 +3,7 @@ import {
   crearFaq,
   traerFaqsActivas,
   traerFaqPorId
-} from "../controllers/faqsController.js";
+} from "../Controllers/Faqs/faqs.controller.js";
 import {
   validarCrearFaq,
   validarActualizarFaq

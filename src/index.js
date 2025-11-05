@@ -28,8 +28,9 @@ import db from "./Config/db.js";
 
 // importo las rutas principales
 import usuariosRoutes from "./Routes/Usuarios/usuarios.routes.js";
+import localidadesRoutes from "./Routes/Usuarios/localidades.routes.js";
 import usuariosRoutesNew from "./Routes/usuarios.routes.js";
-import loginRoutes from "./Routes/login.routes.js";
+import loginRoutes from "./Routes/Login/login.routes.js";
 import pacientesRoutes from "./Routes/Pacientes/pacientes.routes.js";
 import turnosRoutes from "./Routes/Turnos/turnos.routes.js";
 
@@ -112,6 +113,7 @@ app.use("/api/faqs/v1", faqsRoutes);
 
 // rutas principales
 app.use("/api/usuarios/v1", usuariosRoutes);
+app.use("/api/localidades/v1", localidadesRoutes);
 app.use("/api/usuarios-new/v1", usuariosRoutesNew);
 app.use("/api/auth/v1", loginRoutes);
 app.use("/api/pacientes/v1", pacientesRoutes);

@@ -1,5 +1,5 @@
 import express from 'express';
-import { traerComentariosActivos, traerComentarioPorId, crearComentario, actualizarComentario, borradoLogicoComentario } from '../controllers/comentarios.controller.js';
+import { traerComentariosActivos, traerComentarioPorId, crearComentario, actualizarComentario, borradoLogicoComentario } from '../Controllers/Comentarios/comentarios.controller.js';
 import { validarCrearComentario, validarActualizarComentario } from '../Middlewares/validation.js'; 
 
 const router = express.Router();
