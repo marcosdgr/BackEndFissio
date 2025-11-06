@@ -3,11 +3,11 @@ import {
   crearCategoriaFaq,
   traerCategoriasActivas,
   actualizarCategoriaFaq
-} from "../Controllers/Faqs/catFaqs.controller.js";
+} from "../../Controllers/Faqs/catFaqs.controller.js";
 import {
   validarCrearCategoria,
   validarActualizarCategoria
-} from "../Middlewares/catFaqs.validation.js";
+} from "../../Middlewares/catFaqs.validation.js";
 
 const router = express.Router();
 

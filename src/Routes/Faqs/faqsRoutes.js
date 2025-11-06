@@ -3,11 +3,11 @@ import {
   crearFaq,
   traerFaqsActivas,
   traerFaqPorId
-} from "../Controllers/Faqs/faqs.controller.js";
+} from "../../Controllers/Faqs/faqs.controller.js";
 import {
   validarCrearFaq,
   validarActualizarFaq
-} from "../Middlewares/faqs.validation.js";
+} from "../../Middlewares/faqs.validation.js";
 
 const router = express.Router();
 
