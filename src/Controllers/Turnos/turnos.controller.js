@@ -146,24 +146,24 @@ export const solicitarTurno = async (req, res) => {
             );
           }
 
-          // Obtener email del paciente para enviar confirmación
-          const obtenerEmailPaciente = `
-            SELECT u.MailUsuario
+          // Obtener email y datos del paciente para enviar confirmación
+          const obtenerDatosPaciente = `
+            SELECT u.MailUsuario, p.NombrePaciente, p.ApellidoPaciente
             FROM usuarios u
             INNER JOIN pacientes p ON u.idUsuario = p.idUsuario
             WHERE p.idPaciente = ?
           `;
 
-          db.query(obtenerEmailPaciente, [idPaciente], async (err, emailResults) => {
+          db.query(obtenerDatosPaciente, [idPaciente], async (err, pacienteResults) => {
             if (err) {
-              console.error("Error al obtener email del paciente:", err);
-            } else if (emailResults.length > 0) {
+              console.error("Error al obtener datos del paciente:", err);
+            } else if (pacienteResults.length > 0) {
               // Enviar email de confirmación
-              const emailPaciente = emailResults[0].MailUsuario;
+              const emailPaciente = pacienteResults[0].MailUsuario;
               const datosTurno = {
                 idTurno: turnoId,
-                nombrePaciente: results[0].NombrePaciente,
-                apellidoPaciente: results[0].ApellidoPaciente,
+                nombrePaciente: pacienteResults[0].NombrePaciente,
+                apellidoPaciente: pacienteResults[0].ApellidoPaciente,
                 FechaRequeridaTurno: FechaRequeridaTurno,
                 HorarioRequeridoTurno: HorarioRequeridoTurno,
                 mensaje: "Su solicitud será procesada por nuestro personal. Recibirá confirmación pronto."
@@ -184,7 +184,7 @@ export const solicitarTurno = async (req, res) => {
               estado: "Solicitado",
               mensaje: "Su solicitud será procesada por nuestro personal. Recibirá confirmación pronto.",
               ordenMedicaGuardada: OrdenMedicaURL ? true : false,
-              emailEnviado: emailResults.length > 0
+              emailEnviado: pacienteResults.length > 0
             });
           });
         }
