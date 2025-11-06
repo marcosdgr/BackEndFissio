@@ -13,5 +13,11 @@ const db = mysql.createConnection({
   database: process.env.DB_NAME,
 });
 
+// Prevenir "Unhandled 'error' event" en conexión
+db.on('error', (err) => {
+  console.error('MySQL connection error (caught in db.js):', err);
+  // Nota: no hacemos process.exit aquí para que el caller pueda decidir qué hacer.
+});
+
 // Exportamos la conexión
 export default db;
