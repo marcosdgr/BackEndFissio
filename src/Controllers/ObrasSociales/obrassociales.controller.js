@@ -226,29 +226,39 @@ export const actualizarObraSocial = async (req, res) => {
     }
 };
 //borrado logico de obra social
-export const borradoLogicoObraSocial = async (req, res) => {
+export const cambiarEstadoObraSocial = async (req, res) => {
     try {
         const { idObraSocial } = req.params;
-        const actualizarObraSocial = 'UPDATE obraSociales SET IsActive = 0 WHERE idObraSocial = ?';
-        db.query(actualizarObraSocial, [idObraSocial], (error, results) => {
+        const query = 'UPDATE obraSociales SET IsActive = NOT IsActive WHERE idObraSocial = ?';
+
+        db.query(query, [idObraSocial], (error, results) => {
             if (error) {
-                console.error('Error al realizar el borrado lógico de la obra social:', error);
-                res.status(500).json({ error: 'Error al realizar el borrado lógico de la obra social' });
-                return;
+                console.error('Error al cambiar estado de la obra social:', error);
+                return res.status(500).json({ error: 'Error al cambiar estado de la obra social' });
             }
             if (results.affectedRows === 0) {
-                res.status(404).json({ error: 'Obra social no encontrada' });
-                return;
+                return res.status(404).json({ error: 'Obra social no encontrada' });
             }
-            res.status(200).json({ message: 'Obra social eliminada lógicamente correctamente' });
+            res.status(200).json({ message: 'Estado de obra social cambiado correctamente' });
         });
     } catch (error) {
+        console.error('Error del servidor:', error);
         res.status(500).json({ error: 'Error del servidor' });
     }
 };
+
 //obtener las obras sociales activas
 export const obtenerObraSocialActiva = async (req, res) => {
     try {
+        // Log de petición para identificar posible bucle (IP, UA, ruta, timestamp)
+        try {
+            const remote = req.ip || req.connection?.remoteAddress || 'unknown';
+            const ua = req.headers?.['user-agent'] || 'unknown';
+            console.log(`REQUEST DEBUG - ${new Date().toISOString()} - ${req.method} ${req.originalUrl} - ip=${remote} - ua=${ua}`);
+        } catch (e) {
+            // no bloquear la petición por problemas de logging
+        }
+
         const obtenerObrasSocialesActivas = 'SELECT * FROM obraSociales WHERE IsActive = 1';
         db.query(obtenerObrasSocialesActivas, (error, results) => {
             if (error) {

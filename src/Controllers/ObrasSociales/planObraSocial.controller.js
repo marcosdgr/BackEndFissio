@@ -4,7 +4,16 @@ import db from '../../Config/db.js';
 // Obtener todos los planes de obra social
 export const obtenerPlanesObra = (req, res) => {
     try {
-        const obtenerTodosLosPlanesObra = 'SELECT * FROM planObraSocial';
+        const obtenerTodosLosPlanesObra = `
+    SELECT 
+      p.idPlanObra,
+      p.NombraPlan,
+      p.DescripciónPlan,
+      o.NombreObraSocial,
+      p.IsActive
+    FROM planObraSocial p
+    INNER JOIN obraSociales o ON p.idObraSocial = o.idObraSocial
+  `;
         db.query(obtenerTodosLosPlanesObra, (err, results) => {
             if (err) {
                 console.error('Error al obtener los planes de obra social:', err);
