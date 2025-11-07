@@ -8,7 +8,8 @@ export const obtenerPlanesObra = (req, res) => {
     SELECT 
       p.idPlanObra,
       p.NombraPlan,
-      p.DescripciónPlan,
+      p.DescripcionPlan,
+      p.PorcentajeDescuentoPlan,
       o.NombreObraSocial,
       p.IsActive
     FROM planObraSocial p
@@ -49,65 +50,76 @@ export const obtenerPlanObraPorId = (req, res) => {
 
 // Crear un nuevo plan de obra social
 export const crearPlanObra = (req, res) => {
-    try {
-        const { NombraPlan, DescripcionPlan, idObrasocial } = req.body;
+  try {
+    // Campos esperados en body: NombraPlan, DescripcionPlan (sin acento), PorcentajeDescuentoPlan (opcional), idObraSocial
+    const { NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan } = req.body;
+    const idObraSocial = req.body.idObraSocial || req.body.idObrasocial;
 
-        // Validaciones básicas
-        if (!NombraPlan || !idObrasocial) {
-            return res.status(400).json({ error: 'Faltan datos obligatorios: NombraPlan o idObrasocial' });
+    const descripcionPlan = DescripcionPlan || null;
+    const porcentajeDescuento = (PorcentajeDescuentoPlan !== undefined) ? PorcentajeDescuentoPlan : null;
+
+    // Validaciones básicas
+    if (!NombraPlan || !idObraSocial) {
+      return res.status(400).json({ error: 'Faltan datos obligatorios: NombraPlan o idObraSocial' });
+    }
+
+    // Verificar que la obra social existe (callback)
+    const verificarObraSocial = 'SELECT * FROM obraSociales WHERE idObraSocial = ?';
+    db.query(verificarObraSocial, [idObraSocial], (err, obraResults) => {
+      if (err) {
+        console.error('Error al verificar obra social:', err);
+        return res.status(500).json({ error: 'Error al verificar obra social' });
+      }
+
+      if (!obraResults || obraResults.length === 0) {
+        return res.status(404).json({ error: 'Obra social no encontrada' });
+      }
+
+      // Crear el nuevo plan de obra social (callback)
+      const crearNuevoPlanObra = 'INSERT INTO planObraSocial (NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan, idObraSocial) VALUES (?, ?, ?, ?)';
+      db.query(crearNuevoPlanObra, [NombraPlan, descripcionPlan, porcentajeDescuento, idObraSocial], (Error, Result) => {
+        if (Error) {
+          console.error('Error al crear el nuevo plan de obra social:', Error);
+          return res.status(500).json({ error: 'Error al crear el nuevo plan de obra social' });
         }
 
-        // Verificar que la obra social existe (callback)
-        const verificarObraSocial = 'SELECT * FROM obrasSociales WHERE idObraSocial = ?';
-        db.query(verificarObraSocial, [idObrasocial], (err, obraResults) => {
-            if (err) {
-                console.error('Error al verificar obra social:', err);
-                return res.status(500).json({ error: 'Error al verificar obra social' });
-            }
-
-            if (!obraResults || obraResults.length === 0) {
-                return res.status(404).json({ error: 'Obra social no encontrada' });
-            }
-
-            // Crear el nuevo plan de obra social (callback)
-            const crearNuevoPlanObra = 'INSERT INTO planObraSocial (NombraPlan, DescripcionPlan, idObrasocial) VALUES (?, ?, ?)';
-            db.query(crearNuevoPlanObra, [NombraPlan, DescripcionPlan || null, idObrasocial], (insertErr, insertResult) => {
-                if (insertErr) {
-                    console.error('Error al crear el nuevo plan de obra social:', insertErr);
-                    return res.status(500).json({ error: 'Error al crear el nuevo plan de obra social' });
-                }
-
-                return res.status(201).json({ message: 'Nuevo plan de obra social creado exitosamente', id: insertResult.insertId });
-            });
-        });
-    } catch (error) {
-        console.error('Error en crearPlanObra:', error);
-        return res.status(500).json({ error: 'Error del servidor' });
-    }
+        return res.status(201).json({ message: 'Nuevo plan de obra social creado exitosamente', id: Result.insertId });
+      });
+    });
+  } catch (error) {
+    console.error('Error en crearPlanObra:', error);
+    return res.status(500).json({ error: 'Error del servidor' });
+  }
 };
 
 // Actualizar un plan de obra social existente
 export const actualizarPlanObra = (req, res) => {
-    try {
-        const { idPlanObra } = req.params;
-        const { NombraPlan, DescripcionPlan, idObrasocial } = req.body;
-        const actualizarPlanObraQuery = `
-            UPDATE planObraSocial
-            SET NombraPlan = ?, DescripcionPlan = ?, idObrasocial = ?
-            WHERE idPlanObra = ?
-        `;
+  try {
+    const { idPlanObra } = req.params;
+    // Campos esperados en body: NombraPlan, DescripcionPlan (sin acento), PorcentajeDescuentoPlan (opcional), idObraSocial
+    const { NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan } = req.body;
+    const idObraSocial = req.body.idObraSocial || req.body.idObrasocial;
 
-        db.query(actualizarPlanObraQuery, [NombraPlan, DescripcionPlan || null, idObrasocial, idPlanObra], (err, results) => {
-            if (err) {
-                console.error('Error al actualizar el plan de obra social:', err);
-                return res.status(500).json({ error: 'Error al actualizar el plan de obra social' });
-            }
-            return res.status(200).json({ message: 'Plan de obra social actualizado exitosamente' });
-        });
-    } catch (error) {
-        console.error('Error en actualizarPlanObra:', error);
-        return res.status(500).json({ error: 'Error del servidor' });
-    }
+    const descripcionPlan = DescripcionPlan || null;
+    const porcentajeDescuento = (PorcentajeDescuentoPlan !== undefined) ? PorcentajeDescuentoPlan : null;
+
+    const actualizarPlanObraQuery = `
+      UPDATE planObraSocial
+      SET NombraPlan = ?, DescripcionPlan = ?, PorcentajeDescuentoPlan = ?, idObraSocial = ?
+      WHERE idPlanObra = ?
+    `;
+
+    db.query(actualizarPlanObraQuery, [NombraPlan, descripcionPlan, porcentajeDescuento, idObraSocial, idPlanObra], (err, results) => {
+      if (err) {
+        console.error('Error al actualizar el plan de obra social:', err);
+        return res.status(500).json({ error: 'Error al actualizar el plan de obra social' });
+      }
+      return res.status(200).json({ message: 'Plan de obra social actualizado exitosamente' });
+    });
+  } catch (error) {
+    console.error('Error en actualizarPlanObra:', error);
+    return res.status(500).json({ error: 'Error del servidor' });
+  }
 };
 
 // Cambiar estado del plan de obra (activar/desactivar)
