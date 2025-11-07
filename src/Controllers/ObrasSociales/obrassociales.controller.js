@@ -250,15 +250,7 @@ export const cambiarEstadoObraSocial = async (req, res) => {
 //obtener las obras sociales activas
 export const obtenerObraSocialActiva = async (req, res) => {
     try {
-        // Log de petición para identificar posible bucle (IP, UA, ruta, timestamp)
-        try {
-            const remote = req.ip || req.connection?.remoteAddress || 'unknown';
-            const ua = req.headers?.['user-agent'] || 'unknown';
-            console.log(`REQUEST DEBUG - ${new Date().toISOString()} - ${req.method} ${req.originalUrl} - ip=${remote} - ua=${ua}`);
-        } catch (e) {
-            // no bloquear la petición por problemas de logging
-        }
-
+  
         const obtenerObrasSocialesActivas = 'SELECT * FROM obraSociales WHERE IsActive = 1';
         db.query(obtenerObrasSocialesActivas, (error, results) => {
             if (error) {
