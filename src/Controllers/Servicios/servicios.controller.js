@@ -43,17 +43,31 @@ export const crearServicio = (req, res) => {
             return res.status(400).json({ error: "El campo 'NombreServicio' es obligatorio" });
         }
         
-        const nuevoServicio = 'INSERT INTO servicios (NombreServicio, DescripcionServicio) VALUES (?, ?)';
-        db.query(nuevoServicio, [NombreServicio.trim(), DescripcionServicio || null], (error, results) => {
+        // Verificar si el nombre del servicio ya existe (case-insensitive)
+        const verificarNombreExistente = 'SELECT idServicio FROM servicios WHERE LOWER(NombreServicio) = LOWER(?)';
+        db.query(verificarNombreExistente, [NombreServicio.trim()], (error, results) => {
             if (error) {
-                console.error('Error al crear servicio:', error);
-                return res.status(500).json({ error: 'Error al crear servicio' });
+                console.error('Error al verificar nombre del servicio:', error);
+                return res.status(500).json({ error: 'Error al verificar nombre del servicio' });
             }
-            res.status(201).json({ 
-                message: 'Servicio creado exitosamente',
-                idServicio: results.insertId, 
-                NombreServicio: NombreServicio.trim(), 
-                DescripcionServicio: DescripcionServicio || null
+            
+            if (results.length > 0) {
+                return res.status(400).json({ error: 'Ya existe un servicio con ese nombre (sin distinción de mayúsculas/minúsculas)' });
+            }
+            
+            // Si no existe, proceder a crear el servicio
+            const nuevoServicio = 'INSERT INTO servicios (NombreServicio, DescripcionServicio) VALUES (?, ?)';
+            db.query(nuevoServicio, [NombreServicio.trim(), DescripcionServicio || null], (error, results) => {
+                if (error) {
+                    console.error('Error al crear servicio:', error);
+                    return res.status(500).json({ error: 'Error al crear servicio' });
+                }
+                res.status(201).json({ 
+                    message: 'Servicio creado exitosamente',
+                    idServicio: results.insertId, 
+                    NombreServicio: NombreServicio.trim(), 
+                    DescripcionServicio: DescripcionServicio || null
+                });
             });
         });
     } catch (error) {
@@ -72,20 +86,34 @@ export const actualizarServicio = (req, res) => {
             return res.status(400).json({ error: "El campo 'NombreServicio' es obligatorio" });
         }
         
-        const actualizarUnServicio = 'UPDATE servicios SET NombreServicio = ?, DescripcionServicio = ? WHERE idServicio = ?';
-        db.query(actualizarUnServicio, [NombreServicio.trim(), DescripcionServicio || null, idServicio], (error, results) => {
+        // Verificar si existe otro servicio con el mismo nombre (excluyendo el actual, case-insensitive)
+        const verificarNombreExistente = 'SELECT idServicio FROM servicios WHERE LOWER(NombreServicio) = LOWER(?) AND idServicio != ?';
+        db.query(verificarNombreExistente, [NombreServicio.trim(), idServicio], (error, results) => {
             if (error) {
-                console.error('Error al actualizar servicio:', error);
-                return res.status(500).json({ error: 'Error al actualizar servicio' });
+                console.error('Error al verificar nombre del servicio:', error);
+                return res.status(500).json({ error: 'Error al verificar nombre del servicio' });
             }
-            if (results.affectedRows === 0) {
-                return res.status(404).json({ error: 'Servicio no encontrado' });
+            
+            if (results.length > 0) {
+                return res.status(400).json({ error: 'Ya existe otro servicio con ese nombre (sin distinción de mayúsculas/minúsculas)' });
             }
-            res.status(200).json({ 
-                message: 'Servicio actualizado exitosamente',
-                idServicio: idServicio, 
-                NombreServicio: NombreServicio.trim(), 
-                DescripcionServicio: DescripcionServicio || null
+            
+            // Si no existe, proceder a actualizar el servicio
+            const actualizarUnServicio = 'UPDATE servicios SET NombreServicio = ?, DescripcionServicio = ? WHERE idServicio = ?';
+            db.query(actualizarUnServicio, [NombreServicio.trim(), DescripcionServicio || null, idServicio], (error, results) => {
+                if (error) {
+                    console.error('Error al actualizar servicio:', error);
+                    return res.status(500).json({ error: 'Error al actualizar servicio' });
+                }
+                if (results.affectedRows === 0) {
+                    return res.status(404).json({ error: 'Servicio no encontrado' });
+                }
+                res.status(200).json({ 
+                    message: 'Servicio actualizado exitosamente',
+                    idServicio: idServicio, 
+                    NombreServicio: NombreServicio.trim(), 
+                    DescripcionServicio: DescripcionServicio || null
+                });
             });
         });
     } catch (error) {

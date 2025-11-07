@@ -1,4 +1,5 @@
 import db from "../../Config/db.js";
+import bcrypt from "bcryptjs"; 
 
 // traer todos los pacientes
 
@@ -165,4 +166,134 @@ export const cambiarEstadoPaciente = async (req, res) => {
     console.error("error del servidor: ", error);
     res.status(500).json({ message: "Error del servidor" });
   }
+};
+ // crear nuevo paciente 
+export const crearPaciente = (req, res) => {
+    try {
+        const {
+            DNI, NombrePaciente, ApellidoPaciente, FechaNacPaciente,
+            TelefonoPaciente, DireccionPaciente, Sexo, idLocalidad,
+            MailUsuario, PasswordUsuario
+        } = req.body;
+
+        // Validaciones básicas del paciente
+        if (!DNI || !NombrePaciente || !ApellidoPaciente || !FechaNacPaciente ||
+            !TelefonoPaciente || !DireccionPaciente || !Sexo || !idLocalidad) {
+            return res.status(400).json({ message: "Faltan datos obligatorios del paciente" });
+        }
+
+        // Si el paciente no tiene email, generamos uno temporal
+        let emailFinal = MailUsuario;
+        if (!emailFinal || emailFinal.trim() === "") {
+            emailFinal = `${DNI}@sinmail.local`;
+        }
+
+        // Si no se especificó contraseña, se asigna una genérica temporal
+        const passwordFinal = PasswordUsuario && PasswordUsuario.trim() !== "" 
+            ? PasswordUsuario 
+            : "1234";
+
+        // Verificar si el email ya está en uso
+        const verificarEmailQuery = "SELECT idUsuario FROM usuarios WHERE MailUsuario = ?";
+        db.query(verificarEmailQuery, [emailFinal], (error, usuarioExistente) => {
+            if (error) {
+                console.error('Error al verificar email:', error);
+                return res.status(500).json({ message: 'Error al verificar email' });
+            }
+
+            if (usuarioExistente.length > 0) {
+                return res.status(400).json({ message: "El email ya está registrado" });
+            }
+
+            // Verificar si el DNI ya existe
+            const verificarDNIQuery = "SELECT idPaciente FROM pacientes WHERE DNI = ?";
+            db.query(verificarDNIQuery, [DNI], (error, pacienteExistente) => {
+                if (error) {
+                    console.error('Error al verificar DNI:', error);
+                    return res.status(500).json({ message: 'Error al verificar DNI' });
+                }
+
+                if (pacienteExistente.length > 0) {
+                    return res.status(400).json({ message: "El DNI ya está registrado" });
+                }
+
+                // Verificar si el teléfono ya existe
+                const verificarTelefonoQuery = "SELECT idPaciente FROM pacientes WHERE TelefonoPaciente = ?";
+                db.query(verificarTelefonoQuery, [TelefonoPaciente], async (error, telefonoExistente) => {
+                    if (error) {
+                        console.error('Error al verificar teléfono:', error);
+                        return res.status(500).json({ message: 'Error al verificar teléfono' });
+                    }
+
+                    if (telefonoExistente.length > 0) {
+                        return res.status(400).json({ message: "El teléfono ya está registrado" });
+                    }
+
+                    try {
+                        // Hashear la contraseña
+                        const hashedPassword = await bcrypt.hash(passwordFinal, 10);
+
+                        // Crear el usuario (rol paciente = 3)
+                        const idRolPaciente = 3; 
+                        const crearUsuarioQuery = `
+                            INSERT INTO usuarios (MailUsuario, PasswordUsuario, idRol) 
+                            VALUES (?, ?, ?)
+                        `;
+                        
+                        db.query(crearUsuarioQuery, [emailFinal, hashedPassword, idRolPaciente], (error, resultUsuario) => {
+                            if (error) {
+                                console.error('Error al crear usuario:', error);
+                                return res.status(500).json({ message: 'Error al crear usuario' });
+                            }
+
+                            const idUsuarioNuevo = resultUsuario.insertId;
+
+                            // Crear el paciente
+                            const crearPacienteQuery = `
+                                INSERT INTO pacientes 
+                                (DNI, NombrePaciente, ApellidoPaciente, FechaNacPaciente, 
+                                 TelefonoPaciente, DireccionPaciente, Sexo, idLocalidad, idUsuario)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            `;
+
+                            db.query(crearPacienteQuery, [
+                                DNI, NombrePaciente, ApellidoPaciente, FechaNacPaciente,
+                                TelefonoPaciente, DireccionPaciente, Sexo, idLocalidad, idUsuarioNuevo
+                            ], (error, resultPaciente) => {
+                                if (error) {
+                                    console.error('Error al crear paciente:', error);
+                                    
+                                    // Si falla crear paciente, eliminar usuario creado (rollback manual)
+                                    db.query("DELETE FROM usuarios WHERE idUsuario = ?", [idUsuarioNuevo], (deleteError) => {
+                                        if (deleteError) {
+                                            console.error('Error al eliminar usuario en rollback:', deleteError);
+                                        }
+                                    });
+                                    
+                                    return res.status(500).json({ message: 'Error al crear paciente' });
+                                }
+
+                                res.status(201).json({
+                                    message: "Paciente creado correctamente",
+                                    idPaciente: resultPaciente.insertId,
+                                    usuario: {
+                                        idUsuario: idUsuarioNuevo,
+                                        MailUsuario: emailFinal,
+                                        PasswordTemporal: passwordFinal === "1234"
+                                    }
+                                });
+                            });
+                        });
+                    } catch (hashError) {
+                        console.error('Error al hashear contraseña:', hashError);
+                        res.status(500).json({ message: 'Error al procesar contraseña' });
+                    }
+                });
+            });
+        });
+        
+    } catch (error) {
+        console.error('Error del servidor:', error);
+        res.status(500).json({ message: 'Error del servidor' });
+    }
 };
