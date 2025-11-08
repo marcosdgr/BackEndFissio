@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { 
   solicitarTurno,
+  solicitarTurnoSecretaria,
   asignarRecursosDelDia,
   listarTurnosDelDia,
   listarSolicitudesPendientes,
@@ -15,6 +16,9 @@ const router = Router();
 
 // Ruta para solicitar turno (Paciente)
 router.post("/solicitar", upload.single("ordenMedica"), solicitarTurno);
+
+// Ruta para solicitar turno (Secretaria - sin orden médica)
+router.post("/solicitar-secretaria", solicitarTurnoSecretaria);
 
 // Rutas para gestión de turnos (Secretaria)
 router.get("/turnos-del-dia", listarTurnosDelDia); // Para ver quién viene HOY
