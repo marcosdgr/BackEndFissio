@@ -5,7 +5,6 @@ import {
   listarTurnosDelDia,
   listarSolicitudesPendientes,
   obtenerKinesiologosDisponibles,
-  obtenerSalasDisponibles,
   verificarDisponibilidadHorarios,
   finalizarTurno
 } from '../../Controllers/Turnos/turnos.controller.js';
@@ -25,7 +24,6 @@ router.put("/finalizar/:idTurno", finalizarTurno); // Al terminar sesión
 
 // Rutas de consulta para disponibilidad
 router.get("/kinesiologos-disponibles", obtenerKinesiologosDisponibles);
-router.get("/salas-disponibles", obtenerSalasDisponibles);
 router.get("/disponibilidad-horarios/:fecha", verificarDisponibilidadHorarios);
 
 // Ruta para ejecutar recordatorios manualmente 

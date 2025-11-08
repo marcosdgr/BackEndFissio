@@ -113,6 +113,7 @@ CREATE TABLE asistencias (
   HoraEntrada TIME,
   HoraSalida TIME,
   Observaciones VARCHAR(200),
+  Presente TINYINT DEFAULT 0;
   idEmpleado INT NOT NULL,
   CONSTRAINT fk_asistencias_empleados
     FOREIGN KEY (idEmpleado) REFERENCES empleados(idEmpleado)

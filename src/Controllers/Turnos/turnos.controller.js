@@ -204,14 +204,13 @@ export const asignarRecursosDelDia = (req, res) => {
     HorarioInicioTurno,
     HorarioFinTurno,
     idEmpleado, // Kinesiólogo asignado
-    idSala,
     ObservacionesSecretaria,
   } = req.body;
 
   // Validación de campos obligatorios
-  if (!HorarioInicioTurno || !HorarioFinTurno || !idEmpleado || !idSala) {
+  if (!HorarioInicioTurno || !HorarioFinTurno || !idEmpleado) {
     return res.status(400).json({
-      message: "Horario de inicio, fin, empleado y sala son requeridos",
+      message: "Horario de inicio, fin y empleado son requeridos",
     });
   }
 
@@ -266,11 +265,11 @@ export const asignarRecursosDelDia = (req, res) => {
         });
       }
 
-      // Verificar disponibilidad de sala 
-      const verificarDisponibilidadSala = `
+      // Verificar disponibilidad del kinesiólogo 
+      const verificarDisponibilidadEmpleado = `
         SELECT idTurno 
         FROM turnos 
-        WHERE idSala = ? 
+        WHERE idEmpleado = ? 
           AND FechaRequeridaTurno = ? 
           AND EstadoTurno IN ('Pendiente', 'Finalizado')
           AND HorarioInicioTurno IS NOT NULL
@@ -281,11 +280,10 @@ export const asignarRecursosDelDia = (req, res) => {
             (HorarioInicioTurno >= ? AND HorarioFinTurno <= ?)
           )
       `;
-
       db.query(
-        verificarDisponibilidadSala,
+        verificarDisponibilidadEmpleado,
         [
-          idSala,
+          idEmpleado,
           turno.FechaRequeridaTurno,
           HorarioFinTurno,
           HorarioInicioTurno,
@@ -294,70 +292,30 @@ export const asignarRecursosDelDia = (req, res) => {
           HorarioInicioTurno,
           HorarioFinTurno,
         ],
-        (err, salaResults) => {
+        (err, empleadoDisponibleResults) => {
           if (err) {
-            console.error("Error al verificar disponibilidad de sala:", err);
-            return res.status(500).json({ message: "Error en el servidor" });
+            console.error(
+              "Error al verificar disponibilidad del empleado:",
+              err
+            );
+            return res
+              .status(500)
+              .json({ message: "Error en el servidor" });
           }
 
-          if (salaResults.length > 0) {
+          if (empleadoDisponibleResults.length > 0) {
             return res.status(400).json({
-              message: "La sala no está disponible en el horario seleccionado",
+              message:
+                "El kinesiólogo no está disponible en el horario seleccionado",
             });
           }
 
-          // Verificar disponibilidad del kinesiólogo 
-          const verificarDisponibilidadEmpleado = `
-            SELECT idTurno 
-            FROM turnos 
-            WHERE idEmpleado = ? 
-              AND FechaRequeridaTurno = ? 
-              AND EstadoTurno IN ('Pendiente', 'Finalizado')
-              AND HorarioInicioTurno IS NOT NULL
-              AND HorarioFinTurno IS NOT NULL
-              AND (
-                (HorarioInicioTurno < ? AND HorarioFinTurno > ?) OR
-                (HorarioInicioTurno < ? AND HorarioFinTurno > ?) OR
-                (HorarioInicioTurno >= ? AND HorarioFinTurno <= ?)
-              )
-          `;
-          db.query(
-            verificarDisponibilidadEmpleado,
-            [
-              idEmpleado,
-              turno.FechaRequeridaTurno,
-              HorarioFinTurno,
-              HorarioInicioTurno,
-              HorarioFinTurno,
-              HorarioInicioTurno,
-              HorarioInicioTurno,
-              HorarioFinTurno,
-            ],
-            (err, empleadoDisponibleResults) => {
-              if (err) {
-                console.error(
-                  "Error al verificar disponibilidad del empleado:",
-                  err
-                );
-                return res
-                  .status(500)
-                  .json({ message: "Error en el servidor" });
-              }
-
-              if (empleadoDisponibleResults.length > 0) {
-                return res.status(400).json({
-                  message:
-                    "El kinesiólogo no está disponible en el horario seleccionado",
-                });
-              }
-
-              // Actualizar turno con asignaciones
-              const actualizarTurno = `
+          // Actualizar turno con asignaciones
+          const actualizarTurno = `
             UPDATE turnos 
             SET HorarioInicioTurno = ?,
                 HorarioFinTurno = ?,
                 idEmpleado = ?,
-                idSala = ?,
                 EstadoTurno = 'Pendiente',
                 InformeTurno = CONCAT(
                   COALESCE(InformeTurno, ''), 
@@ -368,41 +326,37 @@ export const asignarRecursosDelDia = (req, res) => {
             WHERE idTurno = ?
           `;
 
-              db.query(
-                actualizarTurno,
-                [
-                  HorarioInicioTurno,
-                  HorarioFinTurno,
-                  idEmpleado,
-                  idSala,
-                  ObservacionesSecretaria,
-                  ObservacionesSecretaria,
-                  idTurno,
-                ],
-                (err, results) => {
-                  if (err) {
-                    console.error("Error al procesar turno:", err);
-                    return res
-                      .status(500)
-                      .json({ message: "Error al procesar turno" });
-                  }
+          db.query(
+            actualizarTurno,
+            [
+              HorarioInicioTurno,
+              HorarioFinTurno,
+              idEmpleado,
+              ObservacionesSecretaria,
+              ObservacionesSecretaria,
+              idTurno,
+            ],
+            (err, results) => {
+              if (err) {
+                console.error("Error al procesar turno:", err);
+                return res
+                  .status(500)
+                  .json({ message: "Error al procesar turno" });
+              }
 
-                  res.status(200).json({
-                    message: "Recursos asignados exitosamente - Turno en curso",
-                    turno: {
-                      idTurno: idTurno,
-                      paciente: `${turno.NombrePaciente} ${turno.ApellidoPaciente}`,
-                      fecha: turno.FechaRequeridaTurno,
-                      horario: `${HorarioInicioTurno} - ${HorarioFinTurno}`,
-                      kinesiologo: `${empleadoResults[0].NombreEmpleado} ${empleadoResults[0].ApellidoEmpleado}`,
-                      sala: idSala,
-                      estadoAnterior: "Solicitado",
-                      estadoActual: "Pendiente",
-                      mensaje: "El paciente ya puede comenzar su sesión"
-                    }
-                  });
+              res.status(200).json({
+                message: "Recursos asignados exitosamente - Turno en curso",
+                turno: {
+                  idTurno: idTurno,
+                  paciente: `${turno.NombrePaciente} ${turno.ApellidoPaciente}`,
+                  fecha: turno.FechaRequeridaTurno,
+                  horario: `${HorarioInicioTurno} - ${HorarioFinTurno}`,
+                  kinesiologo: `${empleadoResults[0].NombreEmpleado} ${empleadoResults[0].ApellidoEmpleado}`,
+                  estadoAnterior: "Solicitado",
+                  estadoActual: "Pendiente",
+                  mensaje: "El paciente ya puede comenzar su sesión"
                 }
-              );
+              });
             }
           );
         }
@@ -433,12 +387,10 @@ export const listarTurnosDelDia = (req, res) => {
       p.TelefonoPaciente,
       p.DNI,
       e.NombreEmpleado,
-      e.ApellidoEmpleado,
-      s.NombreSala
+      e.ApellidoEmpleado
     FROM turnos t
     INNER JOIN pacientes p ON t.idPaciente = p.idPaciente
     LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado
-    LEFT JOIN salas s ON t.idSala = s.idSala
     WHERE DATE(t.FechaRequeridaTurno) = ${fecha ? '?' : 'CURDATE()'}
       AND t.EstadoTurno IN ('Solicitado', 'Pendiente', 'Finalizado')
     ORDER BY t.HorarioRequeridoTurno ASC, t.EstadoTurno ASC
@@ -511,11 +463,11 @@ export const listarSolicitudesPendientes = (req, res) => {
 
 // PASO 4: Obtener kinesiólogos disponibles para una fecha/hora
 export const obtenerKinesiologosDisponibles = (req, res) => {
-  const { fecha, horaInicio, horaFin } = req.query;
+  const { fecha } = req.query;
 
-  if (!fecha || !horaInicio || !horaFin) {
+  if (!fecha) {
     return res.status(400).json({
-      message: "Fecha, hora de inicio y fin son requeridas",
+      message: "Fecha es requerida",
     });
   }
 
@@ -524,31 +476,22 @@ export const obtenerKinesiologosDisponibles = (req, res) => {
       e.idEmpleado,
       e.NombreEmpleado,
       e.ApellidoEmpleado,
-      c.NombreCat
+      c.NombreCat,
+      a.HoraEntrada,
+      a.Fecha as FechaAsistencia
     FROM empleados e
     INNER JOIN catEmpleados c ON e.idCatEmpleado = c.idCatEmpleado
+    INNER JOIN asistencias a ON e.idEmpleado = a.idEmpleado
     WHERE c.NombreCat = 'Kinesiologo' 
       AND e.IsActive = 1
-      AND e.idEmpleado NOT IN (
-        SELECT t.idEmpleado 
-        FROM turnos t 
-        WHERE t.FechaRequeridaTurno = ?
-          AND t.EstadoTurno IN ('Pendiente', 'Finalizado')
-          AND t.idEmpleado IS NOT NULL
-          AND t.HorarioInicioTurno IS NOT NULL
-          AND t.HorarioFinTurno IS NOT NULL
-          AND (
-            (t.HorarioInicioTurno < ? AND t.HorarioFinTurno > ?) OR
-            (t.HorarioInicioTurno < ? AND t.HorarioFinTurno > ?) OR
-            (t.HorarioInicioTurno >= ? AND t.HorarioFinTurno <= ?)
-          )
-      )
+      AND a.Presente = 1
+      AND a.Fecha = ?
     ORDER BY e.NombreEmpleado, e.ApellidoEmpleado
   `;
 
   db.query(
     kinesiologosDisponiblesQuery,
-    [fecha, horaFin, horaInicio, horaFin, horaInicio, horaInicio, horaFin],
+    [fecha],
     (err, results) => {
       if (err) {
         console.error("Error al obtener kinesiólogos disponibles:", err);
@@ -556,64 +499,15 @@ export const obtenerKinesiologosDisponibles = (req, res) => {
       }
 
       res.status(200).json({
-        message: "Kinesiólogos disponibles obtenidos exitosamente",
+        message: "Kinesiólogos presentes obtenidos exitosamente",
         kinesiologos: results,
+        totalPresentes: results.length
       });
     }
   );
 };
 
 // PASO 5: Obtener salas disponibles para una fecha/hora
-export const obtenerSalasDisponibles = (req, res) => {
-  const { fecha, horaInicio, horaFin } = req.query;
-
-  if (!fecha || !horaInicio || !horaFin) {
-    return res.status(400).json({
-      message: "Fecha, hora de inicio y fin son requeridas",
-    });
-  }
-
-  const salasDisponiblesQuery = `
-    SELECT 
-      s.idSala,
-      s.NombreSala,
-      s.Capacidad
-    FROM salas s
-    WHERE s.IsActive = 1
-      AND s.idSala NOT IN (
-        SELECT t.idSala 
-        FROM turnos t 
-        WHERE t.FechaRequeridaTurno = ?
-          AND t.EstadoTurno IN ('Pendiente', 'Finalizado')
-          AND t.idSala IS NOT NULL
-          AND t.HorarioInicioTurno IS NOT NULL
-          AND t.HorarioFinTurno IS NOT NULL
-          AND (
-            (t.HorarioInicioTurno < ? AND t.HorarioFinTurno > ?) OR
-            (t.HorarioInicioTurno < ? AND t.HorarioFinTurno > ?) OR
-            (t.HorarioInicioTurno >= ? AND t.HorarioFinTurno <= ?)
-          )
-      )
-    ORDER BY s.NombreSala
-  `;
-
-  db.query(
-    salasDisponiblesQuery,
-    [fecha, horaFin, horaInicio, horaFin, horaInicio, horaInicio, horaFin],
-    (err, results) => {
-      if (err) {
-        console.error("Error al obtener salas disponibles:", err);
-        return res.status(500).json({ message: "Error en el servidor" });
-      }
-
-      res.status(200).json({
-        message: "Salas disponibles obtenidas exitosamente",
-        salas: results,
-      });
-    }
-  );
-};
-
 //  Verificar disponibilidad de horarios para una fecha
 export const verificarDisponibilidadHorarios = (req, res) => {
   const { fecha } = req.params; // Formato: YYYY-MM-DD
@@ -696,12 +590,10 @@ export const finalizarTurno = (req, res) => {
       p.NombrePaciente,
       p.ApellidoPaciente,
       e.NombreEmpleado,
-      e.ApellidoEmpleado,
-      s.NombreSala
+      e.ApellidoEmpleado
     FROM turnos t
     INNER JOIN pacientes p ON t.idPaciente = p.idPaciente
     LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado
-    LEFT JOIN salas s ON t.idSala = s.idSala
     WHERE t.idTurno = ? AND t.EstadoTurno = 'Pendiente'
   `;
 
@@ -746,7 +638,6 @@ export const finalizarTurno = (req, res) => {
           fecha: turno.FechaRequeridaTurno,
           horario: `${turno.HorarioInicioTurno} - ${turno.HorarioFinTurno}`,
           kinesiologo: turno.NombreEmpleado ? `${turno.NombreEmpleado} ${turno.ApellidoEmpleado}` : null,
-          sala: turno.NombreSala,
           estadoAnterior: "Pendiente",
           estadoActual: "Finalizado",
           fechaFinalizacion: new Date().toISOString()

@@ -128,15 +128,16 @@ export const crearAsistencia = (req, res) => {
             return res.status(400).json({ message: "El campo 'idEmpleado' debe ser un número válido" });
         }
 
-        const nuevaAsistencia = "INSERT INTO asistencias (Fecha, HoraEntrada, HoraSalida, Observaciones, idEmpleado) VALUES (?, ?, ?, ?, ?)";
+        const nuevaAsistencia = "INSERT INTO asistencias (Fecha, HoraEntrada, HoraSalida, Observaciones, idEmpleado, Presente) VALUES (?, ?, ?, ?, ?, 1)";
         db.query(nuevaAsistencia, [Fecha, HoraEntrada || null, HoraSalida || null, Observaciones || null, idEmpleado], (error, results) => {
             if (error) {
                 console.error("Error al crear la asistencia:", error);
                 return res.status(500).json({ error: "Error del servidor al crear la asistencia" });
             }
             res.status(201).json({ 
-                message: "Asistencia registrada correctamente", 
-                idInsertado: results.insertId 
+                message: "Asistencia registrada correctamente - Empleado marcado como presente", 
+                idInsertado: results.insertId,
+                presente: true
             });
         });
     } catch (error) {
