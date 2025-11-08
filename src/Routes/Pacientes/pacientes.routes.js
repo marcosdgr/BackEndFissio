@@ -6,12 +6,14 @@ import {
   cambiarEstadoPaciente,
   crearPaciente,
   traerPacientes,
+  traerLocalidades
 } from "../../Controllers/Pacientes/pacientes.controller.js";
 
 const router = Router();
 
 // ruta GET para traer todos los pacientes
 router.get("/", traerPacientes);
+router.get("/localidades", traerLocalidades);
 
 // ruta POST para crear nuevo paciente
 router.post("/", crearPaciente);

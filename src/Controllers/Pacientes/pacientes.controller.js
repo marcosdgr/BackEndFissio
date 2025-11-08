@@ -1,27 +1,29 @@
 import db from "../../Config/db.js";
 import bcrypt from "bcryptjs"; 
 
-// traer todos los pacientes
-
 export const traerPacientes = (req, res) => {
   const traerPacientesQuery = `
     SELECT p.idPaciente, p.DNI, p.NombrePaciente, p.ApellidoPaciente, p.FechaNacPaciente,
-           p.TelefonoPaciente, p.DireccionPaciente, p.Sexo, l.NombreLocalidad, p.IsActive
+           p.TelefonoPaciente, p.DireccionPaciente, p.Sexo, p.idLocalidad, p.IsActive,
+           l.NombreLocalidad, 
+           u.idUsuario, u.MailUsuario
     FROM pacientes p
     INNER JOIN localidades l ON p.idLocalidad = l.idLocalidad
+    LEFT JOIN usuarios u ON p.idUsuario = u.idUsuario
   `;
   db.query(traerPacientesQuery, (err, results) => {
     if (err) {
-      console.error("Error al traer los pacientes:", err);
       return res.status(500).json({ message: "Error en el servidor" });
     }
-    return res.status(200).json(results);
+    // Agregar información adicional para cada paciente
+    const pacientesConInfo = results.map(paciente => ({
+      ...paciente,
+      PasswordTemporal: true // Por seguridad, no devolvemos la contraseña real
+    }));
+    return res.status(200).json(pacientesConInfo);
   });
 };
-
-// actualizar datos del paciente
-
-export const actualizarPaciente = async (req, res) => {
+export const actualizarPaciente = (req, res) => {
   try {
     const { idPaciente } = req.params;
     const {
@@ -35,79 +37,82 @@ export const actualizarPaciente = async (req, res) => {
       idLocalidad,
     } = req.body;
 
-    const actualizarPacienteQuery = `
-      UPDATE pacientes 
-      SET NombrePaciente = ?, ApellidoPaciente = ?, DNI = ?, FechaNacPaciente = ?, 
-          TelefonoPaciente = ?, DireccionPaciente = ?, Sexo = ?, idLocalidad = ? 
-      WHERE idPaciente = ?
-    `;
+    if (!NombrePaciente || !ApellidoPaciente || !DNI || !FechaNacPaciente ||
+        !TelefonoPaciente || !DireccionPaciente || !Sexo || !idLocalidad) {
+      return res.status(400).json({ message: "Faltan datos obligatorios del paciente" });
+    }
 
-    db.query(
-      actualizarPacienteQuery,
-      [
-        NombrePaciente,
-        ApellidoPaciente,
-        DNI,
-        FechaNacPaciente,
-        TelefonoPaciente,
-        DireccionPaciente,
-        Sexo,
-        idLocalidad,
-        idPaciente,
-      ],
-      (error, results) => {
-        if (error) {
-          console.error("Error al actualizar paciente:", error);
+    let sexoNormalizado = Sexo;
+    if (Sexo === 'M' || Sexo === 'Masculino') {
+        sexoNormalizado = 'Masculino';
+    } else if (Sexo === 'F' || Sexo === 'Femenino') {
+        sexoNormalizado = 'Femenino';
+    } else if (Sexo === 'O' || Sexo === 'Otro') {
+        sexoNormalizado = 'Otro';
+    } else {
+        return res.status(400).json({ 
+            message: "Valor de Sexo inválido. Debe ser 'Masculino', 'Femenino' o 'Otro'" 
+        });
+    }
 
-          // Manejo SIMPLE de errores comunes para actualización
-          if (error.code === "ER_DUP_ENTRY") {
-            if (error.message.includes("DNI")) {
-              return res.status(400).json({
-                message: "El DNI ya está registrado por otro paciente",
-              });
-            }
-            if (error.message.includes("TelefonoPaciente")) {
-              return res.status(400).json({
-                message: "El teléfono ya está registrado por otro paciente",
-              });
-            }
-            return res.status(400).json({
-              message: "Los datos ya están registrados por otro paciente",
-            });
+    const verificarDNIQuery = "SELECT idPaciente FROM pacientes WHERE DNI = ? AND idPaciente != ?";
+    db.query(verificarDNIQuery, [DNI, idPaciente], (error, pacienteExistente) => {
+      if (error) {
+        return res.status(500).json({ message: 'Error al verificar DNI' });
+      }
+
+      if (pacienteExistente.length > 0) {
+        return res.status(400).json({ message: "El DNI ya está registrado por otro paciente" });
+      }
+
+      const actualizarPacienteQuery = `
+        UPDATE pacientes 
+        SET NombrePaciente = ?, ApellidoPaciente = ?, DNI = ?, FechaNacPaciente = ?, 
+            TelefonoPaciente = ?, DireccionPaciente = ?, Sexo = ?, idLocalidad = ? 
+        WHERE idPaciente = ?
+      `;
+
+      db.query(
+        actualizarPacienteQuery,
+        [
+          NombrePaciente,
+          ApellidoPaciente,
+          DNI,
+          FechaNacPaciente,
+          TelefonoPaciente,
+          DireccionPaciente,
+          sexoNormalizado,
+          idLocalidad,
+          idPaciente,
+        ],
+        (error, results) => {
+          if (error) {
+            return res.status(500).json({ message: "Error al actualizar paciente" });
           }
 
-          return res
-            .status(500)
-            .json({ message: "Error al actualizar paciente" });
-        }
+          if (results.affectedRows === 0) {
+            return res.status(404).json({ message: "Paciente no encontrado" });
+          }
 
-        if (results.affectedRows === 0) {
-          return res.status(404).json({ message: "Paciente no encontrado" });
+          res.status(200).json({ message: "Paciente actualizado exitosamente" });
         }
-
-        res.status(200).json({ message: "Paciente actualizado exitosamente" });
-      }
-    );
+      );
+    });
   } catch (error) {
-    console.error("error del servidor: ", error);
     res.status(500).json({ message: "Error del servidor" });
   }
 };
-
-// cambiar estado del paciente (activar/desactivar)
-export const cambiarEstadoPaciente = async (req, res) => {
+export const cambiarEstadoPaciente = (req, res) => {
   try {
     const { idPaciente } = req.params;
     const { IsActive } = req.body;
 
-    // Validar que IsActive sea un valor válido
     if (IsActive !== 0 && IsActive !== 1) {
       return res.status(400).json({
         message: "IsActive debe ser 0 (inactivo) o 1 (activo)",
       });
     }
 
-    // Primero verificar el estado actual del paciente
     const verificarEstadoQuery = `
       SELECT IsActive 
       FROM pacientes 
@@ -116,10 +121,7 @@ export const cambiarEstadoPaciente = async (req, res) => {
 
     db.query(verificarEstadoQuery, [idPaciente], (err, results) => {
       if (err) {
-        console.error("Error al verificar estado del paciente:", err);
-        return res
-          .status(500)
-          .json({ message: "Error al verificar estado del paciente" });
+        return res.status(500).json({ message: "Error al verificar estado del paciente" });
       }
 
       if (results.length === 0) {
@@ -128,7 +130,6 @@ export const cambiarEstadoPaciente = async (req, res) => {
 
       const estadoActual = results[0].IsActive;
 
-      // Validar que el estado nuevo sea diferente al actual
       if (estadoActual === IsActive) {
         const estadoTexto = IsActive === 1 ? "activo" : "inactivo";
         return res.status(400).json({
@@ -136,7 +137,6 @@ export const cambiarEstadoPaciente = async (req, res) => {
         });
       }
 
-      // Si es diferente, proceder con el cambio
       const cambiarEstadoQuery = `
         UPDATE pacientes 
         SET IsActive = ?
@@ -148,10 +148,7 @@ export const cambiarEstadoPaciente = async (req, res) => {
         [IsActive, idPaciente],
         (error, updateResults) => {
           if (error) {
-            console.error("Error al cambiar estado del paciente:", error);
-            return res
-              .status(500)
-              .json({ message: "Error al cambiar estado del paciente" });
+            return res.status(500).json({ message: "Error al cambiar estado del paciente" });
           }
 
           const mensaje =
@@ -163,11 +160,9 @@ export const cambiarEstadoPaciente = async (req, res) => {
       );
     });
   } catch (error) {
-    console.error("error del servidor: ", error);
     res.status(500).json({ message: "Error del servidor" });
   }
 };
- // crear nuevo paciente 
 export const crearPaciente = (req, res) => {
     try {
         const {
@@ -176,28 +171,37 @@ export const crearPaciente = (req, res) => {
             MailUsuario, PasswordUsuario
         } = req.body;
 
-        // Validaciones básicas del paciente
         if (!DNI || !NombrePaciente || !ApellidoPaciente || !FechaNacPaciente ||
             !TelefonoPaciente || !DireccionPaciente || !Sexo || !idLocalidad) {
             return res.status(400).json({ message: "Faltan datos obligatorios del paciente" });
         }
 
-        // Si el paciente no tiene email, generamos uno temporal
+        let sexoNormalizado = Sexo;
+        if (Sexo === 'M' || Sexo === 'Masculino') {
+            sexoNormalizado = 'Masculino';
+        } else if (Sexo === 'F' || Sexo === 'Femenino') {
+            sexoNormalizado = 'Femenino';
+        } else if (Sexo === 'O' || Sexo === 'Otro') {
+            sexoNormalizado = 'Otro';
+        } else {
+            return res.status(400).json({ 
+                message: "Valor de Sexo inválido. Debe ser 'Masculino', 'Femenino' o 'Otro'" 
+            });
+        }
+
         let emailFinal = MailUsuario;
         if (!emailFinal || emailFinal.trim() === "") {
             emailFinal = `${DNI}@sinmail.local`;
         }
 
-        // Si no se especificó contraseña, se asigna una genérica temporal
         const passwordFinal = PasswordUsuario && PasswordUsuario.trim() !== "" 
             ? PasswordUsuario 
             : "1234";
 
-        // Verificar si el email ya está en uso
         const verificarEmailQuery = "SELECT idUsuario FROM usuarios WHERE MailUsuario = ?";
+        
         db.query(verificarEmailQuery, [emailFinal], (error, usuarioExistente) => {
             if (error) {
-                console.error('Error al verificar email:', error);
                 return res.status(500).json({ message: 'Error al verificar email' });
             }
 
@@ -205,11 +209,10 @@ export const crearPaciente = (req, res) => {
                 return res.status(400).json({ message: "El email ya está registrado" });
             }
 
-            // Verificar si el DNI ya existe
             const verificarDNIQuery = "SELECT idPaciente FROM pacientes WHERE DNI = ?";
-            db.query(verificarDNIQuery, [DNI], (error, pacienteExistente) => {
+            
+            db.query(verificarDNIQuery, [DNI], async (error, pacienteExistente) => {
                 if (error) {
-                    console.error('Error al verificar DNI:', error);
                     return res.status(500).json({ message: 'Error al verificar DNI' });
                 }
 
@@ -217,83 +220,66 @@ export const crearPaciente = (req, res) => {
                     return res.status(400).json({ message: "El DNI ya está registrado" });
                 }
 
-                // Verificar si el teléfono ya existe
-                const verificarTelefonoQuery = "SELECT idPaciente FROM pacientes WHERE TelefonoPaciente = ?";
-                db.query(verificarTelefonoQuery, [TelefonoPaciente], async (error, telefonoExistente) => {
-                    if (error) {
-                        console.error('Error al verificar teléfono:', error);
-                        return res.status(500).json({ message: 'Error al verificar teléfono' });
-                    }
+                try {
+                    const hashedPassword = await bcrypt.hash(passwordFinal, 10);
+                    const idRolPaciente = 3; 
+                    const crearUsuarioQuery = `
+                        INSERT INTO usuarios (MailUsuario, PasswordUsuario, idRol) 
+                        VALUES (?, ?, ?)
+                    `;
+                    
+                    db.query(crearUsuarioQuery, [emailFinal, hashedPassword, idRolPaciente], (error, resultUsuario) => {
+                        if (error) {
+                            return res.status(500).json({ message: 'Error al crear usuario' });
+                        }
 
-                    if (telefonoExistente.length > 0) {
-                        return res.status(400).json({ message: "El teléfono ya está registrado" });
-                    }
+                        const idUsuarioNuevo = resultUsuario.insertId;
 
-                    try {
-                        // Hashear la contraseña
-                        const hashedPassword = await bcrypt.hash(passwordFinal, 10);
-
-                        // Crear el usuario (rol paciente = 3)
-                        const idRolPaciente = 3; 
-                        const crearUsuarioQuery = `
-                            INSERT INTO usuarios (MailUsuario, PasswordUsuario, idRol) 
-                            VALUES (?, ?, ?)
+                        const crearPacienteQuery = `
+                            INSERT INTO pacientes 
+                            (DNI, NombrePaciente, ApellidoPaciente, FechaNacPaciente, 
+                             TelefonoPaciente, DireccionPaciente, Sexo, idLocalidad, idUsuario)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                         `;
-                        
-                        db.query(crearUsuarioQuery, [emailFinal, hashedPassword, idRolPaciente], (error, resultUsuario) => {
+
+                        const paramsPaciente = [
+                            DNI, NombrePaciente, ApellidoPaciente, FechaNacPaciente,
+                            TelefonoPaciente, DireccionPaciente, sexoNormalizado, idLocalidad, idUsuarioNuevo
+                        ];
+
+                        db.query(crearPacienteQuery, paramsPaciente, (error, resultPaciente) => {
                             if (error) {
-                                console.error('Error al crear usuario:', error);
-                                return res.status(500).json({ message: 'Error al crear usuario' });
+                                db.query("DELETE FROM usuarios WHERE idUsuario = ?", [idUsuarioNuevo], () => {});
+                                return res.status(500).json({ message: 'Error al crear paciente' });
                             }
 
-                            const idUsuarioNuevo = resultUsuario.insertId;
-
-                            // Crear el paciente
-                            const crearPacienteQuery = `
-                                INSERT INTO pacientes 
-                                (DNI, NombrePaciente, ApellidoPaciente, FechaNacPaciente, 
-                                 TelefonoPaciente, DireccionPaciente, Sexo, idLocalidad, idUsuario)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            `;
-
-                            db.query(crearPacienteQuery, [
-                                DNI, NombrePaciente, ApellidoPaciente, FechaNacPaciente,
-                                TelefonoPaciente, DireccionPaciente, Sexo, idLocalidad, idUsuarioNuevo
-                            ], (error, resultPaciente) => {
-                                if (error) {
-                                    console.error('Error al crear paciente:', error);
-                                    
-                                    // Si falla crear paciente, eliminar usuario creado (rollback manual)
-                                    db.query("DELETE FROM usuarios WHERE idUsuario = ?", [idUsuarioNuevo], (deleteError) => {
-                                        if (deleteError) {
-                                            console.error('Error al eliminar usuario en rollback:', deleteError);
-                                        }
-                                    });
-                                    
-                                    return res.status(500).json({ message: 'Error al crear paciente' });
+                            res.status(201).json({
+                                message: "Paciente creado correctamente",
+                                idPaciente: resultPaciente.insertId,
+                                usuario: {
+                                    idUsuario: idUsuarioNuevo,
+                                    MailUsuario: emailFinal,
+                                    PasswordTemporal: passwordFinal === "1234"
                                 }
-
-                                res.status(201).json({
-                                    message: "Paciente creado correctamente",
-                                    idPaciente: resultPaciente.insertId,
-                                    usuario: {
-                                        idUsuario: idUsuarioNuevo,
-                                        MailUsuario: emailFinal,
-                                        PasswordTemporal: passwordFinal === "1234"
-                                    }
-                                });
                             });
                         });
-                    } catch (hashError) {
-                        console.error('Error al hashear contraseña:', hashError);
-                        res.status(500).json({ message: 'Error al procesar contraseña' });
-                    }
-                });
+                    });
+                } catch (hashError) {
+                    res.status(500).json({ message: 'Error al procesar contraseña' });
+                }
             });
         });
         
     } catch (error) {
-        console.error('Error del servidor:', error);
         res.status(500).json({ message: 'Error del servidor' });
     }
+};
+export const traerLocalidades = (req, res) => {
+  const query = "SELECT idLocalidad, NombreLocalidad FROM localidades WHERE IsActive = 1";
+  db.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: "Error en el servidor" });
+    }
+    return res.status(200).json(results);
+  });
 };
