@@ -86,7 +86,14 @@ export const marcarLeido = (req, res) => {
     const { idNotificacion, idEmpleadoDestinatario } = req.body;
     const idEmpleadoAutenticado = req.usuarioAutenticado.idEmpleado;
     
+    console.log('🟢 CONTROLLER marcarLeido - Datos recibidos:');
+    console.log('  - idNotificacion:', idNotificacion);
+    console.log('  - idEmpleadoDestinatario:', idEmpleadoDestinatario);
+    console.log('  - idEmpleadoAutenticado:', idEmpleadoAutenticado);
+    console.log('  - Usuario completo:', req.usuarioAutenticado);
+    
     if (!idNotificacion || !idEmpleadoDestinatario) {
+      console.log('❌ Faltan datos requeridos');
       return res.status(400).json({ 
         message: "Faltan datos: idNotificacion e idEmpleadoDestinatario son requeridos" 
       });
@@ -94,31 +101,37 @@ export const marcarLeido = (req, res) => {
 
     // Validar que el usuario autenticado sea el destinatario
     if (!idEmpleadoAutenticado) {
+      console.log('❌ Usuario no es empleado o no tiene idEmpleado');
       return res.status(403).json({ 
         message: "Solo empleados pueden marcar mensajes como leídos" 
       });
     }
 
     if (parseInt(idEmpleadoDestinatario) !== idEmpleadoAutenticado) {
+      console.log('❌ El empleado no coincide con el destinatario');
       return res.status(403).json({ 
         message: "Solo puedes marcar como leídos tus propios mensajes" 
       });
     }
 
-    mensajesInternos.marcarLeido(idNotificacion, idEmpleadoDestinatario, (err) => {
+    console.log('✅ Validaciones pasadas, llamando al modelo...');
+    mensajesInternos.marcarLeido(idNotificacion, idEmpleadoDestinatario, (err, result) => {
       if (err) {
-        console.error("Error al marcar mensaje como leído:", err);
+        console.error("❌ Error al marcar mensaje como leído:", err);
         return res.status(500).json({ 
           message: "Error al marcar mensaje", 
           error: err.message 
         });
       }
+      console.log('✅ Mensaje marcado exitosamente. Result:', result);
       res.status(200).json({ 
-        message: "Mensaje marcado como leído" 
+        message: "Mensaje marcado como leído",
+        affectedRows: result.affectedRows,
+        changedRows: result.changedRows
       });
     });
   } catch (err) {
-    console.error("Error del servidor:", err);
+    console.error("❌ Error del servidor:", err);
     res.status(500).json({ 
       message: "Error del servidor", 
       error: err.message 
