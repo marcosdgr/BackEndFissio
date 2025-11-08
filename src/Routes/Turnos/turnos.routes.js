@@ -7,7 +7,8 @@ import {
   listarSolicitudesPendientes,
   obtenerKinesiologosDisponibles,
   verificarDisponibilidadHorarios,
-  finalizarTurno
+  finalizarTurno,
+  cancelarTurno
 } from '../../Controllers/Turnos/turnos.controller.js';
 import { ejecutarRecordatoriosManual } from '../../Services/recordatorios.service.js';
 import upload from '../../Middlewares/images.js';
@@ -19,6 +20,9 @@ router.post("/solicitar", upload.single("ordenMedica"), solicitarTurno);
 
 // Ruta para solicitar turno (Secretaria - sin orden médica)
 router.post("/solicitar-secretaria", solicitarTurnoSecretaria);
+
+// Ruta para cancelar turno (Secretaria)
+router.put("/cancelar/:idTurno", cancelarTurno);
 
 // Rutas para gestión de turnos (Secretaria)
 router.get("/turnos-del-dia", listarTurnosDelDia); // Para ver quién viene HOY
