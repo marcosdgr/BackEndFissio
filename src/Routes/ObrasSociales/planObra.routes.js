@@ -7,13 +7,13 @@ const router = Router();
 // Importo controladores
 
 
-// Rutas
-router.get ("/", obtenerPlanesObra);
-router.get ("/:idPlanObra", obtenerPlanObraPorId);
-router.post ("/", crearPlanObra);
-router.put ("/:idPlanObra", actualizarPlanObra);
-router.delete ("/cambiarestado/:idPlanObra", cambiarEstadoPlan);
-router.get ("/activos", obtenerPlanesActivos);
-router.get ("/inactivos", obtenerPlanesInactivos);
+// Rutas (ordenadas por prioridad: rutas estáticas antes de las paramétricas)
+router.get("/activos", obtenerPlanesActivos);
+router.get("/inactivos", obtenerPlanesInactivos);
+router.get("/", obtenerPlanesObra);
+router.get("/:idPlanObra", obtenerPlanObraPorId);
+router.post("/crearPlanObra", crearPlanObra);
+router.put("/actualizarPlanObra/:idPlanObra", actualizarPlanObra);
+router.put("/cambiarEstado/:idPlanObra", cambiarEstadoPlan);
 
 export default router;

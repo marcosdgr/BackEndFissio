@@ -7,9 +7,11 @@ export const obtenerPlanesObra = (req, res) => {
         const obtenerTodosLosPlanesObra = `
     SELECT 
       p.idPlanObra,
+      p.idObraSocial,
       p.NombraPlan,
       p.DescripcionPlan,
       p.PorcentajeDescuentoPlan,
+      p.EstadoPlan,
       o.NombreObraSocial,
       p.IsActive
     FROM planObraSocial p
@@ -51,12 +53,19 @@ export const obtenerPlanObraPorId = (req, res) => {
 // Crear un nuevo plan de obra social
 export const crearPlanObra = (req, res) => {
   try {
-    // Campos esperados en body: NombraPlan, DescripcionPlan (sin acento), PorcentajeDescuentoPlan (opcional), idObraSocial
-    const { NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan } = req.body;
-    const idObraSocial = req.body.idObraSocial || req.body.idObrasocial;
+    // Campos esperados en body: idObraSocial, NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan (opcional), EstadoPlan (opcional)
+    const { idObraSocial, NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan, EstadoPlan } = req.body;
+    const obraId = idObraSocial || req.body.idObrasocial;
 
     const descripcionPlan = DescripcionPlan || null;
     const porcentajeDescuento = (PorcentajeDescuentoPlan !== undefined) ? PorcentajeDescuentoPlan : null;
+    const estadoPlanFinal = EstadoPlan || 'Vigente';
+
+    // Validar EstadoPlan
+    const ALLOWED_ESTADO_PLAN = ['Vigente', 'No vigente'];
+    if (EstadoPlan && !ALLOWED_ESTADO_PLAN.includes(EstadoPlan)) {
+      return res.status(400).json({ error: `EstadoPlan inválido. Valores permitidos: ${ALLOWED_ESTADO_PLAN.join(', ')}` });
+    }
 
     // Validaciones básicas
     if (!NombraPlan || !idObraSocial) {
@@ -76,8 +85,8 @@ export const crearPlanObra = (req, res) => {
       }
 
       // Crear el nuevo plan de obra social (callback)
-      const crearNuevoPlanObra = 'INSERT INTO planObraSocial (NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan, idObraSocial) VALUES (?, ?, ?, ?)';
-      db.query(crearNuevoPlanObra, [NombraPlan, descripcionPlan, porcentajeDescuento, idObraSocial], (Error, Result) => {
+      const crearNuevoPlanObra = 'INSERT INTO planObraSocial (idObraSocial, NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan, EstadoPlan) VALUES (?, ?, ?, ?, ?)';
+      db.query(crearNuevoPlanObra, [obraId, NombraPlan, descripcionPlan, porcentajeDescuento, estadoPlanFinal], (Error, Result) => {
         if (Error) {
           console.error('Error al crear el nuevo plan de obra social:', Error);
           return res.status(500).json({ error: 'Error al crear el nuevo plan de obra social' });
@@ -96,20 +105,28 @@ export const crearPlanObra = (req, res) => {
 export const actualizarPlanObra = (req, res) => {
   try {
     const { idPlanObra } = req.params;
-    // Campos esperados en body: NombraPlan, DescripcionPlan (sin acento), PorcentajeDescuentoPlan (opcional), idObraSocial
-    const { NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan } = req.body;
-    const idObraSocial = req.body.idObraSocial || req.body.idObrasocial;
+    // Campos esperados en body: idObraSocial, NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan (opcional), EstadoPlan (opcional)
+    const { idObraSocial: idObraBody, NombraPlan: NP, DescripcionPlan: DP, PorcentajeDescuentoPlan: PDP, EstadoPlan: EP } = req.body;
+    const obraIdUpdate = idObraBody || req.body.idObrasocial;
 
-    const descripcionPlan = DescripcionPlan || null;
-    const porcentajeDescuento = (PorcentajeDescuentoPlan !== undefined) ? PorcentajeDescuentoPlan : null;
+    const descripcionPlanUp = DP || null;
+    const porcentajeDescuentoUp = (PDP !== undefined) ? PDP : null;
+    const estadoPlanUp = EP || undefined;
+
+    const ALLOWED_ESTADO_PLAN = ['Vigente', 'No vigente'];
+    if (estadoPlanUp && !ALLOWED_ESTADO_PLAN.includes(estadoPlanUp)) {
+      return res.status(400).json({ error: `EstadoPlan inválido. Valores permitidos: ${ALLOWED_ESTADO_PLAN.join(', ')}` });
+    }
 
     const actualizarPlanObraQuery = `
       UPDATE planObraSocial
-      SET NombraPlan = ?, DescripcionPlan = ?, PorcentajeDescuentoPlan = ?, idObraSocial = ?
+      SET idObraSocial = ?, NombraPlan = ?, DescripcionPlan = ?, PorcentajeDescuentoPlan = ?` + (estadoPlanUp ? `, EstadoPlan = ?` : ``) + `
       WHERE idPlanObra = ?
     `;
 
-    db.query(actualizarPlanObraQuery, [NombraPlan, descripcionPlan, porcentajeDescuento, idObraSocial, idPlanObra], (err, results) => {
+    const params = estadoPlanUp ? [obraIdUpdate, NP, descripcionPlanUp, porcentajeDescuentoUp, estadoPlanUp, idPlanObra] : [obraIdUpdate, NP, descripcionPlanUp, porcentajeDescuentoUp, idPlanObra];
+
+    db.query(actualizarPlanObraQuery, params, (err, results) => {
       if (err) {
         console.error('Error al actualizar el plan de obra social:', err);
         return res.status(500).json({ error: 'Error al actualizar el plan de obra social' });
@@ -123,107 +140,65 @@ export const actualizarPlanObra = (req, res) => {
 };
 
 // Cambiar estado del plan de obra (activar/desactivar)
-export const cambiarEstadoPlan = async (req, res) => {
+export const cambiarEstadoPlan = (req, res) => {
   try {
     const { idPlanObra } = req.params;
-    const { IsActive } = req.body;
     // Validar idPlanObra
     const id = Number(idPlanObra);
     if (!Number.isInteger(id) || id <= 0) {
       return res.status(400).json({ message: 'idPlanObra inválido' });
     }
 
-    // Validar que IsActive sea un valor válido (acepta '0'/'1' o 0/1)
-    if (IsActive === undefined || IsActive === null) {
-      return res.status(400).json({ message: 'Falta el campo IsActive en el body' });
-    }
-    const isActiveCoerced = (typeof IsActive === 'string') ? (IsActive === '1' ? 1 : (IsActive === '0' ? 0 : NaN)) : Number(IsActive);
-    if (isNaN(isActiveCoerced) || (isActiveCoerced !== 0 && isActiveCoerced !== 1)) {
-      return res.status(400).json({ message: 'IsActive debe ser 0 (inactivo) o 1 (activo)' });
-    }
-
-    // Primero verificar el estado actual del empleado
-    const verificarEstadoQuery = `
-      SELECT IsActive 
-      FROM planObraSocial
-      WHERE idPlanObra = ?
-    `;
-
+    // Consultar estado actual del plan
+    const verificarEstadoQuery = `SELECT EstadoPlan FROM planObraSocial WHERE idPlanObra = ?`;
     db.query(verificarEstadoQuery, [id], (err, results) => {
       if (err) {
         console.error('Error al verificar estado del plan de obra:', err);
         return res.status(500).json({ message: 'Error al verificar estado del plan de obra' });
       }
 
-      if (results.length === 0) {
+      if (!results || results.length === 0 || !results[0]) {
         return res.status(404).json({ message: 'Plan de obra no encontrado' });
       }
 
-      const estadoActual = results[0].IsActive;
+      const currentRaw = results[0].EstadoPlan;
+      const current = typeof currentRaw === 'string' ? currentRaw.trim() : currentRaw;
 
-      // Validar que el estado nuevo sea diferente al actual
-      if (estadoActual === isActiveCoerced) {
-        const estadoTexto = isActiveCoerced === 1 ? 'activo' : 'inactivo';
-        return res.status(400).json({ message: `El plan de obra ya se encuentra ${estadoTexto}` });
+      // Si se envía explícitamente, sólo aceptamos exactamente 'Vigente' o 'No vigente'
+      const targetRaw = req.body && req.body.EstadoPlan;
+      let target;
+
+      if (targetRaw === undefined || targetRaw === null) {
+        // toggle based on current value
+        if (String(current).trim() === 'Vigente') target = 'No vigente';
+        else target = 'Vigente';
+      } else {
+        // exigimos valor exacto (el botón en el front debe enviar 'Vigente' o 'No vigente')
+        if (typeof targetRaw === 'string' && (targetRaw === 'Vigente' || targetRaw === 'No vigente')) {
+          target = targetRaw;
+        } else {
+          return res.status(400).json({ message: 'EstadoPlan inválido. Debe ser exactamente "Vigente" o "No vigente" si se especifica.' });
+        }
       }
 
-      // Si se intenta desactivar, verificar que no existan pacientes con ese plan activo
-      if (isActiveCoerced === 0) {
-        const verificarReferencias = `SELECT COUNT(*) as cnt FROM obraSocial_Paciente WHERE idPlanObra = ? AND EstadoPlan = 'activo' AND IsActive = 1`;
-        db.query(verificarReferencias, [id], (refErr, refResults) => {
-          if (refErr) {
-            console.error('Error al verificar referencias en obraSocial_Paciente:', refErr);
-            return res.status(500).json({ message: 'Error al verificar referencias del plan' });
-          }
-
-          const count = refResults && refResults[0] ? refResults[0].cnt : 0;
-          if (count > 0) {
-            return res.status(409).json({ message: `No se puede desactivar el plan: existen ${count} pacientes con este plan activo` });
-          }
-
-          // Si no hay referencias activas, proceder con la desactivación
-          const cambiarEstadoQuery = `
-            UPDATE planObraSocial
-            SET IsActive = ?
-            WHERE idPlanObra = ?
-          `;
-
-          db.query(cambiarEstadoQuery, [isActiveCoerced, id], (error, updateResults) => {
-            if (error) {
-              console.error('Error al cambiar estado del plan de obra:', error);
-              return res.status(500).json({ message: 'Error al cambiar estado del plan de obra' });
-            }
-
-            if (!updateResults || updateResults.affectedRows === 0) {
-              return res.status(404).json({ message: 'Plan de obra no encontrado' });
-            }
-
-            const mensaje = isActiveCoerced === 1 ? 'Plan de obra activado exitosamente' : 'Plan de obra desactivado exitosamente';
-            return res.status(200).json({ message: mensaje });
-          });
-        });
-        return; // ya respondimos o seguimos en callback
+      // Si no hay cambio, responder idempotente
+      if (String(current).trim().toLowerCase() === String(target).trim().toLowerCase()) {
+        return res.status(200).json({ message: `El plan ya se encuentra ${target}` });
       }
 
-      // Si se llega aquí, significa que isActiveCoerced === 1 (activación)
-      const cambiarEstadoQuery = `
-        UPDATE planObraSocial
-        SET IsActive = ?
-        WHERE idPlanObra = ?
-      `;
-
-      db.query(cambiarEstadoQuery, [isActiveCoerced, id], (error, updateResults) => {
+      // Actualizamos solo EstadoPlan
+      const cambiarEstadoQuery = `UPDATE planObraSocial SET EstadoPlan = ? WHERE idPlanObra = ?`;
+      db.query(cambiarEstadoQuery, [target, id], (error, updateResults) => {
         if (error) {
-          console.error('Error al cambiar estado del plan de obra:', error);
-          return res.status(500).json({ message: 'Error al cambiar estado del plan de obra' });
+          console.error('Error al cambiar EstadoPlan del plan de obra:', error);
+          return res.status(500).json({ message: 'Error al cambiar EstadoPlan del plan de obra' });
         }
 
         if (!updateResults || updateResults.affectedRows === 0) {
           return res.status(404).json({ message: 'Plan de obra no encontrado' });
         }
 
-        const mensaje = isActiveCoerced === 1 ? 'Plan de obra activado exitosamente' : 'Plan de obra desactivado exitosamente';
-        return res.status(200).json({ message: mensaje });
+        return res.status(200).json({ message: `EstadoPlan actualizado a ${target}`, EstadoPlan: target });
       });
     });
   } catch (error) {

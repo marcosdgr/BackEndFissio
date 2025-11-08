@@ -1,4 +1,5 @@
 import db from '../../Config/db.js';
+import bcrypt from 'bcryptjs';
 
 
 
@@ -7,9 +8,10 @@ export const obtenerEmpleados = async (req, res) => {
   try {
     const obtenerEmpleadosQuery = `
       SELECT e.idEmpleado, e.DNI, e.NombreEmpleado, e.ApellidoEmpleado, e.FechaNacEmpleado,
-             e.TelefonoEmpleado, e.DireccionEmpleado, e.SalarioEmpleado, 
-             l.NombreLocalidad, c.NombreCat, e.IsActive
+             e.TelefonoEmpleado, e.DireccionEmpleado, e.SalarioEmpleado,
+             u.MailUsuario, l.NombreLocalidad, c.NombreCat, e.IsActive
       FROM empleados e
+      LEFT JOIN usuarios u ON e.idUsuario = u.idUsuario
       LEFT JOIN localidades l ON e.idLocalidad = l.idLocalidad
       INNER JOIN catEmpleados c ON e.idCatEmpleado = c.idCatEmpleado
     `;
@@ -142,123 +144,291 @@ export const buscarEmpleadosPorApellido = async (req, res) => {
 
 // Crear nuevo empleado
 export const crearEmpleado = async (req, res) => {
+  // Traigo datos del body
+  const {
+    MailUsuario,
+    PasswordUsuario,
+    DNI,
+    NombreEmpleado,
+    ApellidoEmpleado,
+    FechaNacEmpleado,
+    TelefonoEmpleado,
+    DireccionEmpleado,
+    SalarioEmpleado,
+    idLocalidad,
+    idUsuario,
+    idCatEmpleado,
+  } = req.body;
+
   try {
-    const { DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, idUsuario, idCatEmpleado } = req.body;
-    
-    // 1. Validar campos obligatorios
+    // 1- validar campos obligatorios para empleado
     if (!DNI || !NombreEmpleado || !ApellidoEmpleado || !FechaNacEmpleado || !SalarioEmpleado || !idCatEmpleado) {
-      return res.status(400).json({ error: 'Todos los campos obligatorios deben ser completados' });
+      return res.status(400).json({ message: 'Todos los campos obligatorios deben ser completados' });
     }
 
-    // 2. Validar formato de DNI (solo números, 7-8 dígitos)
-    const dniRegex = /^\d{7,8}$/;
-    if (!dniRegex.test(DNI)) {
-      return res.status(400).json({ error: 'El DNI debe contener entre 7 y 8 dígitos numéricos' });
-    }
-
-    // 3. Validar que el salario sea positivo
-    if (SalarioEmpleado <= 0) {
-      return res.status(400).json({ error: 'El salario debe ser un número positivo' });
-    }
-
-    // 4. Validar teléfono si existe (solo números y guiones)
-    if (TelefonoEmpleado) {
-      const telefonoRegex = /^[\d\-\s()]+$/;
-      if (!telefonoRegex.test(TelefonoEmpleado)) {
-        return res.status(400).json({ error: 'El formato del teléfono no es válido' });
-      }
-    }
-
-    // 5. Verificar que el DNI no exista ya
-    const verificarDNI = 'SELECT * FROM empleados WHERE DNI = ?';
-    db.query(verificarDNI, [DNI], (error, results) => {
-      if (error) {
-        console.error('Error al verificar DNI:', error);
-        return res.status(500).json({ error: 'Error al verificar DNI' });
-      }
-      
-      if (results.length > 0) {
-        return res.status(409).json({ error: 'Ya existe un empleado con ese DNI' });
+    // 2- verificar que el DNI no esté registrado en empleados
+    const verificarDNI = `SELECT idEmpleado FROM empleados WHERE DNI = ? LIMIT 1`;
+    db.query(verificarDNI, [DNI], (err, dniRes) => {
+      if (err) {
+        console.error('Error en la consulta de verificación de DNI (empleados):', err);
+        return res.status(500).json({ message: 'Error en el servidor' });
       }
 
-      // 6. Crear el empleado
-      const nuevoEmpleado = 'INSERT INTO empleados (DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, idUsuario, idCatEmpleado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-      db.query(nuevoEmpleado, [DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, idUsuario, idCatEmpleado], (error, results) => {
-        if (error) {
-          console.error('Error al crear el empleado:', error);
-          // Error de FK
-          if (error.code === 'ER_NO_REFERENCED_ROW_2') {
-            return res.status(400).json({ error: 'Una o más referencias (categoría, localidad, usuario) no existen' });
+      if (dniRes && dniRes.length > 0) {
+        return res.status(409).json({ message: 'El DNI ya está registrado' });
+      }
+
+      // 3- verificar teléfono en empleados (si se envía)
+      if (TelefonoEmpleado) {
+        const verificarTelefono = `SELECT idEmpleado FROM empleados WHERE TelefonoEmpleado = ? LIMIT 1`;
+        db.query(verificarTelefono, [TelefonoEmpleado], (errTel, telRes) => {
+          if (errTel) {
+            console.error('Error en la consulta de verificación de teléfono (empleados):', errTel);
+            return res.status(500).json({ message: 'Error en el servidor' });
           }
-          return res.status(500).json({ error: 'Error al crear el empleado' });
-        }
-        res.status(201).json({ 
-          message: 'Empleado creado exitosamente', 
-          id: results.insertId,
-          empleado: { DNI, NombreEmpleado, ApellidoEmpleado }
+
+          if (telRes && telRes.length > 0) {
+            return res.status(409).json({ message: 'El teléfono ya está registrado' });
+          }
+
+          // Continuar flujo
+          handleUserAndInsert();
         });
-      });
+      } else {
+        handleUserAndInsert();
+      }
+
+      // función que maneja creación de usuario (si corresponde) y la inserción del empleado
+      function handleUserAndInsert() {
+        // si proporcionaron idUsuario -> verificar existencia y usarlo
+        if (idUsuario) {
+          const verificarUsuario = `SELECT idUsuario FROM usuarios WHERE idUsuario = ? LIMIT 1`;
+          db.query(verificarUsuario, [idUsuario], (errUser, userRes) => {
+            if (errUser) {
+              console.error('Error al verificar idUsuario:', errUser);
+              return res.status(500).json({ message: 'Error en el servidor' });
+            }
+
+            if (!userRes || userRes.length === 0) {
+              return res.status(404).json({ message: 'Usuario proporcionado no existe' });
+            }
+
+            // insertar empleado con idUsuario existente
+            insertEmpleado(userRes[0].idUsuario);
+          });
+          return;
+        }
+
+        // si proporcionaron MailUsuario y PasswordUsuario -> crear usuario
+        if (MailUsuario && PasswordUsuario) {
+          // 4- verificar que el mail no esté registrado en usuarios
+          const verificarMail = `SELECT idUsuario FROM usuarios WHERE MailUsuario = ? LIMIT 1`;
+          db.query(verificarMail, [MailUsuario], (errMail, mailRes) => {
+            if (errMail) {
+              console.error('Error en la consulta de verificación de mail (usuarios):', errMail);
+              return res.status(500).json({ message: 'Error en el servidor' });
+            }
+
+            if (mailRes && mailRes.length > 0) {
+              return res.status(409).json({ message: 'El mail ya está registrado' });
+            }
+
+            // 5- obtener idRol para 'Empleado'
+            const obtenerRolEmpleado = `SELECT idRol FROM roles WHERE NombreRol = 'Empleado' LIMIT 1`;
+            db.query(obtenerRolEmpleado, (errRol, rolRes) => {
+              if (errRol) {
+                console.error('Error al obtener rol Empleado:', errRol);
+                return res.status(500).json({ message: 'Error en el servidor' });
+              }
+
+              if (!rolRes || rolRes.length === 0) {
+                return res.status(500).json({ message: "Rol 'Empleado' no encontrado en la base de datos" });
+              }
+
+              const idRolEmpleado = rolRes[0].idRol;
+
+              // 6- encriptar contraseña y crear usuario
+              const saltRounds = 10;
+              bcrypt.hash(PasswordUsuario, saltRounds, (errHash, hashedPassword) => {
+                if (errHash) {
+                  console.error('Error al encriptar la contraseña:', errHash);
+                  return res.status(500).json({ message: 'Error en el servidor' });
+                }
+
+                const insertarUsuario = `INSERT INTO usuarios (MailUsuario, PasswordUsuario, idRol, IsActive) VALUES (?, ?, ?, 1)`;
+                db.query(insertarUsuario, [MailUsuario, hashedPassword, idRolEmpleado], (errInsertUser, userResults) => {
+                  if (errInsertUser) {
+                    console.error('Error en la inserción del usuario:', errInsertUser);
+                    return res.status(500).json({ message: 'Error en el servidor' });
+                  }
+
+                  const idUsuarioCreado = userResults.insertId;
+                  // insertar empleado con idUsuarioCreado
+                  insertEmpleado(idUsuarioCreado, true);
+                });
+              });
+            });
+          });
+          return;
+        }
+
+        // si no se proporcionó idUsuario ni Mail/Password -> error
+        return res.status(400).json({ message: 'Debe proporcionar idUsuario existente o MailUsuario y PasswordUsuario para crear un usuario asociado' });
+      }
+
+      // Inserta empleado en la tabla empleados. Si createdUserFlag es true, hace rollback del usuario en caso de fallo.
+      function insertEmpleado(finalIdUsuario, createdUserFlag = false) {
+        const nuevoEmpleado = `INSERT INTO empleados (DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, idUsuario, idCatEmpleado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        db.query(nuevoEmpleado, [DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado || null, DireccionEmpleado || null, SalarioEmpleado, idLocalidad || null, finalIdUsuario, idCatEmpleado], (errInsert, insertResults) => {
+          if (errInsert) {
+            console.error('Error al crear el empleado:', errInsert);
+            // rollback si creamos el usuario en este flujo
+            if (createdUserFlag && finalIdUsuario) {
+              const eliminarUsuario = `DELETE FROM usuarios WHERE idUsuario = ?`;
+              db.query(eliminarUsuario, [finalIdUsuario], (delErr) => {
+                if (delErr) console.error('Error al eliminar usuario en rollback:', delErr);
+              });
+            }
+
+            if (errInsert.code === 'ER_NO_REFERENCED_ROW_2') {
+              return res.status(400).json({ message: 'Una o más referencias (categoría, localidad, usuario) no existen' });
+            }
+
+            return res.status(500).json({ message: 'Error al crear el empleado' });
+          }
+
+          return res.status(201).json({ message: 'Empleado creado exitosamente', idEmpleado: insertResults.insertId, idUsuario: finalIdUsuario });
+        });
+      }
     });
   } catch (error) {
     console.error('Error al crear el empleado:', error);
-    res.status(500).json({ error: 'Error del servidor' });
+    return res.status(500).json({ message: 'Error en el servidor' });
   }
 };
-
-// Actualizar empleado
-
-export const actualizarEmpleado = async (req, res) => {
+// Actualizar empleado (permite editar los mismos campos que devuelve obtenerEmpleados)
+export const actualizarEmpleado = (req, res) => {
   try {
     const { idEmpleado } = req.params;
-    const { DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, idUsuario, idCatEmpleado } = req.body;
-    
-    const actualizarEmpleadoQuery = `
+    const {
+      DNI,
+      NombreEmpleado,
+      ApellidoEmpleado,
+      FechaNacEmpleado,
+      TelefonoEmpleado,
+      DireccionEmpleado,
+      SalarioEmpleado,
+      idLocalidad,
+      idUsuario,
+      idCatEmpleado,
+      MailUsuario
+    } = req.body;
+
+    const id = Number(idEmpleado);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ message: 'idEmpleado inválido' });
+    }
+
+    // Primero obtener el empleado actual para saber idUsuario si no se envía
+    const obtenerEmpleadoQuery = 'SELECT idUsuario FROM empleados WHERE idEmpleado = ? LIMIT 1';
+    db.query(obtenerEmpleadoQuery, [id], (err, empResults) => {
+      if (err) {
+        console.error('Error al obtener empleado:', err);
+        return res.status(500).json({ message: 'Error en el servidor' });
+      }
+
+      if (!empResults || empResults.length === 0) {
+        return res.status(404).json({ message: 'Empleado no encontrado' });
+      }
+
+      const currentUserId = empResults[0].idUsuario;
+      const finalUserId = idUsuario || currentUserId;
+
+      // Si llega MailUsuario, actualizar la tabla usuarios antes de actualizar empleados
+      const updateEmployeeAfterUser = () => {
+        const actualizarEmpleadoQuery = `
       UPDATE empleados 
       SET DNI = ?, NombreEmpleado = ?, ApellidoEmpleado = ?, FechaNacEmpleado = ?, 
           TelefonoEmpleado = ?, DireccionEmpleado = ?, SalarioEmpleado = ?, 
           idLocalidad = ?, idUsuario = ?, idCatEmpleado = ? 
       WHERE idEmpleado = ?
     `;
-    
-    db.query(actualizarEmpleadoQuery, [DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, idUsuario, idCatEmpleado, idEmpleado], (error, results) => {
-      if (error) {
-        console.error('Error al actualizar el empleado:', error);
 
-        // Manejo de errores comunes para actualización
-        if (error.code === 'ER_DUP_ENTRY') {
-          if (error.message.includes('DNI') || error.sqlMessage?.includes('DNI')) {
-            return res.status(400).json({
-              message: 'El DNI ya está registrado por otro empleado'
-            });
+        const params = [DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, finalUserId, idCatEmpleado, id];
+
+        db.query(actualizarEmpleadoQuery, params, (error, results) => {
+          if (error) {
+            console.error('Error al actualizar el empleado:', error);
+
+            if (error.code === 'ER_DUP_ENTRY') {
+              if (error.message.includes('DNI') || error.sqlMessage?.includes('DNI')) {
+                return res.status(400).json({ message: 'El DNI ya está registrado por otro empleado' });
+              }
+              if (error.message.includes('TelefonoEmpleado') || error.sqlMessage?.includes('TelefonoEmpleado') || error.message.includes('telefono') || error.sqlMessage?.includes('telefono')) {
+                return res.status(400).json({ message: 'El teléfono ya está registrado por otro empleado' });
+              }
+              return res.status(400).json({ message: 'Los datos ya están registrados por otro empleado' });
+            }
+
+            return res.status(500).json({ message: 'Error al actualizar empleado' });
           }
-          if (error.message.includes('TelefonoEmpleado') || 
-              error.sqlMessage?.includes('TelefonoEmpleado') ||
-              error.message.includes('telefono') ||
-              error.sqlMessage?.includes('telefono')) {
-            return res.status(400).json({
-              message: 'El teléfono ya está registrado por otro empleado'
-            });
+
+          if (results.affectedRows === 0) {
+            return res.status(404).json({ message: 'Empleado no encontrado' });
           }
-          return res.status(400).json({
-            message: 'Los datos ya están registrados por otro empleado'
+
+          return res.status(200).json({ message: 'Empleado actualizado exitosamente' });
+        });
+      };
+
+      if (MailUsuario) {
+        // verificar que el mail no esté en uso por otro usuario
+        const verificarMail = 'SELECT idUsuario FROM usuarios WHERE MailUsuario = ? AND idUsuario <> ? LIMIT 1';
+        db.query(verificarMail, [MailUsuario, finalUserId], (errMail, mailRes) => {
+          if (errMail) {
+            console.error('Error al verificar mail:', errMail);
+            return res.status(500).json({ message: 'Error en el servidor' });
+          }
+
+          if (mailRes && mailRes.length > 0) {
+            return res.status(409).json({ message: 'El mail ya está registrado por otro usuario' });
+          }
+
+          // verificar que el usuario existe
+          const verificarUsuario = 'SELECT idUsuario FROM usuarios WHERE idUsuario = ? LIMIT 1';
+          db.query(verificarUsuario, [finalUserId], (errUser, userRes) => {
+            if (errUser) {
+              console.error('Error al verificar usuario:', errUser);
+              return res.status(500).json({ message: 'Error en el servidor' });
+            }
+
+            if (!userRes || userRes.length === 0) {
+              return res.status(404).json({ message: 'Usuario asociado no encontrado' });
+            }
+
+            // actualizar el mail
+            const actualizarMailQuery = 'UPDATE usuarios SET MailUsuario = ? WHERE idUsuario = ?';
+            db.query(actualizarMailQuery, [MailUsuario, finalUserId], (errUpd, updRes) => {
+              if (errUpd) {
+                console.error('Error al actualizar mail de usuario:', errUpd);
+                return res.status(500).json({ message: 'Error al actualizar mail de usuario' });
+              }
+
+              // continuar con la actualización del empleado
+              updateEmployeeAfterUser();
+            });
           });
-        }
-
-        return res.status(500).json({ message: 'Error al actualizar empleado' });
+        });
+      } else {
+        // no se cambia el mail, solo actualizamos empleado
+        updateEmployeeAfterUser();
       }
-
-      if (results.affectedRows === 0) {
-        return res.status(404).json({ message: 'Empleado no encontrado' });
-      }
-
-      res.status(200).json({ message: 'Empleado actualizado exitosamente' });
     });
   } catch (error) {
     console.error('Error del servidor:', error);
-    res.status(500).json({ message: 'Error del servidor' });
+    return res.status(500).json({ message: 'Error del servidor' });
   }
 };
-
 // Cambiar estado del empleado (activar/desactivar)
 export const cambiarEstadoEmpleado = async (req, res) => {
   try {

@@ -76,14 +76,15 @@ export const actualizarCategoriaEmpleado = async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar la categoría de empleado' });
   }
 };
-export const borradoLogicoCategoriaEmpleado = async (req, res) => {
+export const actualizarEstadoCategoriaEmpleado = async (req, res) => {
   try {
     const { idCatEmpleado } = req.params;
-    const borrarCategoria = 'UPDATE catEmpleados SET IsActive = 0 WHERE idCatEmpleado = ?';
-    db.query(borrarCategoria, [idCatEmpleado], (error, results) => {
+    const { IsActive } = req.body;
+    const actualizarEstado = 'UPDATE catEmpleados SET IsActive = ? WHERE idCatEmpleado = ?';
+    db.query(actualizarEstado, [IsActive, idCatEmpleado], (error, results) => {
       if (error) {
-        console.error('Error al realizar el borrado lógico de la categoría de empleado:', error);
-        res.status(500).json({ error: 'Error al realizar el borrado lógico de la categoría de empleado' });
+        console.error('Error al actualizar el estado de la categoría de empleado:', error);
+        res.status(500).json({ error: 'Error al actualizar el estado de la categoría de empleado' });
         return;
       }
       if (results.affectedRows === 0) {

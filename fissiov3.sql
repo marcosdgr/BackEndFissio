@@ -1,0 +1,644 @@
+create database fissio2;
+use fissio2;
+
+
+CREATE TABLE roles (
+  idRol INT PRIMARY KEY AUTO_INCREMENT,
+  NombreRol VARCHAR(50) NOT NULL UNIQUE
+) ;
+
+CREATE TABLE usuarios (
+  idUsuario INT PRIMARY KEY AUTO_INCREMENT,
+  MailUsuario VARCHAR(250) NOT NULL UNIQUE,
+  PasswordUsuario VARCHAR(250) NOT NULL,
+  idRol INT NOT NULL,
+  IsActive TINYINT DEFAULT 1,
+  FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_usuarios_rol
+    FOREIGN KEY (idRol) REFERENCES roles(idRol)
+     
+) ;
+
+-- Localidades (opcional, pero recomendado para normalizar) POOR BASE DE DATOS
+CREATE TABLE localidades (
+  idLocalidad INT PRIMARY KEY AUTO_INCREMENT,
+  NombreLocalidad VARCHAR(100) NOT NULL UNIQUE,
+  IsActive TINYINT DEFAULT 1
+) ;
+
+-- Pacientes
+CREATE TABLE pacientes (
+  idPaciente INT PRIMARY KEY AUTO_INCREMENT,
+  DNI VARCHAR(20) NOT NULL UNIQUE,
+  NombrePaciente VARCHAR(50) NOT NULL,
+  ApellidoPaciente VARCHAR(50) NOT NULL,
+  FechaNacPaciente DATE NOT NULL,
+  TelefonoPaciente VARCHAR(30) NOT NULL,
+  DireccionPaciente VARCHAR(250) NOT NULL,
+  Sexo ENUM('Femenino','Masculino','Otro') NOT NULL,
+  idLocalidad INT NOT NULL,
+  IsActive TINYINT DEFAULT 1,
+  idUsuario INT NOT NULL,
+  FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_pacientes_usuarios
+    FOREIGN KEY (idUsuario) REFERENCES usuarios(idUsuario),
+  CONSTRAINT fk_pacientes_localidades
+    FOREIGN KEY (idLocalidad) REFERENCES localidades(idLocalidad)
+      
+) ;
+
+-- Categoría de empleados
+CREATE TABLE catEmpleados (
+  idCatEmpleado INT PRIMARY KEY AUTO_INCREMENT,
+  NombreCat VARCHAR(200) NOT NULL UNIQUE,
+  DescripcionCat varchar(500),
+  IsActive TINYINT DEFAULT 1
+) ;
+
+-- Empleados 
+CREATE TABLE empleados (
+  idEmpleado INT PRIMARY KEY AUTO_INCREMENT,
+  DNI VARCHAR(20) NOT NULL UNIQUE,
+  NombreEmpleado VARCHAR(50) NOT NULL,
+  ApellidoEmpleado VARCHAR(50) NOT NULL,
+  FechaNacEmpleado DATE NOT NULL,
+  TelefonoEmpleado VARCHAR(20) NOT NULL,
+  DireccionEmpleado VARCHAR(100) NOT NULL,
+  idLocalidad INT NOT NULL,
+  SalarioEmpleado DECIMAL(10,2) NOT NULL,
+  IsActive TINYINT DEFAULT 1,
+  idUsuario INT NOT NULL,
+  idCatEmpleado INT NOT NULL,
+  FechaRegistro DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_empleados_usuarios
+    FOREIGN KEY (idUsuario) REFERENCES usuarios(idUsuario),
+  CONSTRAINT fk_empleados_cat
+    FOREIGN KEY (idCatEmpleado) REFERENCES catEmpleados(idCatEmpleado),
+  CONSTRAINT fk_empleados_localidades
+    FOREIGN KEY (idLocalidad) REFERENCES localidades(idLocalidad)
+     
+) ;
+
+-- Horarios de trabajo
+CREATE TABLE horariosTrabajo (
+  idHorario INT PRIMARY KEY AUTO_INCREMENT,
+  DiaSemana ENUM('Lunes','Martes','Miercoles','Jueves','Viernes','Sabado','Domingo') NOT NULL,
+  HoraEntradaEsperada TIME NOT NULL,
+  HoraSalidaEsperada TIME NOT NULL,
+  DescripcionHorario VARCHAR(250),
+  IsActive TINYINT DEFAULT 1
+) ;
+
+-- Puente Empleado-Horario
+CREATE TABLE empleados_horarios (
+  idEmpHor INT PRIMARY KEY AUTO_INCREMENT,
+  idEmpleado INT NOT NULL,
+  idHorario INT NOT NULL,
+  CONSTRAINT fk_eh_empleado
+    FOREIGN KEY (idEmpleado) REFERENCES empleados(idEmpleado),
+  CONSTRAINT fk_eh_horario
+    FOREIGN KEY (idHorario) REFERENCES horariosTrabajo(idHorario)
+  
+) ;
+
+-- Asistencias
+CREATE TABLE asistencias (
+  idAsistencia INT PRIMARY KEY AUTO_INCREMENT,
+  Fecha DATE NOT NULL,
+  HoraEntrada TIME,
+  HoraSalida TIME,
+  Observaciones VARCHAR(200),
+  idEmpleado INT NOT NULL,
+  CONSTRAINT fk_asistencias_empleados
+    FOREIGN KEY (idEmpleado) REFERENCES empleados(idEmpleado)
+);
+
+-- Obras Sociales
+CREATE TABLE obraSociales (
+  idObraSocial INT PRIMARY KEY AUTO_INCREMENT,
+  NombreObraSocial VARCHAR(100) NOT NULL UNIQUE,
+  TelefonoObra VARCHAR(30) unique,
+  EmailObra VARCHAR(100) unique,
+  PaginaWebObra VARCHAR(200) unique,
+  EstadoObra ENUM('Activa', 'Suspendida') DEFAULT 'Activa',
+  IsActive TINYINT DEFAULT 1
+) ;
+
+-- planes
+CREATE TABLE planObraSocial (
+idPlanObra INT primary key auto_increment,
+idObraSocial int not null,
+NombraPlan varchar(100) not null,
+DescripcionPlan text,
+PorcentajeDescuentoPlan decimal(2,2),
+EstadoPlan enum('Vigente','No vigente') default 'Vigente',
+IsActive TINYINT DEFAULT 1,
+constraint fk_plan_obrasocial
+foreign key (idObraSocial) references obraSociales(idObraSocial)
+);
+
+
+-- Obra Social x Paciente
+CREATE TABLE obraSocial_Paciente (
+  idPacienteObra INT PRIMARY KEY AUTO_INCREMENT,
+  idPaciente INT NOT NULL,
+  idPlanObra int not null,
+  NumeroAfiliado VARCHAR(30),
+  EstadoPlan ENUM('activo','suspendido','baja') DEFAULT 'activo',
+  IsActive TINYINT DEFAULT 1,
+  CONSTRAINT fk_os_pac_paciente
+    FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente),
+  CONSTRAINT fk_os_pac_obra
+    FOREIGN KEY (idPlanObra) REFERENCES planObraSocial(idPlanObra)
+  
+) ;
+
+
+
+
+-- Salas
+CREATE TABLE salas (
+  idSala INT PRIMARY KEY AUTO_INCREMENT,
+  NombreSala VARCHAR(50) NOT NULL UNIQUE,
+  Capacidad INT NOT NULL,
+  IsActive TINYINT DEFAULT 1
+) ;
+
+-- Tratamientos y Servicios -- falta
+CREATE TABLE tratamientos (
+  idTratamiento INT PRIMARY KEY AUTO_INCREMENT,
+  NombreTratamiento VARCHAR(50) NOT NULL UNIQUE,
+  DescripcionTratamiento TEXT NOT NULL,
+  DuracionTratamiento INT NOT NULL,
+  InformeTratamiento TEXT,
+  IsActive TINYINT DEFAULT 1
+) ;
+
+CREATE TABLE servicios (
+  idServicio INT PRIMARY KEY AUTO_INCREMENT,
+  NombreServicio VARCHAR(50) NOT NULL,
+  DescripcionServicio VARCHAR(200) NOT NULL,
+  IsActive TINYINT DEFAULT 1
+) ;
+
+
+-- Turnos (sin idServicio directo; usaremos puente turno_servicios)
+CREATE TABLE turnos (
+  idTurno INT PRIMARY KEY AUTO_INCREMENT,
+  FechaSolicitudTurno DATE NOT NULL,
+  FechaRequeridaTurno DATE NOT NULL,
+  HorarioRequeridoTurno TIME NOT NULL,
+  HorarioInicioTurno TIME NOT NULL,
+  HorarioFinTurno TIME NOT NULL,
+  InformeTurno VARCHAR(250),
+  EstadoTurno ENUM('Solicitado','Pendiente','Cancelado','Finalizado') NOT NULL default 'Solicitado',
+  idPaciente INT NOT NULL,
+  idEmpleado INT  NULL,
+  idSala INT NULL,
+  idTratamiento INT NULL,
+  CONSTRAINT fk_turnos_paciente
+    FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente),
+  CONSTRAINT fk_turnos_empleado
+    FOREIGN KEY (idEmpleado) REFERENCES empleados(idEmpleado),
+  CONSTRAINT fk_turnos_sala
+    FOREIGN KEY (idSala) REFERENCES salas(idSala),
+  CONSTRAINT fk_turnos_tratamientos
+  FOREIGN KEY (idTratamiento) references tratamientos(idTratamiento)
+) ;
+
+-- Puente Turno-Servicios (permite 1..N)
+CREATE TABLE turno_servicios (
+  idTurnoServicio INT PRIMARY KEY AUTO_INCREMENT,
+  idTurno INT NOT NULL,
+  idServicio INT NOT NULL,
+  Cantidad INT DEFAULT 1,
+  PrecioUnitario DECIMAL(10,2) DEFAULT NULL, -- si querés capturar precio histórico
+  CONSTRAINT fk_ts_turno
+    FOREIGN KEY (idTurno) REFERENCES turnos(idTurno),
+  CONSTRAINT fk_ts_servicio
+    FOREIGN KEY (idServicio) REFERENCES servicios(idServicio)
+     
+) ;    
+-- Catálogos de pagos/cobros 
+CREATE TABLE catMediosPago (
+  idMedioPago INT PRIMARY KEY AUTO_INCREMENT,
+  NombreMedio VARCHAR(50) NOT NULL UNIQUE
+) ;
+
+CREATE TABLE catTiposPago (
+  idTipoPago INT PRIMARY KEY AUTO_INCREMENT,
+  NombreTipo VARCHAR(50) NOT NULL UNIQUE
+) ;
+
+
+-- Cobros (relacionados al turno)
+CREATE TABLE cobros (
+  idCobro INT PRIMARY KEY AUTO_INCREMENT,
+  FechaCobro DATETIME NOT NULL,
+  TipoCobro ENUM('Paciente','Otro') NOT NULL DEFAULT 'Paciente',
+  idMedioPago INT NOT NULL,
+  MontoCobro DECIMAL(10,2) NOT NULL,
+  EstadoCobro ENUM('Cobrado','Pendiente') NOT NULL,
+  Descripcion TEXT,
+  idTurno INT NOT NULL,
+  CONSTRAINT fk_cobros_turno
+    FOREIGN KEY (idTurno) REFERENCES turnos(idTurno),
+  CONSTRAINT fk_cobros_medio
+    FOREIGN KEY (idMedioPago) REFERENCES catMediosPago(idMedioPago)
+      
+) ;
+
+-- Pagos (gastos)
+CREATE TABLE pagos (
+  idPago INT PRIMARY KEY AUTO_INCREMENT,
+  FechaPago DATETIME NOT NULL,
+  idTipoPago INT NOT NULL,
+  Descripcion TEXT,
+  idMedioPago INT NOT NULL,
+  MontoPago DECIMAL(10,2) NOT NULL,
+  EstadoPago ENUM('Pagado','Pendiente') NOT NULL DEFAULT 'Pendiente',
+  CONSTRAINT fk_pagos_tipo
+    FOREIGN KEY (idTipoPago) REFERENCES catTiposPago(idTipoPago),
+  CONSTRAINT fk_pagos_medio
+    FOREIGN KEY (idMedioPago) REFERENCES catMediosPago(idMedioPago)
+) ;
+
+-- Historias clínicas
+CREATE TABLE historiasClinicas (
+  idHistoriaClinica INT PRIMARY KEY AUTO_INCREMENT,
+  FechaInicio DATETIME NOT NULL,
+  Diagnostico VARCHAR(100),
+  Observaciones VARCHAR(500),
+  FechaActualizacion DATETIME NOT NULL,
+  CreadoPor INT NOT NULL,
+  ActualizadoPor INT NOT NULL,
+  IsActive TINYINT DEFAULT 1,
+  idPaciente INT NOT NULL,
+  CONSTRAINT fk_hc_paciente
+    FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente),
+  CONSTRAINT fk_hc_empleado_crea
+    FOREIGN KEY (CreadoPor) REFERENCES empleados(idEmpleado),
+  CONSTRAINT fk_hc_empleado_act
+    FOREIGN KEY (ActualizadoPor) REFERENCES empleados(idEmpleado)
+  
+) ;
+-- COMENTARIOS QUE PUEDEN DEJAR LOS PACIENTES Y SE PUEDEN PUBLICAR EN LA PAGINA -- 
+-- Comentarios (opcional vincular al turno)
+CREATE TABLE comentarios (
+  idComentario INT PRIMARY KEY AUTO_INCREMENT,
+  CalificacionComentario INT NOT NULL,
+  FechaComentario DATETIME DEFAULT CURRENT_TIMESTAMP,
+  Comentario VARCHAR(300),
+  IsActive TINYINT DEFAULT 1,
+  idPaciente INT NOT NULL,
+  CONSTRAINT fk_com_paciente
+    FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente)
+) ;
+
+-- MENSAJERIA INTERNA --
+-- Notificaciones: entre usuarios + destinatarios M:N
+CREATE TABLE notificaciones (
+  idNotificacion INT PRIMARY KEY AUTO_INCREMENT,
+  idRemitente INT NOT NULL,
+  Mensaje TEXT NOT NULL,
+  FechaEnvio DATETIME DEFAULT CURRENT_TIMESTAMP,
+  Leido TINYINT DEFAULT 0,
+  CONSTRAINT fk_notif_remitente
+    FOREIGN KEY (idRemitente) REFERENCES usuarios(idUsuario)
+      
+) ;
+
+CREATE TABLE notificaciones_destinatarios (
+  idNotDest INT PRIMARY KEY AUTO_INCREMENT,
+  idNotificacion INT NOT NULL,
+  idEmpleadoDestinatario INT NOT NULL,
+  CONSTRAINT fk_notdest_notif
+    FOREIGN KEY (idNotificacion) REFERENCES notificaciones(idNotificacion),
+  CONSTRAINT fk_notdest_usuario
+    FOREIGN KEY (idempleadoDestinatario) REFERENCES empleados(idEmpleado)
+) ;
+
+-- Recordatorios y encuestas (por turno)
+CREATE TABLE recordatorios (
+  idRecordatorio INT PRIMARY KEY AUTO_INCREMENT,
+  TipoNotificacion ENUM('Recordatorio','Aviso','Otro') NOT NULL DEFAULT 'Recordatorio',
+  Mensaje TEXT NOT NULL,
+  FechaEnvio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  Enviado TINYINT DEFAULT 0,
+  idTurno INT NOT NULL,
+  CONSTRAINT fk_recordatorios_turnos
+    FOREIGN KEY (idTurno) REFERENCES turnos(idTurno)
+) ;
+
+CREATE TABLE encuestasSatisfaccion (
+  idEncuesta INT PRIMARY KEY AUTO_INCREMENT,
+  Calificacion INT NOT NULL,
+  Comentario TEXT,
+  FechaRespuesta DATETIME DEFAULT CURRENT_TIMESTAMP,
+  idTurno INT NOT NULL,
+  CONSTRAINT fk_encuestas_turnos
+    FOREIGN KEY (idTurno) REFERENCES turnos(idTurno)
+) ;
+
+-- Estudios del paciente
+CREATE TABLE estudios_paciente (
+  idEstudio INT PRIMARY KEY AUTO_INCREMENT,
+  idPaciente INT NOT NULL,
+  ArchivoURL TEXT NOT NULL,         
+  FechaEstudio DATETIME NOT NULL,
+  Descripcion TEXT,
+  CONSTRAINT fk_estudios_paciente
+    FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente)
+);
+
+
+CREATE TABLE metricasDiarias (
+  idMetrica INT AUTO_INCREMENT PRIMARY KEY,
+  FechaBalance DATE NOT NULL UNIQUE,
+
+  -- Totales de dinero
+  IngresosCobrados DECIMAL(12,2) DEFAULT 0.00,
+  IngresosPendientes DECIMAL(12,2) DEFAULT 0.00,
+  EgresosPagados DECIMAL(12,2) DEFAULT 0.00,
+  EgresosPendientes DECIMAL(12,2) DEFAULT 0.00,
+
+  -- Turnos
+  TurnosProgramados INT DEFAULT 0,
+  TurnosAtendidos INT DEFAULT 0,
+  TurnosCancelados INT DEFAULT 0,
+
+  idTurno INT NOT NULL,
+  idPago INT NOT NULL,
+  idCobro INT NOT NULL,
+	CONSTRAINT fk_metricas_turnos
+    FOREIGN KEY (idTurno) REFERENCES turnos(idTurno),
+    CONSTRAINT fk_metricas_pagos
+    FOREIGN KEY (idPago) REFERENCES pagos(idPago),
+    CONSTRAINT fk_metricas_cobros
+    FOREIGN KEY (idCobro) REFERENCES cobros(idCobro)
+);
+CREATE TABLE cat_faqs (
+  idCatFAQ INT PRIMARY KEY AUTO_INCREMENT,
+  NombreCategoria VARCHAR(100) NOT NULL UNIQUE,
+  IsActive TINYINT DEFAULT 1
+);
+
+CREATE TABLE faqs (
+  idFAQ INT PRIMARY KEY AUTO_INCREMENT,
+  idCatFAQ INT,
+  Pregunta VARCHAR(500) NOT NULL,
+  Respuesta TEXT NOT NULL,
+  Categoria VARCHAR(100),
+  FechaCreacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+  IsActive TINYINT DEFAULT 1,
+  CONSTRAINT fk_faqs_cat 
+  FOREIGN KEY (idCatFAQ) REFERENCES cat_faqs(idCatFAQ)
+);
+
+
+
+-- Chatbot
+CREATE TABLE chatbot (
+  idLog INT AUTO_INCREMENT PRIMARY KEY,
+  sessionId CHAR(36) NOT NULL,                                                                 -- UUID del visitante
+  preguntaUsuario TEXT NOT NULL,                                                               -- Lo que el visitante escribió
+  respuestaBot TEXT,                                                                           -- Respuesta generada por el bot
+  fechaMensaje DATETIME DEFAULT CURRENT_TIMESTAMP,                                             -- Fecha y hora del mensaje
+  origen ENUM('usuario', 'bot') NOT NULL,                                                      -- Quién envió el mensaje
+  categoriaConsulta VARCHAR(100),                                                              -- (Opcional) tipo de consulta detectada
+  INDEX (sessionId),                                                                           -- Para buscar rápido por sesión
+  INDEX (fechaMensaje)
+);
+
+
+-- ejemplos --
+-- ================================
+-- 🔹 ROLES
+-- ================================
+INSERT INTO roles (NombreRol) VALUES 
+('Administrador'),
+('Empleado'),
+('Paciente');
+
+-- ================================
+-- 🔹 USUARIOS
+-- ================================
+INSERT INTO usuarios (MailUsuario, PasswordUsuario, idRol) VALUES
+('admin@fissio.com', 'admin123', 1),
+('empleado1@fissio.com', 'empleado123', 2),
+('paciente1@fissio.com', 'paciente123', 3);
+
+-- ================================
+-- 🔹 LOCALIDADES
+-- ================================
+INSERT INTO localidades (NombreLocalidad) VALUES
+('San Miguel de Tucumán'),
+('Yerba Buena'),
+('Tafí Viejo'),
+('Lules');
+
+-- ================================
+-- 🔹 CATEGORÍA DE EMPLEADOS
+-- ================================
+INSERT INTO catEmpleados (NombreCat, DescripcionCat) VALUES
+('Fisioterapeuta', 'Profesional encargado de los tratamientos de rehabilitación.'),
+('Recepcionista', 'Atención al paciente y gestión de turnos.'),
+('Administrador', 'Gestión integral del sistema.');
+
+-- ================================
+-- 🔹 EMPLEADOS
+-- ================================
+INSERT INTO empleados (DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, idLocalidad, SalarioEmpleado, idUsuario, idCatEmpleado)
+VALUES
+('40300111', 'Carlos', 'Gomez', '1990-03-15', '3815000011', 'Av. Mitre 123', 1, 250000.00, 2, 1),
+('39222999', 'Lucía', 'Perez', '1985-07-10', '3815000022', 'Gral. Paz 450', 2, 180000.00, 2, 2);
+
+-- ================================
+-- 🔹 PACIENTES
+-- ================================
+INSERT INTO pacientes (DNI, NombrePaciente, ApellidoPaciente, FechaNacPaciente, TelefonoPaciente, DireccionPaciente, Sexo, idLocalidad, idUsuario)
+VALUES
+('45999888', 'Juan', 'Martinez', '2000-06-22', '3815111122', 'Av. Belgrano 800', 'Masculino', 1, 3),
+('42233444', 'Ana', 'Lopez', '1998-09-15', '3815444433', '9 de Julio 2300', 'Femenino', 2, 3);
+
+-- ================================
+-- 🔹 HORARIOS DE TRABAJO
+-- ================================
+INSERT INTO horariosTrabajo (DiaSemana, HoraEntradaEsperada, HoraSalidaEsperada, DescripcionHorario)
+VALUES
+('Lunes', '08:00:00', '14:00:00', 'Turno mañana'),
+('Martes', '08:00:00', '14:00:00', 'Turno mañana'),
+('Miércoles', '14:00:00', '20:00:00', 'Turno tarde');
+
+-- ================================
+-- 🔹 EMPLEADOS_HORARIOS
+-- ================================
+INSERT INTO empleados_horarios (idEmpleado, idHorario) VALUES
+(1, 1),
+(1, 2),
+(2, 3);
+
+-- ================================
+-- 🔹 OBRAS SOCIALES
+-- ================================
+INSERT INTO obraSociales (NombreObraSocial, TelefonoObra, EmailObra, PaginaWebObra)
+VALUES
+('OSDE', '0800-555-6733', 'contacto@osde.com.ar', 'https://www.osde.com.ar'),
+('Swiss Medical', '0800-777-7788', 'info@swissmedical.com', 'https://www.swissmedical.com.ar');
+
+-- ================================
+-- 🔹 PLANES DE OBRA SOCIAL
+-- ================================
+INSERT INTO planObraSocial (NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan, idObraSocial)
+VALUES
+('OSDE 210', 'Cobertura básica de consultas y tratamientos.', 0.20, 1),
+('SMG Oro', 'Plan premium con cobertura total.', 0.30, 2);
+
+-- ================================
+-- 🔹 OBRAS SOCIALES POR PACIENTE
+-- ================================
+INSERT INTO obraSocial_Paciente (idPaciente, idPlanObra, NumeroAfiliado)
+VALUES
+(1, 1, 'OS210-998877'),
+(2, 2, 'SMG-445566');
+
+-- ================================
+-- 🔹 SALAS
+-- ================================
+INSERT INTO salas (NombreSala, Capacidad)
+VALUES
+('Sala 1 - Rehabilitación', 3),
+('Sala 2 - Electroterapia', 2);
+
+-- ================================
+-- 🔹 TRATAMIENTOS
+-- ================================
+INSERT INTO tratamientos (NombreTratamiento, DescripcionTratamiento, DuracionTratamiento)
+VALUES
+('Kinesiología General', 'Sesión de 45 minutos para rehabilitación muscular.', 45),
+('Masoterapia', 'Terapia de masajes relajantes o descontracturantes.', 30);
+
+-- ================================
+-- 🔹 SERVICIOS
+-- ================================
+INSERT INTO servicios (NombreServicio, DescripcionServicio)
+VALUES
+('Evaluación Inicial', 'Evaluación física y diagnóstico del paciente.'),
+('Sesión de Rehabilitación', 'Aplicación de tratamiento kinesiológico.');
+
+-- ================================
+-- 🔹 TURNOS
+-- ================================
+INSERT INTO turnos (FechaSolicitudTurno, FechaRequeridaTurno, HorarioRequeridoTurno, HorarioInicioTurno, HorarioFinTurno, idPaciente, idEmpleado, idSala, idTratamiento)
+VALUES
+('2025-11-05', '2025-11-10', '10:00:00', '10:00:00', '10:45:00', 1, 1, 1, 1),
+('2025-11-05', '2025-11-11', '11:00:00', '11:00:00', '11:30:00', 2, 2, 2, 2);
+
+-- ================================
+-- 🔹 TURNOS_SERVICIOS
+-- ================================
+INSERT INTO turno_servicios (idTurno, idServicio, Cantidad, PrecioUnitario)
+VALUES
+(1, 1, 1, 2500.00),
+(1, 2, 1, 3000.00),
+(2, 2, 1, 3200.00);
+
+-- ================================
+-- 🔹 CATEGORÍAS DE MEDIOS Y TIPOS DE PAGO
+-- ================================
+INSERT INTO catMediosPago (NombreMedio) VALUES ('Efectivo'), ('Tarjeta'), ('Transferencia');
+INSERT INTO catTiposPago (NombreTipo) VALUES ('Gasto operativo'), ('Honorarios'), ('Compra de insumos');
+
+-- ================================
+-- 🔹 COBROS
+-- ================================
+INSERT INTO cobros (FechaCobro, TipoCobro, idMedioPago, MontoCobro, EstadoCobro, idTurno)
+VALUES
+(NOW(), 'Paciente', 1, 5500.00, 'Cobrado', 1),
+(NOW(), 'Paciente', 2, 3200.00, 'Pendiente', 2);
+
+-- ================================
+-- 🔹 PAGOS
+-- ================================
+INSERT INTO pagos (FechaPago, idTipoPago, Descripcion, idMedioPago, MontoPago, EstadoPago)
+VALUES
+(NOW(), 1, 'Compra de guantes y alcohol', 1, 12000.00, 'Pagado'),
+(NOW(), 2, 'Pago a kinesiólogo', 2, 200000.00, 'Pendiente');
+
+-- ================================
+-- 🔹 HISTORIAS CLÍNICAS
+-- ================================
+INSERT INTO historiasClinicas (FechaInicio, Diagnostico, Observaciones, FechaActualizacion, CreadoPor, ActualizadoPor, idPaciente)
+VALUES
+(NOW(), 'Lumbalgia', 'Dolor lumbar leve. Se recomienda fisioterapia.', NOW(), 1, 1, 1),
+(NOW(), 'Esguince de tobillo', 'Tratamiento con ejercicios de fortalecimiento.', NOW(), 2, 2, 2);
+
+-- ================================
+-- 🔹 COMENTARIOS
+-- ================================
+INSERT INTO comentarios (CalificacionComentario, Comentario, idPaciente)
+VALUES
+(5, 'Excelente atención y resultados.', 1),
+(4, 'Muy buena experiencia.', 2);
+
+-- ================================
+-- 🔹 NOTIFICACIONES
+-- ================================
+INSERT INTO notificaciones (idRemitente, Mensaje)
+VALUES
+(1, 'Recordatorio: revisar agenda semanal.'),
+(2, 'Nuevo paciente registrado.');
+
+-- ================================
+-- 🔹 NOTIFICACIONES DESTINATARIOS
+-- ================================
+INSERT INTO notificaciones_destinatarios (idNotificacion, idEmpleadoDestinatario)
+VALUES
+(1, 1),
+(2, 2);
+
+-- ================================
+-- 🔹 RECORDATORIOS
+-- ================================
+INSERT INTO recordatorios (TipoNotificacion, Mensaje, idTurno)
+VALUES
+('Recordatorio', 'Turno de Juan Martínez el 10/11 a las 10:00.', 1),
+('Aviso', 'Turno de Ana López el 11/11 a las 11:00.', 2);
+
+-- ================================
+-- 🔹 ENCUESTAS
+-- ================================
+INSERT INTO encuestasSatisfaccion (Calificacion, Comentario, idTurno)
+VALUES
+(5, 'Muy conforme con el servicio.', 1),
+(4, 'Atención rápida y cordial.', 2);
+
+-- ================================
+-- 🔹 FAQ
+-- ================================
+INSERT INTO cat_faqs (NombreCategoria) VALUES ('Turnos'), ('Tratamientos'), ('Obras Sociales');
+
+INSERT INTO faqs (idCatFAQ, Pregunta, Respuesta)
+VALUES
+(1, '¿Cómo puedo cancelar un turno?', 'Podés cancelar un turno desde la app o comunicándote con recepción.'),
+(2, '¿Cuánto dura una sesión de fisioterapia?', 'Las sesiones duran entre 30 y 45 minutos.'),
+(3, '¿Qué obras sociales se aceptan?', 'Actualmente trabajamos con OSDE y Swiss Medical.');
+
+-- ================================
+-- 🔹 CHATBOT
+-- ================================
+INSERT INTO chatbot (sessionId, preguntaUsuario, respuestaBot, origen, categoriaConsulta)
+VALUES
+(UUID(), '¿Qué tratamientos ofrecen?', 'Ofrecemos kinesiología, masoterapia y rehabilitación.', 'usuario', 'tratamientos'),
+(UUID(), '¿Trabajan con OSDE?', 'Sí, aceptamos OSDE y Swiss Medical.', 'usuario', 'obras sociales');
+
+
+select*from planObraSocial;
+
+SELECT idPlanObra, NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan, IsActive
+FROM planObraSocial
+WHERE idPlanObra = 3;
+
+SELECT COUNT(*) AS cnt
+FROM obraSocial_Paciente
+WHERE idPlanObra = 3 AND EstadoPlan = 'activo' AND IsActive = 1;
