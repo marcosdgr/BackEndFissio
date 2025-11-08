@@ -63,16 +63,21 @@ const mensajesInternos = {
         n.Leido,
         n.idRemitente,
         u1.MailUsuario AS RemitenteEmail,
-        e.NombreEmpleado AS NombreDestinatario,
-        e.ApellidoEmpleado AS ApellidoDestinatario,
+        e_remitente.idEmpleado AS idEmpleadoRemitente,
+        e_remitente.NombreEmpleado AS NombreRemitente,
+        e_remitente.ApellidoEmpleado AS ApellidoRemitente,
+        e_destinatario.idEmpleado AS idEmpleadoDestinatario,
+        e_destinatario.NombreEmpleado AS NombreDestinatario,
+        e_destinatario.ApellidoEmpleado AS ApellidoDestinatario,
         nd.idEmpleadoDestinatario
       FROM notificaciones n
       JOIN notificaciones_destinatarios nd ON n.idNotificacion = nd.idNotificacion
       JOIN usuarios u1 ON n.idRemitente = u1.idUsuario
-      JOIN empleados e ON nd.idEmpleadoDestinatario = e.idEmpleado
+      LEFT JOIN empleados e_remitente ON n.idRemitente = e_remitente.idUsuario
+      JOIN empleados e_destinatario ON nd.idEmpleadoDestinatario = e_destinatario.idEmpleado
       WHERE 
-        (n.idRemitente = ? AND nd.idEmpleadoDestinatario = ?) OR
-        (n.idRemitente = ? AND nd.idEmpleadoDestinatario = ?)
+        (n.idRemitente = ? AND nd.idEmpleadoDestinatario IN (SELECT idEmpleado FROM empleados WHERE idUsuario = ?)) OR
+        (n.idRemitente = ? AND nd.idEmpleadoDestinatario IN (SELECT idEmpleado FROM empleados WHERE idUsuario = ?))
       ORDER BY n.FechaEnvio ASC
     `;
     db.query(sql, [idUser1, idUser2, idUser2, idUser1], (err, results) => {
