@@ -12,7 +12,7 @@ export const login = (req, res) => {
         .status(400)
         .json({ message: "Mail y contraseña con requeridos" });
     }
-    // 2- verifico que el usuario exista en la base de datos
+    // 2- verifico que el usuario exista en la base de datos y obtengo su idEmpleado si existe
     const credenciales = `
     SELECT u.idUsuario, u.PasswordUsuario, u.IsActive, r.NombreRol
     FROM usuarios u
@@ -55,6 +55,7 @@ export const login = (req, res) => {
           idUsuario: user.idUsuario,
           MailUsuario: MailUsuario,
           NombreRol: user.NombreRol,
+          idEmpleado: user.idEmpleado || null, // Incluir idEmpleado si existe
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, {

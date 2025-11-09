@@ -24,15 +24,39 @@ export const autenticar = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
+    // Si el token ya tiene idEmpleado, lo usamos directamente
+    if (decoded.idEmpleado) {
+      req.usuarioAutenticado = {
+        idUsuario: decoded.idUsuario,
+        MailUsuario: decoded.MailUsuario,
+        NombreRol: decoded.NombreRol,
+        idEmpleado: decoded.idEmpleado
+      };
+      return next();
+    }
 
-    req.usuarioAutenticado = {
-      idUsuario: decoded.idUsuario,
-      MailUsuario: decoded.MailUsuario,
-      NombreRol: decoded.NombreRol,
-      idEmpleado: decoded.idEmpleado || null
-    };
+    // Si no tiene idEmpleado, lo obtenemos de la BD
+    import('../../Config/db.js').then(({ default: db }) => {
+      const query = 'SELECT idEmpleado FROM empleados WHERE idUsuario = ? LIMIT 1';
+      db.query(query, [decoded.idUsuario], (err, results) => {
+        if (err) {
+          console.error("Error al obtener idEmpleado:", err);
+          return res.status(500).json({ 
+            message: "Error al verificar autenticación" 
+          });
+        }
 
-    next();
+        req.usuarioAutenticado = {
+          idUsuario: decoded.idUsuario,
+          MailUsuario: decoded.MailUsuario,
+          NombreRol: decoded.NombreRol,
+          idEmpleado: results.length > 0 ? results[0].idEmpleado : null
+        };
+
+        next();
+      });
+    });
+
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ 

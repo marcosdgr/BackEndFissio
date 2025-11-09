@@ -22,4 +22,15 @@ router.get("/conversacion/:idUser1/:idUser2", validarAccesoMensaje, obtenerConve
 // Marcar como leído - valida que solo pueda marcar sus propios mensajes
 router.put("/leido", validarMarcarLeido, marcarLeido);
 
+// Registrar actividad del usuario (heartbeat)
+router.post("/heartbeat", (req, res) => {
+  try {
+    const idUsuario = req.usuarioAutenticado.idUsuario;
+    // Aquí podrías guardar en caché o BD el último heartbeat
+    res.status(200).json({ message: "Heartbeat registrado", timestamp: new Date() });
+  } catch (err) {
+    res.status(500).json({ message: "Error en heartbeat" });
+  }
+});
+
 export default router;

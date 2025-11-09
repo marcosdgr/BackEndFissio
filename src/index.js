@@ -1,5 +1,4 @@
 import express from "express";
-
 import dotenv from "dotenv";
 import cors from "cors";
 
@@ -61,7 +60,8 @@ import mensajesInternosRoutes from "./Routes/mensajes-internos.routes.js";
 import { iniciarCronRecordatorios } from "./Services/recordatorios.service.js";
 
 import obrasSocialesRoutes from "./Routes/ObrasSociales/obrassociales.routes.js";
-import planObraRoutes from "./Routes/ObrasSociales/planObra.routes.js";
+import planObraPacientes from "./Routes/ObrasSociales/obraSocialPaciente.routes.js";
+import planObraSocial from "./Routes/ObrasSociales/planObra.routes.js";
 import chatWebRoutes from "./BOT/routes/chatWeb.routes.js";
 
 
@@ -147,7 +147,8 @@ app.use("/api/cobros/v1", cobrosRoutes); //cobros
 
 
 app.use("/api/obras-sociales/v1", obrasSocialesRoutes);
-app.use("/api/plan-obra/v1", planObraRoutes);
+app.use("/api/plan-obra/v1", planObraSocial);
+app.use("/api/plan-obra-paciente/v1", planObraPacientes);
 
 app.use("/api/chat-web/v1", chatWebRoutes);
 
