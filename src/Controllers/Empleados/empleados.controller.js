@@ -8,7 +8,7 @@ export const obtenerEmpleados = async (req, res) => {
   try {
     const obtenerEmpleadosQuery = `
       SELECT e.idEmpleado, e.DNI, e.NombreEmpleado, e.ApellidoEmpleado, e.FechaNacEmpleado,
-             e.TelefonoEmpleado, e.DireccionEmpleado, e.SalarioEmpleado,
+             e.TelefonoEmpleado, e.DireccionEmpleado, e.SalarioEmpleado, e.PermisosEmpleado,
              u.MailUsuario, l.NombreLocalidad, c.NombreCat, e.IsActive
       FROM empleados e
       LEFT JOIN usuarios u ON e.idUsuario = u.idUsuario
@@ -155,6 +155,7 @@ export const crearEmpleado = async (req, res) => {
     TelefonoEmpleado,
     DireccionEmpleado,
     SalarioEmpleado,
+    PermisosEmpleado,
     idLocalidad,
     idUsuario,
     idCatEmpleado,
@@ -164,6 +165,12 @@ export const crearEmpleado = async (req, res) => {
     // 1- validar campos obligatorios para empleado
     if (!DNI || !NombreEmpleado || !ApellidoEmpleado || !FechaNacEmpleado || !SalarioEmpleado || !idCatEmpleado) {
       return res.status(400).json({ message: 'Todos los campos obligatorios deben ser completados' });
+    }
+
+    // Si se envía PermisosEmpleado (enum), validar valores permitidos
+    const permisosValidos = ['Administracion', 'Kinesiologia', 'Otros'];
+    if (PermisosEmpleado && !permisosValidos.includes(PermisosEmpleado)) {
+      return res.status(400).json({ message: `PermisosEmpleado inválido. Valores permitidos: ${permisosValidos.join(', ')}` });
     }
 
     // 2- verificar que el DNI no esté registrado en empleados
@@ -278,8 +285,8 @@ export const crearEmpleado = async (req, res) => {
 
       // Inserta empleado en la tabla empleados. Si createdUserFlag es true, hace rollback del usuario en caso de fallo.
       function insertEmpleado(finalIdUsuario, createdUserFlag = false) {
-        const nuevoEmpleado = `INSERT INTO empleados (DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, idUsuario, idCatEmpleado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-        db.query(nuevoEmpleado, [DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado || null, DireccionEmpleado || null, SalarioEmpleado, idLocalidad || null, finalIdUsuario, idCatEmpleado], (errInsert, insertResults) => {
+        const nuevoEmpleado = `INSERT INTO empleados (DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, PermisosEmpleado, idLocalidad, idUsuario, idCatEmpleado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        db.query(nuevoEmpleado, [DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado || null, DireccionEmpleado || null, SalarioEmpleado, PermisosEmpleado || null, idLocalidad || null, finalIdUsuario, idCatEmpleado], (errInsert, insertResults) => {
           if (errInsert) {
             console.error('Error al crear el empleado:', errInsert);
             // rollback si creamos el usuario en este flujo
@@ -318,6 +325,7 @@ export const actualizarEmpleado = (req, res) => {
       TelefonoEmpleado,
       DireccionEmpleado,
       SalarioEmpleado,
+      PermisosEmpleado,
       idLocalidad,
       idUsuario,
       idCatEmpleado,
@@ -346,15 +354,21 @@ export const actualizarEmpleado = (req, res) => {
 
       // Si llega MailUsuario, actualizar la tabla usuarios antes de actualizar empleados
       const updateEmployeeAfterUser = () => {
-        const actualizarEmpleadoQuery = `
-      UPDATE empleados 
-      SET DNI = ?, NombreEmpleado = ?, ApellidoEmpleado = ?, FechaNacEmpleado = ?, 
-          TelefonoEmpleado = ?, DireccionEmpleado = ?, SalarioEmpleado = ?, 
-          idLocalidad = ?, idUsuario = ?, idCatEmpleado = ? 
-      WHERE idEmpleado = ?
-    `;
+        // Validar PermisosEmpleado si se proporciona
+        const permisosValidos = ['Administracion', 'Kinesiologia', 'Otros'];
+        if (PermisosEmpleado && !permisosValidos.includes(PermisosEmpleado)) {
+          return res.status(400).json({ message: `PermisosEmpleado inválido. Valores permitidos: ${permisosValidos.join(', ')}` });
+        }
 
-        const params = [DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, idLocalidad, finalUserId, idCatEmpleado, id];
+        const actualizarEmpleadoQuery = `
+          UPDATE empleados 
+          SET DNI = ?, NombreEmpleado = ?, ApellidoEmpleado = ?, FechaNacEmpleado = ?, 
+              TelefonoEmpleado = ?, DireccionEmpleado = ?, SalarioEmpleado = ?, PermisosEmpleado = ?,
+              idLocalidad = ?, idUsuario = ?, idCatEmpleado = ? 
+          WHERE idEmpleado = ?
+        `;
+
+            const params = [DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, SalarioEmpleado, PermisosEmpleado || null, idLocalidad, finalUserId, idCatEmpleado, id];
 
         db.query(actualizarEmpleadoQuery, params, (error, results) => {
           if (error) {
