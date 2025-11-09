@@ -46,12 +46,12 @@ import empleadoRoutes from "./Routes/Empleados/empleados.routes.js";
 import categoriaEmpleadoRoutes from "./Routes/Empleados/categoria_empleados.routes.js";
 
 // import de rutas adicionales
-import comentarioRoutes from "./Routes/comentarioRoutes.js";
-import historiaClinicaRoutes from "./Routes/historiaClinica.routes.js";
-import salaRoutes from "./Routes/salaRoutes.js";
-import metricaDiariaRoutes from "./Routes/metricasDiariasRoutes.js";
-import catFaqsRoutes from "./Routes/catFaqsRoutes.js";
-import faqsRoutes from "./Routes/faqsRoutes.js";
+import comentarioRoutes from "./Routes/Comentarios/comentarioRoutes.js";
+import historiaClinicaRoutes from "./Routes/HistoriaClinica/historiaClinica.routes.js";
+import salaRoutes from "./Routes/Salas/salaRoutes.js";
+import metricaDiariaRoutes from "./Routes/MetricasDiarias/metricasDiariasRoutes.js";
+import catFaqsRoutes from "./Routes/Faqs/catFaqsRoutes.js";
+import faqsRoutes from "./Routes/Faqs/faqsRoutes.js";
 
 // importo rutas de mensajería interna
 import mensajesInternosRoutes from "./Routes/mensajes-internos.routes.js";

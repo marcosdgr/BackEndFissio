@@ -6,11 +6,11 @@ import {
   traerHistoriaClinicaPorId,
   actualizarHistoriaClinica,
   borradoLogicoHistoriaClinica,
-} from "../Controllers/Pacientes/historiaClinica.controller.js";
+} from "../../Controllers/Pacientes/historiaClinica.controller.js";
 import {
   validarCrearHistoriaClinica,
   validarActualizarHistoriaClinica,
-} from "../Middlewares/historiaClinica.validation.js";
+} from "../../Middlewares/historiaClinica.validation.js";
 
 const router = express.Router();
 

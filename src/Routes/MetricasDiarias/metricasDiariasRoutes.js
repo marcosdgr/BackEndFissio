@@ -3,11 +3,11 @@ import {
   crearMetricaDiaria,
   traerMetricasDiarias,
   traerMetricaPorFecha
-} from "../Controllers/Metricas/metricasDiarias.controller.js";
+} from "../../Controllers/Metricas/metricasDiarias.controller.js";
 import {
   validarCrearMetrica,
   validarActualizarMetrica
-} from "../Middlewares/metricasDiarias.validation.js";
+} from "../../Middlewares/metricasDiarias.validation.js";
 
 const router = express.Router();
 
