@@ -12,11 +12,15 @@ export const login = (req, res) => {
         .status(400)
         .json({ message: "Mail y contraseña con requeridos" });
     }
-    // 2- verifico que el usuario exista en la base de datos y obtengo su idEmpleado si existe
+    // 2- verifico que el usuario exista en la base de datos y obtengo su información completa
     const credenciales = `
-    SELECT u.idUsuario, u.PasswordUsuario, u.IsActive, r.NombreRol
+    SELECT u.idUsuario, u.PasswordUsuario, u.IsActive, r.NombreRol,
+           e.idEmpleado, 
+           p.idPaciente, p.NombrePaciente, p.ApellidoPaciente, p.DNI
     FROM usuarios u
     INNER JOIN roles r ON u.idRol = r.idRol
+    LEFT JOIN empleados e ON u.idUsuario = e.idUsuario
+    LEFT JOIN pacientes p ON u.idUsuario = p.idUsuario
     WHERE u.MailUsuario = ?
     LIMIT 1
   `;
@@ -55,14 +59,15 @@ export const login = (req, res) => {
           idUsuario: user.idUsuario,
           MailUsuario: MailUsuario,
           NombreRol: user.NombreRol,
-          idEmpleado: user.idEmpleado || null, // Incluir idEmpleado si existe
+          idEmpleado: user.idEmpleado || null,
+          idPaciente: user.idPaciente || null,
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
           expiresIn: "24h", 
         });
 
-        // 8- retorno el token y la información del usuario
+        // 8- retorno el token y la información completa del usuario
         return res.status(200).json({
           message: "Login exitoso",
           token: token,
@@ -70,6 +75,11 @@ export const login = (req, res) => {
             idUsuario: user.idUsuario,
             MailUsuario: MailUsuario,
             NombreRol: user.NombreRol,
+            idEmpleado: user.idEmpleado || null,
+            idPaciente: user.idPaciente || null,
+            NombrePaciente: user.NombrePaciente || null,
+            ApellidoPaciente: user.ApellidoPaciente || null,
+            DNI: user.DNI || null,
           },
         });
       });

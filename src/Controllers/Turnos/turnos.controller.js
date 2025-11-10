@@ -866,3 +866,57 @@ export const cancelarTurno = (req, res) => {
     return res.status(500).json({ message: "Error interno del servidor" });
   }
 };
+
+// FUNCIÓN: Obtener detalles completos de un turno específico
+export const obtenerDetallesTurno = (req, res) => {
+  const { idTurno } = req.params;
+
+  const detallesTurnoQuery = `
+    SELECT 
+      t.idTurno,
+      t.EstadoTurno,
+      p.NombrePaciente,
+      p.ApellidoPaciente,
+      p.DNI,
+      ep.ArchivoURL as OrdenMedicaURL,
+      ep.FechaEstudio as FechaOrdenMedica,
+      ep.Descripcion as DescripcionOrdenMedica
+    FROM turnos t
+    INNER JOIN pacientes p ON t.idPaciente = p.idPaciente
+    LEFT JOIN estudios_paciente ep ON p.idPaciente = ep.idPaciente 
+      AND ep.Descripcion LIKE CONCAT('%Solicitud de turno #', t.idTurno, '%')
+    WHERE t.idTurno = ?
+    LIMIT 1
+  `;
+
+  db.query(detallesTurnoQuery, [idTurno], (err, results) => {
+    if (err) {
+      console.error("Error al obtener detalles del turno:", err);
+      return res.status(500).json({ message: "Error en el servidor" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({
+        message: "Turno no encontrado"
+      });
+    }
+
+    const turno = results[0];
+
+    res.status(200).json({
+      message: "Detalles del turno obtenidos exitosamente",
+      turno: {
+        idTurno: turno.idTurno,
+        estado: turno.EstadoTurno,
+        nombre: turno.NombrePaciente,
+        apellido: turno.ApellidoPaciente,
+        dni: turno.DNI,
+        ordenMedica: turno.OrdenMedicaURL ? {
+          url: turno.OrdenMedicaURL,
+          fechaSubida: turno.FechaOrdenMedica,
+          descripcion: turno.DescripcionOrdenMedica
+        } : null
+      }
+    });
+  });
+};
