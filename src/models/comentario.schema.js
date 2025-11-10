@@ -25,14 +25,14 @@ export const crearComentarioSchema = Joi.object({
       "any.required": "El comentario es requerido",
     }),
 
-  idPaciente: Joi.number()
+  idUsuario: Joi.number()
     .integer()
     .min(1)
     .required()
     .messages({
-      "number.base": "ID de paciente debe ser un número entero",
-      "number.min": "ID de paciente debe ser al menos 1",
-      "any.required": "ID de paciente es requerido",
+      "number.base": "ID de usuario debe ser un número entero",
+      "number.min": "ID de usuario debe ser al menos 1",
+      "any.required": "ID de usuario es requerido",
     }),
 });
 
