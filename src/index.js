@@ -136,8 +136,8 @@ app.use("/api/empleados/v1", empleadoRoutes);
 
 // Rutas
 app.use("/api/pagos/v1", pagosRoutes);
-app.use("/api/catMedioPago/v1", catMedioPagoRoutes); //categorias de medio de pago
-app.use("/api/catTipoPago/v1", catTipoPagoRoutes); // categorias de tipo de pago
+app.use("/api/catMedioPago/v1", catMedioPagoRoutes);
+app.use("/api/catTipoPago/v1", catTipoPagoRoutes);
 app.use("/api/horariosTrabajo/v1", horariosTrabajoRoutes); //horarios de trabajo
 app.use("/api/empleadosHorarios/v1", empleadosHorariosRoutes); //empleados con horarios
 app.use("/api/asistencias/v1", asistenciasRoutes); //asistencias
