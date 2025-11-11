@@ -309,7 +309,7 @@ export const obtenerTurnosPorIdPaciente = (req, res) => {
     if (!idPaciente) {
       return res.status(400).json({ message: "Falta idPaciente" });
     }
-    const obtenerTurnosPaciente = "SELECT t.idTurno, t.FechaSolicitudTurno, t.HorarioRequeridoTurno, t.EstadoTruno, tr.NombreTratamiento, CONCAT (e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS NombreEmpleado FROM turnos t JOIN tratamientos tr ON t.idTratamiento = tr.idTratamiento LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE t.idPaciente = ?";
+    const obtenerTurnosPaciente = "SELECT t.idTurno, t.FechaSolicitudTurno, t.HorarioRequeridoTurno, t.EstadoTurno, tr.NombreTratamiento, CONCAT (e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS NombreEmpleado FROM turnos t JOIN tratamientos tr ON t.idTratamiento = tr.idTratamiento LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE t.idPaciente = ?";
     db.query(obtenerTurnosPaciente, [idPaciente], (error, results) => {
       if (error) {
         return res.status(500).json({ message: "Error en el servidor" });
