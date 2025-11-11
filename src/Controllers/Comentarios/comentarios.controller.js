@@ -3,34 +3,53 @@ import db from "../../Config/db.js";
 // crear comentario
 export const crearComentario = async (req, res) => {
   try {
-    const { CalificacionComentario, Comentario: textoComentario, idPaciente } = req.body;
+    const { CalificacionComentario, Comentario: textoComentario, idUsuario } = req.body;
 
-    const CrearComentarioQuery = `
-      INSERT INTO comentarios (CalificacionComentario, FechaComentario, Comentario, IsActive, idPaciente)
-      VALUES (?, NOW(), ?, 1, ?)
+    // Primero buscar el idPaciente usando el idUsuario
+    const BuscarPacienteQuery = `
+      SELECT idPaciente FROM pacientes WHERE idUsuario = ? AND IsActive = 1
     `;
 
-    db.query(CrearComentarioQuery, [CalificacionComentario, textoComentario, idPaciente], (err, result) => {
-      if (err) {
-        console.error("Error al crear comentario: ", err);
-        return res.status(500).json({ message: "Error al crear comentario" });
+    db.query(BuscarPacienteQuery, [idUsuario], (errBuscar, pacientes) => {
+      if (errBuscar) {
+        console.error("Error al buscar paciente: ", errBuscar);
+        return res.status(500).json({ message: "Error al buscar paciente" });
       }
 
-      const ObtenerComentarioCreadoQuery = `
-        SELECT c.*, p.NombrePaciente AS pacienteNombre
-        FROM comentarios c
-        JOIN pacientes p ON c.idPaciente = p.idPaciente
-        WHERE c.idComentario = ?
+      if (!pacientes || pacientes.length === 0) {
+        return res.status(404).json({ message: "Paciente no encontrado para este usuario" });
+      }
+
+      const idPaciente = pacientes[0].idPaciente;
+
+      // Ahora crear el comentario con el idPaciente encontrado
+      const CrearComentarioQuery = `
+        INSERT INTO comentarios (CalificacionComentario, FechaComentario, Comentario, IsActive, idPaciente)
+        VALUES (?, NOW(), ?, 1, ?)
       `;
 
-      db.query(ObtenerComentarioCreadoQuery, [result.insertId], (errSelect, comentarios) => {
-        if (errSelect) {
-          console.error("Error al obtener comentario creado: ", errSelect);
-          return res.status(500).json({ message: "Error al obtener comentario" });
+      db.query(CrearComentarioQuery, [CalificacionComentario, textoComentario, idPaciente], (err, result) => {
+        if (err) {
+          console.error("Error al crear comentario: ", err);
+          return res.status(500).json({ message: "Error al crear comentario" });
         }
-        res.status(201).json({
-          mensaje: "Comentario creado exitosamente",
-          data: comentarios[0],
+
+        const ObtenerComentarioCreadoQuery = `
+          SELECT c.*, p.NombrePaciente AS pacienteNombre
+          FROM comentarios c
+          JOIN pacientes p ON c.idPaciente = p.idPaciente
+          WHERE c.idComentario = ?
+        `;
+
+        db.query(ObtenerComentarioCreadoQuery, [result.insertId], (errSelect, comentarios) => {
+          if (errSelect) {
+            console.error("Error al obtener comentario creado: ", errSelect);
+            return res.status(500).json({ message: "Error al obtener comentario" });
+          }
+          res.status(201).json({
+            mensaje: "Comentario creado exitosamente",
+            data: comentarios[0],
+          });
         });
       });
     });
@@ -41,7 +60,6 @@ export const crearComentario = async (req, res) => {
 };
 
 // traer comentarios activos
-
 export const traerComentariosActivos = async (req, res) => {
   try {
     const ListarComentariosActivosQuery = `
@@ -159,6 +177,84 @@ export const borradoLogicoComentario = async (req, res) => {
       }
 
       res.status(200).json({ mensaje: "Comentario eliminado lógicamente" });
+    });
+  } catch (error) {
+    console.error("Error del servidor: ", error);
+    res.status(500).json({ message: "Error del servidor" });
+  }
+};
+
+// Obtener comentarios publicados (para HomePage)
+export const traerComentariosPublicados = async (req, res) => {
+  try {
+    const ListarComentariosPublicadosQuery = `
+      SELECT c.*, p.NombrePaciente AS pacienteNombre
+      FROM comentarios c
+      JOIN pacientes p ON c.idPaciente = p.idPaciente
+      WHERE c.IsActive = 1 AND c.IsPublicado = 1
+      ORDER BY c.FechaComentario DESC
+    `;
+
+    db.query(ListarComentariosPublicadosQuery, (err, comentarios) => {
+      if (err) {
+        console.error("Error al traer comentarios publicados: ", err);
+        return res.status(500).json({ message: "Error al traer comentarios publicados" });
+      }
+      res.status(200).json(comentarios);
+    });
+  } catch (error) {
+    console.error("Error del servidor: ", error);
+    res.status(500).json({ message: "Error del servidor" });
+  }
+};
+
+// Publicar comentario
+export const publicarComentario = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const PublicarComentarioQuery = `
+      UPDATE comentarios SET IsPublicado = 1 WHERE idComentario = ?
+    `;
+
+    db.query(PublicarComentarioQuery, [id], (err, result) => {
+      if (err) {
+        console.error("Error al publicar comentario: ", err);
+        return res.status(500).json({ message: "Error al publicar comentario" });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ mensaje: "Comentario no encontrado" });
+      }
+
+      res.status(200).json({ mensaje: "Comentario publicado exitosamente" });
+    });
+  } catch (error) {
+    console.error("Error del servidor: ", error);
+    res.status(500).json({ message: "Error del servidor" });
+  }
+};
+
+// Despublicar comentario
+export const despublicarComentario = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const DespublicarComentarioQuery = `
+      UPDATE comentarios SET IsPublicado = 0 WHERE idComentario = ?
+    `;
+
+    db.query(DespublicarComentarioQuery, [id], (err, result) => {
+      if (err) {
+        console.error("Error al despublicar comentario: ", err);
+        return res.status(500).json({ message: "Error al despublicar comentario" });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ mensaje: "Comentario no encontrado" });
+      }
+
+      res.status(200).json({ mensaje: "Comentario despublicado exitosamente" });
     });
   } catch (error) {
     console.error("Error del servidor: ", error);
