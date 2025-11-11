@@ -1,5 +1,5 @@
-import { crearComentarioSchema } from "../models/comentario.schema.js"; 
-import { actualizarComentarioSchema } from "../models/comentario.schema.js";
+import { crearComentarioSchema } from "../Models/comentario.schema.js"; 
+import { actualizarComentarioSchema } from "../Models/comentario.schema.js";
 
 // Middleware para validar datos al crear un comentario
 export const validarCrearComentario = (req, res, next) => {
