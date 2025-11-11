@@ -183,3 +183,81 @@ export const borradoLogicoComentario = async (req, res) => {
     res.status(500).json({ message: "Error del servidor" });
   }
 };
+
+// Obtener comentarios publicados (para HomePage)
+export const traerComentariosPublicados = async (req, res) => {
+  try {
+    const ListarComentariosPublicadosQuery = `
+      SELECT c.*, p.NombrePaciente AS pacienteNombre
+      FROM comentarios c
+      JOIN pacientes p ON c.idPaciente = p.idPaciente
+      WHERE c.IsActive = 1 AND c.IsPublicado = 1
+      ORDER BY c.FechaComentario DESC
+    `;
+
+    db.query(ListarComentariosPublicadosQuery, (err, comentarios) => {
+      if (err) {
+        console.error("Error al traer comentarios publicados: ", err);
+        return res.status(500).json({ message: "Error al traer comentarios publicados" });
+      }
+      res.status(200).json(comentarios);
+    });
+  } catch (error) {
+    console.error("Error del servidor: ", error);
+    res.status(500).json({ message: "Error del servidor" });
+  }
+};
+
+// Publicar comentario
+export const publicarComentario = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const PublicarComentarioQuery = `
+      UPDATE comentarios SET IsPublicado = 1 WHERE idComentario = ?
+    `;
+
+    db.query(PublicarComentarioQuery, [id], (err, result) => {
+      if (err) {
+        console.error("Error al publicar comentario: ", err);
+        return res.status(500).json({ message: "Error al publicar comentario" });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ mensaje: "Comentario no encontrado" });
+      }
+
+      res.status(200).json({ mensaje: "Comentario publicado exitosamente" });
+    });
+  } catch (error) {
+    console.error("Error del servidor: ", error);
+    res.status(500).json({ message: "Error del servidor" });
+  }
+};
+
+// Despublicar comentario
+export const despublicarComentario = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const DespublicarComentarioQuery = `
+      UPDATE comentarios SET IsPublicado = 0 WHERE idComentario = ?
+    `;
+
+    db.query(DespublicarComentarioQuery, [id], (err, result) => {
+      if (err) {
+        console.error("Error al despublicar comentario: ", err);
+        return res.status(500).json({ message: "Error al despublicar comentario" });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ mensaje: "Comentario no encontrado" });
+      }
+
+      res.status(200).json({ mensaje: "Comentario despublicado exitosamente" });
+    });
+  } catch (error) {
+    console.error("Error del servidor: ", error);
+    res.status(500).json({ message: "Error del servidor" });
+  }
+};
