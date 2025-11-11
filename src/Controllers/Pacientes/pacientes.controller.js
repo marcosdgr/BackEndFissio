@@ -1,3 +1,4 @@
+import e from "express";
 import db from "../../Config/db.js";
 import bcrypt from "bcryptjs"; 
 
@@ -282,4 +283,40 @@ export const traerLocalidades = (req, res) => {
     }
     return res.status(200).json(results);
   });
+};
+ // traer paciente por id
+export const obtenerPacientePorId = (req, res) => {
+   try {
+    const { idPaciente } = req.params;
+    const obtenerPacientePorId = "SELECT p.DNI, p.NombrePaciente, p.ApellidoPaciente, p.FechaNacPaciente, p.TelefonoPaciente, p.DireccionPaciente, p.Sexo, p.idLocalidad, p.IsActive, l.NombreLocalidad, u.idUsuario, u.MailUsuario FROM pacientes p INNER JOIN localidades l ON p.idLocalidad = l.idLocalidad LEFT JOIN usuarios u ON p.idUsuario = u.idUsuario WHERE p.idPaciente = ?";
+    db.query(obtenerPacientePorId, [idPaciente], (error, results) => {
+      if (error) {
+        return res.status(500).json({ message: "Error en el servidor" });
+      }
+      if (results.length === 0) {
+        return res.status(404).json({ message: "Paciente no encontrado" });
+      }
+      res.status(200).json(results[0]);
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error en el servidor" });
+  }
+};
+//Obtener turnos de paciente por id de paciente
+export const obtenerTurnosPorIdPaciente = (req, res) => {
+  try {
+    const { idPaciente } = req.params;
+    if (!idPaciente) {
+      return res.status(400).json({ message: "Falta idPaciente" });
+    }
+    const obtenerTurnosPaciente = "SELECT t.idTurno, t.FechaSolicitudTurno, t.HorarioRequeridoTurno, t.EstadoTruno, tr.NombreTratamiento, CONCAT (e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS NombreEmpleado FROM turnos t JOIN tratamientos tr ON t.idTratamiento = tr.idTratamiento LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE t.idPaciente = ?";
+    db.query(obtenerTurnosPaciente, [idPaciente], (error, results) => {
+      if (error) {
+        return res.status(500).json({ message: "Error en el servidor" });
+      }
+      res.status(200).json(results);
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error en el servidor" });
+  }
 };
