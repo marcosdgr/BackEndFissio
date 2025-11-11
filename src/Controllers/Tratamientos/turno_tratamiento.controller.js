@@ -114,82 +114,84 @@ export const obtenerTurnosPorTratamiento = async (req, res) => {
 };
 
 // Asignar un tratamiento a un turno
-export const asignarTratamientoATurno = async (req, res) => {
+export const crearTurnoTratamiento = async (req, res) => {
     try {
-        const { idTurno, idTratamiento, Cantidad, PrecioUnitario, Observaciones } = req.body;
-        
-        // Validar campos obligatorios
-        if (!idTurno || !idTratamiento || !PrecioUnitario) {
-            return res.status(400).json({ message: "Los campos idTurno, idTratamiento y PrecioUnitario son obligatorios" });
+        const { idTurno, idTratamiento, Cantidad } = req.body;
+
+        // 1. Validar campos obligatorios
+        if (!idTurno || !idTratamiento) {
+            return res.status(400).json({ message: 'El turno y el tratamiento son obligatorios' });
         }
-        
-        // Verificar que el turno existe
-        const verificarTurno = "SELECT idTurno, EstadoTurno FROM turnos WHERE idTurno = ?";
-        db.query(verificarTurno, [idTurno], (err, turnoResults) => {
-            if (err) {
-                console.error("Error al verificar turno:", err);
-                return res.status(500).json({ message: "Error en el servidor" });
+
+        // 2. Validar cantidad
+        const cantidad = Cantidad || 1;
+        if (cantidad < 1) {
+            return res.status(400).json({ message: 'La cantidad debe ser mayor a 0' });
+        }
+
+        // 3. Verificar que el turno existe
+        const verificarTurnoQuery = 'SELECT * FROM turnos WHERE idTurno = ?';
+        db.query(verificarTurnoQuery, [idTurno], (error, results) => {
+            if (error) {
+                console.error('Error al verificar turno:', error);
+                return res.status(500).json({ message: 'Error al verificar turno' });
             }
-            
-            if (turnoResults.length === 0) {
-                return res.status(404).json({ message: "Turno no encontrado" });
+
+            if (results.length === 0) {
+                return res.status(400).json({ message: 'El turno especificado no existe' });
             }
-            
-            // Verificar que el tratamiento existe y está activo
-            const verificarTratamiento = "SELECT idTratamiento, NombreTratamiento, IsActive FROM tratamientos WHERE idTratamiento = ?";
-            db.query(verificarTratamiento, [idTratamiento], (error, tratamientoResults) => {
+
+            // 4. Verificar que el tratamiento existe y está activo
+            const verificarTratamientoQuery = 'SELECT * FROM tratamientos WHERE idTratamiento = ? AND IsActive = 1';
+            db.query(verificarTratamientoQuery, [idTratamiento], (error, results) => {
                 if (error) {
-                    console.error("Error al verificar tratamiento:", error);
-                    return res.status(500).json({ message: "Error en el servidor" });
+                    console.error('Error al verificar tratamiento:', error);
+                    return res.status(500).json({ message: 'Error al verificar tratamiento' });
                 }
-                
-                if (tratamientoResults.length === 0) {
-                    return res.status(404).json({ message: "Tratamiento no encontrado" });
+
+                if (results.length === 0) {
+                    return res.status(400).json({ message: 'El tratamiento especificado no existe o está inactivo' });
                 }
-                
-                if (tratamientoResults[0].IsActive === 0) {
-                    return res.status(400).json({ message: "El tratamiento no está activo" });
-                }
-                
-                // Verificar si ya existe la relación
-                const verificarRelacion = "SELECT idTurnoTratamiento FROM turno_tratamientos WHERE idTurno = ? AND idTratamiento = ?";
-                db.query(verificarRelacion, [idTurno, idTratamiento], (err, relacionResults) => {
-                    if (err) {
-                        console.error("Error al verificar relación:", err);
-                        return res.status(500).json({ message: "Error en el servidor" });
+
+                // 5. Verificar que no exista ya la combinación turno-tramiento
+                const verificarDuplicadoQuery = 'SELECT * FROM turno_tratamientos WHERE idTurno = ? AND idTratamiento = ?';
+                db.query(verificarDuplicadoQuery, [idTurno, idTratamiento], (error, results) => {
+                    if (error) {
+                        console.error('Error al verificar duplicado:', error);
+                        return res.status(500).json({ message: 'Error al verificar duplicado' });
                     }
-                    
-                    if (relacionResults.length > 0) {
-                        return res.status(409).json({ message: "Este tratamiento ya está asignado a este turno" });
+
+                    if (results.length > 0) {
+                        return res.status(409).json({ message: 'Este tratamiento ya está asignado a este turno' });
                     }
-                    
-                    // Crear la relación
-                    const crearRelacion = "INSERT INTO turno_tratamientos (idTurno, idTratamiento, Cantidad, PrecioUnitario, Observaciones) VALUES (?, ?, ?, ?, ?)";
-                    db.query(crearRelacion, [idTurno, idTratamiento, Cantidad || 1, PrecioUnitario, Observaciones || null], (error, results) => {
+
+                    // 6. Crear el turno-tratamiento
+                    const crearTurnotratamientoQuery = `
+                        INSERT INTO turno_tratamientos (idTurno, idTratamiento, Cantidad)
+                        VALUES (?, ?, ?)
+                    `;
+                    db.query(crearTurnotratamientoQuery, [idTurno, idTratamiento, cantidad], (error, results) => {
                         if (error) {
-                            console.error("Error al asignar tratamiento al turno:", error);
-                            return res.status(500).json({ message: "Error al asignar tratamiento al turno" });
+                            console.error('Error al crear turno-tratamiento:', error);
+                            return res.status(500).json({ message: 'Error al crear turno-tratamiento' });
                         }
-                        
-                        return res.status(201).json({
-                            message: "Tratamiento asignado al turno exitosamente",
+
+                        res.status(201).json({
+                            message: 'Turno-tratamientos creado exitosamente',
                             id: results.insertId,
-                            relacion: {
-                                idTurno,
-                                idTratamiento,
-                                nombreTratamiento: tratamientoResults[0].NombreTratamiento
-                            }
+                            idTurno,
+                            idTratamiento,
+                            Cantidad: cantidad
                         });
                     });
                 });
             });
         });
     } catch (error) {
-        console.error("Error en el servidor:", error);
-        return res.status(500).json({ message: "Error en el servidor" });
+        console.error('Error del servidor:', error);
+        res.status(500).json({ message: 'Error del servidor' });
     }
 };
-
 // Asignar múltiples tratamientos a un turno
 export const asignarMultiplesTratamientos = async (req, res) => {
     try {
