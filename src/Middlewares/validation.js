@@ -2,6 +2,7 @@ import { crearComentarioSchema } from "../models/comentario.schema.js";
 import { actualizarComentarioSchema } from "../models/comentario.schema.js";
 
 // Middleware para validar datos al crear un comentario
+// Utiliza el esquema crearComentarioSchema
 export const validarCrearComentario = (req, res, next) => {
   const { error } = crearComentarioSchema.validate(req.body);
 
