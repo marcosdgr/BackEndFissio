@@ -1,7 +1,7 @@
 import express from 'express';
-import { traerComentariosActivos, traerComentarioPorId, crearComentario, actualizarComentario, borradoLogicoComentario } from '../Controllers/Comentarios/comentarios.controller.js';
-import { validarCrearComentario, validarActualizarComentario } from '../Middlewares/validation.js'; 
-import { despublicarComentario, publicarComentario, traerComentariosPublicados } from '../models/comentario.schema.js';
+import { traerComentariosActivos, traerComentarioPorId, crearComentario, actualizarComentario, borradoLogicoComentario } from '../../Controllers/Comentarios/comentarios.controller.js';
+import { validarCrearComentario, validarActualizarComentario } from '../../Middlewares/validation.js'; 
+import { despublicarComentario, publicarComentario, traerComentariosPublicados } from '../../models/comentario.schema.js';
 
 const router = express.Router();
 

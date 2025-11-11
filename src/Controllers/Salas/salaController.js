@@ -1,4 +1,4 @@
-import db from "../../config/db.js";
+import db from "../../Config/db.js";
 
 // Crear sala
 export const crearSala = async (req, res) => {

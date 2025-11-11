@@ -1,13 +1,15 @@
 import { Router } from 'express';
 import { 
   solicitarTurno,
+  solicitarTurnoSecretaria,
   asignarRecursosDelDia,
   listarTurnosDelDia,
   listarSolicitudesPendientes,
   obtenerKinesiologosDisponibles,
-  obtenerSalasDisponibles,
   verificarDisponibilidadHorarios,
-  finalizarTurno
+  finalizarTurno,
+  cancelarTurno,
+  obtenerDetallesTurno
 } from '../../Controllers/Turnos/turnos.controller.js';
 import { ejecutarRecordatoriosManual } from '../../Services/recordatorios.service.js';
 import upload from '../../Middlewares/images.js';
@@ -17,15 +19,21 @@ const router = Router();
 // Ruta para solicitar turno (Paciente)
 router.post("/solicitar", upload.single("ordenMedica"), solicitarTurno);
 
+// Ruta para solicitar turno (Secretaria - sin orden médica)
+router.post("/solicitar-secretaria", solicitarTurnoSecretaria);
+
+// Ruta para cancelar turno (Secretaria)
+router.put("/cancelar/:idTurno", cancelarTurno);
+
 // Rutas para gestión de turnos (Secretaria)
 router.get("/turnos-del-dia", listarTurnosDelDia); // Para ver quién viene HOY
 router.get("/solicitudes-pendientes", listarSolicitudesPendientes); // Historial
+router.get("/detalles/:idTurno", obtenerDetallesTurno); // Ver detalles completos de un turno
 router.put("/asignar-recursos/:idTurno", asignarRecursosDelDia); // Cuando paciente llega
 router.put("/finalizar/:idTurno", finalizarTurno); // Al terminar sesión
 
 // Rutas de consulta para disponibilidad
 router.get("/kinesiologos-disponibles", obtenerKinesiologosDisponibles);
-router.get("/salas-disponibles", obtenerSalasDisponibles);
 router.get("/disponibilidad-horarios/:fecha", verificarDisponibilidadHorarios);
 
 // Ruta para ejecutar recordatorios manualmente 

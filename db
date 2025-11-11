@@ -6,13 +6,10 @@ CREATE TABLE roles (
   idRol INT PRIMARY KEY AUTO_INCREMENT,
   NombreRol VARCHAR(50) NOT NULL UNIQUE
 ) ;
-select * from roles;
-INSERT INTO roles (NombreRol) VALUES ('Paciente');
-INSERT INTO roles (NombreRol) VALUES ('Admin');
 
 CREATE TABLE usuarios (
   idUsuario INT PRIMARY KEY AUTO_INCREMENT,
-  MailUsuario VARCHAR(100) NOT NULL UNIQUE,
+  MailUsuario VARCHAR(250) NOT NULL UNIQUE,
   PasswordUsuario VARCHAR(250) NOT NULL,
   idRol INT NOT NULL,
   IsActive TINYINT DEFAULT 1,
@@ -22,15 +19,13 @@ CREATE TABLE usuarios (
      
 ) ;
 select * from usuarios;
-
--- Localidades (opcional, pero recomendado para normalizar)
+-- Localidades (opcional, pero recomendado para normalizar) POOR BASE DE DATOS
 CREATE TABLE localidades (
   idLocalidad INT PRIMARY KEY AUTO_INCREMENT,
   NombreLocalidad VARCHAR(100) NOT NULL UNIQUE,
   IsActive TINYINT DEFAULT 1
 ) ;
-INSERT INTO localidades (NombreLocalidad) VALUES ('San Miguel de Tucuman');
-select * from localidades;
+
 -- Pacientes
 CREATE TABLE pacientes (
   idPaciente INT PRIMARY KEY AUTO_INCREMENT,
@@ -38,8 +33,8 @@ CREATE TABLE pacientes (
   NombrePaciente VARCHAR(50) NOT NULL,
   ApellidoPaciente VARCHAR(50) NOT NULL,
   FechaNacPaciente DATE NOT NULL,
-  TelefonoPaciente VARCHAR(20) NOT NULL,
-  DireccionPaciente VARCHAR(100) NOT NULL,
+  TelefonoPaciente VARCHAR(30) NOT NULL,
+  DireccionPaciente VARCHAR(250) NOT NULL,
   Sexo ENUM('Femenino','Masculino','Otro') NOT NULL,
   idLocalidad INT NOT NULL,
   IsActive TINYINT DEFAULT 1,
@@ -52,11 +47,11 @@ CREATE TABLE pacientes (
       
 ) ;
 
-
 -- Categoría de empleados
 CREATE TABLE catEmpleados (
   idCatEmpleado INT PRIMARY KEY AUTO_INCREMENT,
   NombreCat VARCHAR(200) NOT NULL UNIQUE,
+  DescripcionCat varchar(500),
   IsActive TINYINT DEFAULT 1
 ) ;
 
@@ -122,27 +117,42 @@ CREATE TABLE asistencias (
 CREATE TABLE obraSociales (
   idObraSocial INT PRIMARY KEY AUTO_INCREMENT,
   NombreObraSocial VARCHAR(100) NOT NULL UNIQUE,
-  TelefonoContacto VARCHAR(20),
-  EmailContacto VARCHAR(100),
-  PaginaWeb VARCHAR(200),
-  Estado ENUM('Activa', 'Suspendida', 'Baja') DEFAULT 'Activa',
+  TelefonoObra VARCHAR(30) unique,
+  EmailObra VARCHAR(100) unique,
+  PaginaWebObra VARCHAR(200) unique,
+  EstadoObra ENUM('Activa', 'Suspendida') DEFAULT 'Activa',
   IsActive TINYINT DEFAULT 1
 ) ;
 
+-- planes
+CREATE TABLE planObraSocial (
+idPlanObra INT primary key auto_increment,
+idObraSocial int not null,
+NombraPlan varchar(100) not null,
+DescripcionPlan text,
+PorcentajeDescuentoPlan decimal(5,2),
+EstadoPlan enum('Vigente','No vigente') default 'Vigente',
+IsActive TINYINT DEFAULT 1,
+constraint fk_plan_obrasocial
+foreign key (idObraSocial) references obraSociales(idObraSocial)
+);
+
+-- PENDIENTE -- 
 -- Obra Social x Paciente
 CREATE TABLE obraSocial_Paciente (
   idPacienteObra INT PRIMARY KEY AUTO_INCREMENT,
   idPaciente INT NOT NULL,
-  idObraSocial INT NOT NULL,
-  PlanObraSocial VARCHAR(50),
+  idPlanObra int not null,
   NumeroAfiliado VARCHAR(30),
   EstadoPlan ENUM('activo','suspendido','baja') DEFAULT 'activo',
+  IsActive TINYINT DEFAULT 1,
   CONSTRAINT fk_os_pac_paciente
     FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente),
   CONSTRAINT fk_os_pac_obra
-    FOREIGN KEY (idObraSocial) REFERENCES obraSociales(idObraSocial)
+    FOREIGN KEY (idPlanObra) REFERENCES planObraSocial(idPlanObra)
   
 ) ;
+
 
 
 
@@ -154,7 +164,7 @@ CREATE TABLE salas (
   IsActive TINYINT DEFAULT 1
 ) ;
 
--- Tratamientos y Servicios
+-- Tratamientos y Servicios -- falta
 CREATE TABLE tratamientos (
   idTratamiento INT PRIMARY KEY AUTO_INCREMENT,
   NombreTratamiento VARCHAR(50) NOT NULL UNIQUE,
@@ -168,13 +178,9 @@ CREATE TABLE servicios (
   idServicio INT PRIMARY KEY AUTO_INCREMENT,
   NombreServicio VARCHAR(50) NOT NULL,
   DescripcionServicio VARCHAR(200) NOT NULL,
-  IsActive TINYINT DEFAULT 1,
-  idTratamiento INT NOT NULL,
-  CONSTRAINT fk_servicios_tratamientos
-    FOREIGN KEY (idTratamiento) REFERENCES tratamientos(idTratamiento)
-      ON UPDATE CASCADE ON DELETE RESTRICT,
-  UNIQUE KEY uk_servicio_nombre_trat (NombreServicio, idTratamiento)
+  IsActive TINYINT DEFAULT 1
 ) ;
+
 
 -- Turnos (sin idServicio directo; usaremos puente turno_servicios)
 CREATE TABLE turnos (
@@ -182,24 +188,23 @@ CREATE TABLE turnos (
   FechaSolicitudTurno DATE NOT NULL,
   FechaRequeridaTurno DATE NOT NULL,
   HorarioRequeridoTurno TIME NOT NULL,
-  HorarioInicioTurno TIME NULL,
-  HorarioFinTurno TIME NULL,
+  HorarioInicioTurno TIME NOT NULL,
+  HorarioFinTurno TIME NOT NULL,
   InformeTurno VARCHAR(250),
   EstadoTurno ENUM('Solicitado','Pendiente','Cancelado','Finalizado') NOT NULL default 'Solicitado',
   idPaciente INT NOT NULL,
   idEmpleado INT  NULL,
-  idSala INT  NULL,
+  idSala INT NULL,
+  idTratamiento INT NULL,
   CONSTRAINT fk_turnos_paciente
     FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente),
   CONSTRAINT fk_turnos_empleado
     FOREIGN KEY (idEmpleado) REFERENCES empleados(idEmpleado),
   CONSTRAINT fk_turnos_sala
-    FOREIGN KEY (idSala) REFERENCES salas(idSala)
-      
+    FOREIGN KEY (idSala) REFERENCES salas(idSala),
+  CONSTRAINT fk_turnos_tratamientos
+  FOREIGN KEY (idTratamiento) references tratamientos(idTratamiento)
 ) ;
-
-
-
 
 -- Puente Turno-Servicios (permite 1..N)
 CREATE TABLE turno_servicios (
@@ -213,7 +218,7 @@ CREATE TABLE turno_servicios (
   CONSTRAINT fk_ts_servicio
     FOREIGN KEY (idServicio) REFERENCES servicios(idServicio)
      
-) ;
+) ;    
 -- Catálogos de pagos/cobros 
 CREATE TABLE catMediosPago (
   idMedioPago INT PRIMARY KEY AUTO_INCREMENT,
@@ -256,7 +261,6 @@ CREATE TABLE pagos (
     FOREIGN KEY (idTipoPago) REFERENCES catTiposPago(idTipoPago),
   CONSTRAINT fk_pagos_medio
     FOREIGN KEY (idMedioPago) REFERENCES catMediosPago(idMedioPago)
-      
 ) ;
 
 -- Historias clínicas
@@ -278,7 +282,7 @@ CREATE TABLE historiasClinicas (
     FOREIGN KEY (ActualizadoPor) REFERENCES empleados(idEmpleado)
   
 ) ;
-
+-- COMENTARIOS QUE PUEDEN DEJAR LOS PACIENTES Y SE PUEDEN PUBLICAR EN LA PAGINA -- 
 -- Comentarios (opcional vincular al turno)
 CREATE TABLE comentarios (
   idComentario INT PRIMARY KEY AUTO_INCREMENT,
@@ -291,6 +295,7 @@ CREATE TABLE comentarios (
     FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente)
 ) ;
 
+-- MENSAJERIA INTERNA --
 -- Notificaciones: entre usuarios + destinatarios M:N
 CREATE TABLE notificaciones (
   idNotificacion INT PRIMARY KEY AUTO_INCREMENT,
@@ -306,12 +311,11 @@ CREATE TABLE notificaciones (
 CREATE TABLE notificaciones_destinatarios (
   idNotDest INT PRIMARY KEY AUTO_INCREMENT,
   idNotificacion INT NOT NULL,
-  idUsuarioDestinatario INT NOT NULL,
+  idEmpleadoDestinatario INT NOT NULL,
   CONSTRAINT fk_notdest_notif
     FOREIGN KEY (idNotificacion) REFERENCES notificaciones(idNotificacion),
   CONSTRAINT fk_notdest_usuario
-    FOREIGN KEY (idUsuarioDestinatario) REFERENCES usuarios(idUsuario)
-
+    FOREIGN KEY (idempleadoDestinatario) REFERENCES empleados(idEmpleado)
 ) ;
 
 -- Recordatorios y encuestas (por turno)
@@ -347,19 +351,6 @@ CREATE TABLE estudios_paciente (
     FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente)
 );
 
--- Chatbot
-CREATE TABLE chatbot_mensajes (
-  idMensaje INT PRIMARY KEY AUTO_INCREMENT,
-  idPaciente INT NULL,           
-  idSesion INT NULL,             
-  Remitente ENUM('Usuario','Chatbot') NOT NULL,
-  Mensaje TEXT NOT NULL,
-  FechaHora DATETIME DEFAULT CURRENT_TIMESTAMP,
-  IntentoReconocido VARCHAR(100), 
-  RespuestaAutomatica TINYINT DEFAULT 1,
-  CONSTRAINT fk_chatbot_paciente
-    FOREIGN KEY (idPaciente) REFERENCES pacientes(idPaciente)
-);
 
 CREATE TABLE metricasDiarias (
   idMetrica INT AUTO_INCREMENT PRIMARY KEY,
@@ -386,4 +377,431 @@ CREATE TABLE metricasDiarias (
     CONSTRAINT fk_metricas_cobros
     FOREIGN KEY (idCobro) REFERENCES cobros(idCobro)
 );
+CREATE TABLE cat_faqs (
+  idCatFAQ INT PRIMARY KEY AUTO_INCREMENT,
+  NombreCategoria VARCHAR(100) NOT NULL UNIQUE,
+  IsActive TINYINT DEFAULT 1
+);
 
+CREATE TABLE faqs (
+  idFAQ INT PRIMARY KEY AUTO_INCREMENT,
+  idCatFAQ INT,
+  Pregunta VARCHAR(500) NOT NULL,
+  Respuesta TEXT NOT NULL,
+  Categoria VARCHAR(100),
+  FechaCreacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+  IsActive TINYINT DEFAULT 1,
+  CONSTRAINT fk_faqs_cat 
+  FOREIGN KEY (idCatFAQ) REFERENCES cat_faqs(idCatFAQ)
+);
+
+
+
+-- Chatbot
+CREATE TABLE chatbot (
+  idLog INT AUTO_INCREMENT PRIMARY KEY,
+  sessionId CHAR(36) NOT NULL,                                                                 -- UUID del visitante
+  preguntaUsuario TEXT NOT NULL,                                                               -- Lo que el visitante escribió
+  respuestaBot TEXT,                                                                           -- Respuesta generada por el bot
+  fechaMensaje DATETIME DEFAULT CURRENT_TIMESTAMP,                                             -- Fecha y hora del mensaje
+  origen ENUM('usuario', 'bot') NOT NULL,                                                      -- Quién envió el mensaje
+  categoriaConsulta VARCHAR(100),                                                              -- (Opcional) tipo de consulta detectada
+  INDEX (sessionId),                                                                           -- Para buscar rápido por sesión
+  INDEX (fechaMensaje)
+);
+
+
+-- ejemplos --
+-- ================================
+-- 🔹 ROLES
+-- ================================
+INSERT INTO roles (NombreRol) VALUES 
+('Administrador'),
+('Empleado'),
+('Paciente');
+
+-- ================================
+-- 🔹 USUARIOS
+-- ================================
+INSERT INTO usuarios (MailUsuario, PasswordUsuario, idRol) VALUES
+('admin@fissio.com', 'admin123', 1),
+('empleado1@fissio.com', 'empleado123', 2),
+('paciente1@fissio.com', 'paciente123', 3);
+
+-- ================================
+-- 🔹 LOCALIDADES
+-- ================================
+INSERT INTO localidades (NombreLocalidad) VALUES
+('San Miguel de Tucumán'),
+('Yerba Buena'),
+('Tafí Viejo'),
+('Lules');
+
+
+-- Insert inicial de localidades de Tucumán
+INSERT INTO localidades (NombreLocalidad, IsActive) VALUES
+('Alto de la Cocha', 1),
+('Alto Verde', 1),
+('Amaicha del Valle', 1),
+('Amberes', 1),
+('Ampimpa', 1),
+('Arcadia', 1),
+('Atahona', 1),
+('Bajo Grande', 1),
+('Banda del Río Salí', 1),
+('Barrio Malvinas', 1),
+('Barrio San Felipe', 1),
+('Barrio San Jorge', 1),
+('Barrio San Martín', 1),
+('Bella Vista', 1),
+('Benjamín Paz', 1),
+('Boca del Tigre', 1),
+('Campo de Herrera', 1),
+('Capitán Cáceres', 1),
+('Choromoro', 1),
+('Chuscha', 1),
+('Colalao del Valle', 1),
+('Colombres', 1),
+('Colonia 1', 1),
+('Colonia 6', 1),
+('Concepción', 1),
+('Delfín Gallo', 1),
+('Domingo Millán', 1),
+('El Bracho', 1),
+('El Cadillal', 1),
+('El Cajón', 1),
+('El Corralito', 1),
+('El Empalme', 1),
+('El Manantial', 1),
+('El Molino', 1),
+('El Mollar', 1),
+('El Naranjito', 1),
+('El Naranjo', 1),
+('El Polear', 1),
+('El Porvenir', 1),
+('El Puestito', 1),
+('El Rodeo', 1),
+('El Sacrificio', 1),
+('El Siambón', 1),
+('El Timbó', 1),
+('Esquina', 1),
+('Estación Aráoz', 1),
+('Famaillá', 1),
+('Garmendia', 1),
+('Graneros', 1),
+('Huasa Pampa Norte', 1),
+('Huasa Pampa Sur', 1),
+('Iltico', 1),
+('Ingenio Fronterita', 1),
+('Juan Bautista Alberdi', 1),
+('La Angostura', 1),
+('La Cañada', 1),
+('La Cocha', 1),
+('La Costa', 1),
+('La Cruz', 1),
+('La Esperanza', 1),
+('La Florida', 1),
+('Lamadrid', 1),
+('La Ramada', 1),
+('La Ramada de Abajo', 1),
+('Las Carreras', 1),
+('Las Cejas', 1),
+('Las Piedritas', 1),
+('Las Siringuillas', 1),
+('Las Talitas', 1),
+('La Tipa', 1),
+('La Trinidad', 1),
+('Los Aguirre', 1),
+('Los Bulacio', 1),
+('Los Costilla', 1),
+('Los Gómez', 1),
+('Los Guchea', 1),
+('Los Laureles Sur', 1),
+('Los Nogales', 1),
+('Los Pereyra', 1),
+('Los Ralos', 1),
+('Macomitas', 1),
+('Mancopa', 1),
+('Manuela Pedraza', 1),
+('Medina', 1),
+('Monteagudo', 1),
+('Monte Bello', 1),
+('Monteros', 1),
+('Nueva Trinidad', 1),
+('Pacará', 1),
+('Padilla', 1),
+('Pueblo Independencia', 1),
+('Raco', 1),
+('Ranchillos', 1),
+('Río Chico', 1),
+('Río Colorado', 1),
+('Río Nío', 1),
+('Río Seco', 1),
+('Rumi Punco', 1),
+('San Andrés', 1),
+('San Gabriel', 1),
+('San Isidro de Lules', 1),
+('San Javier', 1),
+('San José de Buena Vista', 1),
+('San José de La Cocha', 1),
+('San Pablo', 1),
+('San Pedro de Colalao', 1),
+('San Pedro Mártir', 1),
+('San Ramón', 1),
+('Santa Ana', 1),
+('Santa Cruz', 1),
+('Santa Lucía', 1),
+('Santa Rosa de Leales', 1),
+('Sargento Moya', 1),
+('Simoca', 1),
+('Soldado Maldonado', 1),
+('Tacanas', 1),
+('Taco Ralo', 1),
+('Tafí del Valle', 1),
+('Tapia', 1),
+('Taruca Pampa', 1),
+('Teniente Berdina', 1),
+('Timbó Nuevo', 1),
+('Timbó Viejo', 1),
+('Villa Benjamín Aráoz', 1),
+('Villa Burruyacú', 1),
+('Villa Nougués', 1),
+('Villa Quinteros', 1),
+('Villa Belgrano', 1)
+;
+
+
+
+
+-- ================================
+-- 🔹 CATEGORÍA DE EMPLEADOS
+-- ================================
+INSERT INTO catEmpleados (NombreCat, DescripcionCat) VALUES
+('Fisioterapeuta', 'Profesional encargado de los tratamientos de rehabilitación.'),
+('Recepcionista', 'Atención al paciente y gestión de turnos.'),
+('Administrador', 'Gestión integral del sistema.');
+
+-- ================================
+-- 🔹 EMPLEADOS
+-- ================================
+INSERT INTO empleados (DNI, NombreEmpleado, ApellidoEmpleado, FechaNacEmpleado, TelefonoEmpleado, DireccionEmpleado, idLocalidad, SalarioEmpleado, idUsuario, idCatEmpleado)
+VALUES
+('40300111', 'Carlos', 'Gomez', '1990-03-15', '3815000011', 'Av. Mitre 123', 1, 250000.00, 2, 1),
+('39222999', 'Lucía', 'Perez', '1985-07-10', '3815000022', 'Gral. Paz 450', 2, 180000.00, 2, 2);
+
+-- ================================
+-- 🔹 PACIENTES
+-- ================================
+INSERT INTO pacientes (DNI, NombrePaciente, ApellidoPaciente, FechaNacPaciente, TelefonoPaciente, DireccionPaciente, Sexo, idLocalidad, idUsuario)
+VALUES
+('45999888', 'Juan', 'Martinez', '2000-06-22', '3815111122', 'Av. Belgrano 800', 'Masculino', 1, 3),
+('42233444', 'Ana', 'Lopez', '1998-09-15', '3815444433', '9 de Julio 2300', 'Femenino', 2, 3);
+
+-- ================================
+-- 🔹 HORARIOS DE TRABAJO
+-- ================================
+INSERT INTO horariosTrabajo (DiaSemana, HoraEntradaEsperada, HoraSalidaEsperada, DescripcionHorario)
+VALUES
+('Lunes', '08:00:00', '14:00:00', 'Turno mañana'),
+('Martes', '08:00:00', '14:00:00', 'Turno mañana'),
+('Miércoles', '14:00:00', '20:00:00', 'Turno tarde');
+
+-- ================================
+-- 🔹 EMPLEADOS_HORARIOS
+-- ================================
+INSERT INTO empleados_horarios (idEmpleado, idHorario) VALUES
+(1, 1),
+(1, 2),
+(2, 3);
+
+-- ================================
+-- 🔹 OBRAS SOCIALES
+-- ================================
+INSERT INTO obraSociales (NombreObraSocial, TelefonoObra, EmailObra, PaginaWebObra)
+VALUES
+('OSDE', '0800-555-6733', 'contacto@osde.com.ar', 'https://www.osde.com.ar'),
+('Swiss Medical', '0800-777-7788', 'info@swissmedical.com', 'https://www.swissmedical.com.ar');
+
+-- ================================
+-- 🔹 PLANES DE OBRA SOCIAL
+-- ================================
+INSERT INTO planObraSocial (NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan, idObraSocial)
+VALUES
+('OSDE 210', 'Cobertura básica de consultas y tratamientos.', 0.20, 1),
+('SMG Oro', 'Plan premium con cobertura total.', 0.30, 2);
+
+-- ================================
+-- 🔹 OBRAS SOCIALES POR PACIENTE
+-- ================================
+INSERT INTO obraSocial_Paciente (idPaciente, idPlanObra, NumeroAfiliado)
+VALUES
+(1, 1, 'OS210-998877'),
+(2, 2, 'SMG-445566');
+
+-- ================================
+-- 🔹 SALAS
+-- ================================
+INSERT INTO salas (NombreSala, Capacidad)
+VALUES
+('Sala 1 - Rehabilitación', 3),
+('Sala 2 - Electroterapia', 2);
+
+-- ================================
+-- 🔹 TRATAMIENTOS
+-- ================================
+INSERT INTO tratamientos (NombreTratamiento, DescripcionTratamiento, DuracionTratamiento)
+VALUES
+('Kinesiología General', 'Sesión de 45 minutos para rehabilitación muscular.', 45),
+('Masoterapia', 'Terapia de masajes relajantes o descontracturantes.', 30);
+
+-- ================================
+-- 🔹 SERVICIOS
+-- ================================
+INSERT INTO servicios (NombreServicio, DescripcionServicio)
+VALUES
+('Evaluación Inicial', 'Evaluación física y diagnóstico del paciente.'),
+('Sesión de Rehabilitación', 'Aplicación de tratamiento kinesiológico.');
+
+-- ================================
+-- 🔹 TURNOS
+-- ================================
+INSERT INTO turnos (FechaSolicitudTurno, FechaRequeridaTurno, HorarioRequeridoTurno, HorarioInicioTurno, HorarioFinTurno, idPaciente, idEmpleado, idSala, idTratamiento)
+VALUES
+('2025-11-05', '2025-11-10', '10:00:00', '10:00:00', '10:45:00', 1, 1, 1, 1),
+('2025-11-05', '2025-11-11', '11:00:00', '11:00:00', '11:30:00', 2, 2, 2, 2);
+
+-- ================================
+-- 🔹 TURNOS_SERVICIOS
+-- ================================
+INSERT INTO turno_servicios (idTurno, idServicio, Cantidad, PrecioUnitario)
+VALUES
+(1, 1, 1, 2500.00),
+(1, 2, 1, 3000.00),
+(2, 2, 1, 3200.00);
+
+-- ================================
+-- 🔹 CATEGORÍAS DE MEDIOS Y TIPOS DE PAGO
+-- ================================
+INSERT INTO catMediosPago (NombreMedio) VALUES ('Efectivo'), ('Tarjeta'), ('Transferencia');
+INSERT INTO catTiposPago (NombreTipo) VALUES ('Gasto operativo'), ('Honorarios'), ('Compra de insumos');
+
+-- ================================
+-- 🔹 COBROS
+-- ================================
+INSERT INTO cobros (FechaCobro, TipoCobro, idMedioPago, MontoCobro, EstadoCobro, idTurno)
+VALUES
+(NOW(), 'Paciente', 1, 5500.00, 'Cobrado', 1),
+(NOW(), 'Paciente', 2, 3200.00, 'Pendiente', 2);
+
+-- ================================
+-- 🔹 PAGOS
+-- ================================
+INSERT INTO pagos (FechaPago, idTipoPago, Descripcion, idMedioPago, MontoPago, EstadoPago)
+VALUES
+(NOW(), 1, 'Compra de guantes y alcohol', 1, 12000.00, 'Pagado'),
+(NOW(), 2, 'Pago a kinesiólogo', 2, 200000.00, 'Pendiente');
+
+-- ================================
+-- 🔹 HISTORIAS CLÍNICAS
+-- ================================
+INSERT INTO historiasClinicas (FechaInicio, Diagnostico, Observaciones, FechaActualizacion, CreadoPor, ActualizadoPor, idPaciente)
+VALUES
+(NOW(), 'Lumbalgia', 'Dolor lumbar leve. Se recomienda fisioterapia.', NOW(), 1, 1, 1),
+(NOW(), 'Esguince de tobillo', 'Tratamiento con ejercicios de fortalecimiento.', NOW(), 2, 2, 2);
+
+-- ================================
+-- 🔹 COMENTARIOS
+-- ================================
+INSERT INTO comentarios (CalificacionComentario, Comentario, idPaciente)
+VALUES
+(5, 'Excelente atención y resultados.', 1),
+(4, 'Muy buena experiencia.', 2);
+
+-- ================================
+-- 🔹 NOTIFICACIONES
+-- ================================
+INSERT INTO notificaciones (idRemitente, Mensaje)
+VALUES
+(1, 'Recordatorio: revisar agenda semanal.'),
+(2, 'Nuevo paciente registrado.');
+
+-- ================================
+-- 🔹 NOTIFICACIONES DESTINATARIOS
+-- ================================
+INSERT INTO notificaciones_destinatarios (idNotificacion, idEmpleadoDestinatario)
+VALUES
+(1, 1),
+(2, 2);
+
+-- ================================
+-- 🔹 RECORDATORIOS
+-- ================================
+INSERT INTO recordatorios (TipoNotificacion, Mensaje, idTurno)
+VALUES
+('Recordatorio', 'Turno de Juan Martínez el 10/11 a las 10:00.', 1),
+('Aviso', 'Turno de Ana López el 11/11 a las 11:00.', 2);
+
+-- ================================
+-- 🔹 ENCUESTAS
+-- ================================
+INSERT INTO encuestasSatisfaccion (Calificacion, Comentario, idTurno)
+VALUES
+(5, 'Muy conforme con el servicio.', 1),
+(4, 'Atención rápida y cordial.', 2);
+
+-- ================================
+-- 🔹 FAQ
+-- ================================
+INSERT INTO cat_faqs (NombreCategoria) VALUES ('Turnos'), ('Tratamientos'), ('Obras Sociales');
+
+INSERT INTO faqs (idCatFAQ, Pregunta, Respuesta)
+VALUES
+(1, '¿Cómo puedo cancelar un turno?', 'Podés cancelar un turno desde la app o comunicándote con recepción.'),
+(2, '¿Cuánto dura una sesión de fisioterapia?', 'Las sesiones duran entre 30 y 45 minutos.'),
+(3, '¿Qué obras sociales se aceptan?', 'Actualmente trabajamos con OSDE y Swiss Medical.');
+
+-- ================================
+-- 🔹 CHATBOT
+-- ================================
+INSERT INTO chatbot (sessionId, preguntaUsuario, respuestaBot, origen, categoriaConsulta)
+VALUES
+(UUID(), '¿Qué tratamientos ofrecen?', 'Ofrecemos kinesiología, masoterapia y rehabilitación.', 'usuario', 'tratamientos'),
+(UUID(), '¿Trabajan con OSDE?', 'Sí, aceptamos OSDE y Swiss Medical.', 'usuario', 'obras sociales');
+
+
+select*from planObraSocial;
+
+SELECT idPlanObra, NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan, IsActive
+FROM planObraSocial
+WHERE idPlanObra = 3;
+
+SELECT COUNT(*) AS cnt
+FROM obraSocial_Paciente
+WHERE idPlanObra = 3 AND EstadoPlan = 'activo' AND IsActive = 1;
+
+select*from catEmpleados;
+select*from empleados;
+select*from usuarios;
+
+select*from notificaciones;
+
+SELECT e.idEmpleado, u.idUsuario, u.MailUsuario
+FROM empleados e
+JOIN usuarios u ON e.idUsuario = u.idUsuario
+WHERE u.MailUsuario = 'empleado6@gmail.com';
+
+
+
+INSERT INTO notificaciones (idRemitente, Mensaje)
+VALUES
+(1, 'Recordatorio: reunión del equipo mañana a las 9.'),
+(2, 'Por favor revisar los turnos asignados para esta semana.'),
+(3, 'No olvides actualizar el parte diario de asistencias.');
+
+
+INSERT INTO notificaciones_destinatarios (idNotificacion, idEmpleadoDestinatario)
+SELECT idNotificacion, 2  -- reemplazá 6 por el idEmpleado del destino
+FROM notificaciones
+WHERE idNotificacion >= (SELECT MAX(idNotificacion) - 2 FROM notificaciones);
+
+select*from notificaciones

@@ -4,13 +4,23 @@ import { Router } from "express";
 import {
   actualizarPaciente,
   cambiarEstadoPaciente,
+  crearPaciente,
   traerPacientes,
+  traerLocalidades,
+  obtenerPacientePorId,
+  obtenerTurnosPorIdPaciente
 } from "../../Controllers/Pacientes/pacientes.controller.js";
 
 const router = Router();
 
 // ruta GET para traer todos los pacientes
 router.get("/", traerPacientes);
+router.get("/localidades", traerLocalidades);
+router.get("/:idPaciente", obtenerPacientePorId);
+router.get("/:idPaciente/turnos", obtenerTurnosPorIdPaciente);
+
+// ruta POST para crear nuevo paciente
+router.post("/", crearPaciente);
 
 // ruta PUT para actualizar datos del paciente
 router.put("/actualizar/:idPaciente", actualizarPaciente);

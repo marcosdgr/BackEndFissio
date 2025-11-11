@@ -1,26 +1,30 @@
+import e from "express";
 import db from "../../Config/db.js";
-
-// traer todos los pacientes
+import bcrypt from "bcryptjs"; 
 
 export const traerPacientes = (req, res) => {
   const traerPacientesQuery = `
     SELECT p.idPaciente, p.DNI, p.NombrePaciente, p.ApellidoPaciente, p.FechaNacPaciente,
-           p.TelefonoPaciente, p.DireccionPaciente, p.Sexo, l.NombreLocalidad, p.IsActive
+           p.TelefonoPaciente, p.DireccionPaciente, p.Sexo, p.idLocalidad, p.IsActive,
+           l.NombreLocalidad, 
+           u.idUsuario, u.MailUsuario
     FROM pacientes p
     INNER JOIN localidades l ON p.idLocalidad = l.idLocalidad
+    LEFT JOIN usuarios u ON p.idUsuario = u.idUsuario
   `;
   db.query(traerPacientesQuery, (err, results) => {
     if (err) {
-      console.error("Error al traer los pacientes:", err);
       return res.status(500).json({ message: "Error en el servidor" });
     }
-    return res.status(200).json(results);
+    // Agregar información adicional para cada paciente
+    const pacientesConInfo = results.map(paciente => ({
+      ...paciente,
+      PasswordTemporal: true // Por seguridad, no devolvemos la contraseña real
+    }));
+    return res.status(200).json(pacientesConInfo);
   });
 };
-
-// actualizar datos del paciente
-
-export const actualizarPaciente = async (req, res) => {
+export const actualizarPaciente = (req, res) => {
   try {
     const { idPaciente } = req.params;
     const {
@@ -34,79 +38,82 @@ export const actualizarPaciente = async (req, res) => {
       idLocalidad,
     } = req.body;
 
-    const actualizarPacienteQuery = `
-      UPDATE pacientes 
-      SET NombrePaciente = ?, ApellidoPaciente = ?, DNI = ?, FechaNacPaciente = ?, 
-          TelefonoPaciente = ?, DireccionPaciente = ?, Sexo = ?, idLocalidad = ? 
-      WHERE idPaciente = ?
-    `;
+    if (!NombrePaciente || !ApellidoPaciente || !DNI || !FechaNacPaciente ||
+        !TelefonoPaciente || !DireccionPaciente || !Sexo || !idLocalidad) {
+      return res.status(400).json({ message: "Faltan datos obligatorios del paciente" });
+    }
 
-    db.query(
-      actualizarPacienteQuery,
-      [
-        NombrePaciente,
-        ApellidoPaciente,
-        DNI,
-        FechaNacPaciente,
-        TelefonoPaciente,
-        DireccionPaciente,
-        Sexo,
-        idLocalidad,
-        idPaciente,
-      ],
-      (error, results) => {
-        if (error) {
-          console.error("Error al actualizar paciente:", error);
+    let sexoNormalizado = Sexo;
+    if (Sexo === 'M' || Sexo === 'Masculino') {
+        sexoNormalizado = 'Masculino';
+    } else if (Sexo === 'F' || Sexo === 'Femenino') {
+        sexoNormalizado = 'Femenino';
+    } else if (Sexo === 'O' || Sexo === 'Otro') {
+        sexoNormalizado = 'Otro';
+    } else {
+        return res.status(400).json({ 
+            message: "Valor de Sexo inválido. Debe ser 'Masculino', 'Femenino' o 'Otro'" 
+        });
+    }
 
-          // Manejo SIMPLE de errores comunes para actualización
-          if (error.code === "ER_DUP_ENTRY") {
-            if (error.message.includes("DNI")) {
-              return res.status(400).json({
-                message: "El DNI ya está registrado por otro paciente",
-              });
-            }
-            if (error.message.includes("TelefonoPaciente")) {
-              return res.status(400).json({
-                message: "El teléfono ya está registrado por otro paciente",
-              });
-            }
-            return res.status(400).json({
-              message: "Los datos ya están registrados por otro paciente",
-            });
+    const verificarDNIQuery = "SELECT idPaciente FROM pacientes WHERE DNI = ? AND idPaciente != ?";
+    db.query(verificarDNIQuery, [DNI, idPaciente], (error, pacienteExistente) => {
+      if (error) {
+        return res.status(500).json({ message: 'Error al verificar DNI' });
+      }
+
+      if (pacienteExistente.length > 0) {
+        return res.status(400).json({ message: "El DNI ya está registrado por otro paciente" });
+      }
+
+      const actualizarPacienteQuery = `
+        UPDATE pacientes 
+        SET NombrePaciente = ?, ApellidoPaciente = ?, DNI = ?, FechaNacPaciente = ?, 
+            TelefonoPaciente = ?, DireccionPaciente = ?, Sexo = ?, idLocalidad = ? 
+        WHERE idPaciente = ?
+      `;
+
+      db.query(
+        actualizarPacienteQuery,
+        [
+          NombrePaciente,
+          ApellidoPaciente,
+          DNI,
+          FechaNacPaciente,
+          TelefonoPaciente,
+          DireccionPaciente,
+          sexoNormalizado,
+          idLocalidad,
+          idPaciente,
+        ],
+        (error, results) => {
+          if (error) {
+            return res.status(500).json({ message: "Error al actualizar paciente" });
           }
 
-          return res
-            .status(500)
-            .json({ message: "Error al actualizar paciente" });
-        }
+          if (results.affectedRows === 0) {
+            return res.status(404).json({ message: "Paciente no encontrado" });
+          }
 
-        if (results.affectedRows === 0) {
-          return res.status(404).json({ message: "Paciente no encontrado" });
+          res.status(200).json({ message: "Paciente actualizado exitosamente" });
         }
-
-        res.status(200).json({ message: "Paciente actualizado exitosamente" });
-      }
-    );
+      );
+    });
   } catch (error) {
-    console.error("error del servidor: ", error);
     res.status(500).json({ message: "Error del servidor" });
   }
 };
-
-// cambiar estado del paciente (activar/desactivar)
-export const cambiarEstadoPaciente = async (req, res) => {
+export const cambiarEstadoPaciente = (req, res) => {
   try {
     const { idPaciente } = req.params;
     const { IsActive } = req.body;
 
-    // Validar que IsActive sea un valor válido
     if (IsActive !== 0 && IsActive !== 1) {
       return res.status(400).json({
         message: "IsActive debe ser 0 (inactivo) o 1 (activo)",
       });
     }
 
-    // Primero verificar el estado actual del paciente
     const verificarEstadoQuery = `
       SELECT IsActive 
       FROM pacientes 
@@ -115,10 +122,7 @@ export const cambiarEstadoPaciente = async (req, res) => {
 
     db.query(verificarEstadoQuery, [idPaciente], (err, results) => {
       if (err) {
-        console.error("Error al verificar estado del paciente:", err);
-        return res
-          .status(500)
-          .json({ message: "Error al verificar estado del paciente" });
+        return res.status(500).json({ message: "Error al verificar estado del paciente" });
       }
 
       if (results.length === 0) {
@@ -127,7 +131,6 @@ export const cambiarEstadoPaciente = async (req, res) => {
 
       const estadoActual = results[0].IsActive;
 
-      // Validar que el estado nuevo sea diferente al actual
       if (estadoActual === IsActive) {
         const estadoTexto = IsActive === 1 ? "activo" : "inactivo";
         return res.status(400).json({
@@ -135,7 +138,6 @@ export const cambiarEstadoPaciente = async (req, res) => {
         });
       }
 
-      // Si es diferente, proceder con el cambio
       const cambiarEstadoQuery = `
         UPDATE pacientes 
         SET IsActive = ?
@@ -147,10 +149,7 @@ export const cambiarEstadoPaciente = async (req, res) => {
         [IsActive, idPaciente],
         (error, updateResults) => {
           if (error) {
-            console.error("Error al cambiar estado del paciente:", error);
-            return res
-              .status(500)
-              .json({ message: "Error al cambiar estado del paciente" });
+            return res.status(500).json({ message: "Error al cambiar estado del paciente" });
           }
 
           const mensaje =
@@ -162,7 +161,162 @@ export const cambiarEstadoPaciente = async (req, res) => {
       );
     });
   } catch (error) {
-    console.error("error del servidor: ", error);
     res.status(500).json({ message: "Error del servidor" });
+  }
+};
+export const crearPaciente = (req, res) => {
+    try {
+        const {
+            DNI, NombrePaciente, ApellidoPaciente, FechaNacPaciente,
+            TelefonoPaciente, DireccionPaciente, Sexo, idLocalidad,
+            MailUsuario, PasswordUsuario
+        } = req.body;
+
+        if (!DNI || !NombrePaciente || !ApellidoPaciente || !FechaNacPaciente ||
+            !TelefonoPaciente || !DireccionPaciente || !Sexo || !idLocalidad) {
+            return res.status(400).json({ message: "Faltan datos obligatorios del paciente" });
+        }
+
+        let sexoNormalizado = Sexo;
+        if (Sexo === 'M' || Sexo === 'Masculino') {
+            sexoNormalizado = 'Masculino';
+        } else if (Sexo === 'F' || Sexo === 'Femenino') {
+            sexoNormalizado = 'Femenino';
+        } else if (Sexo === 'O' || Sexo === 'Otro') {
+            sexoNormalizado = 'Otro';
+        } else {
+            return res.status(400).json({ 
+                message: "Valor de Sexo inválido. Debe ser 'Masculino', 'Femenino' o 'Otro'" 
+            });
+        }
+
+        let emailFinal = MailUsuario;
+        if (!emailFinal || emailFinal.trim() === "") {
+            emailFinal = `${DNI}@sinmail.local`;
+        }
+
+        const passwordFinal = PasswordUsuario && PasswordUsuario.trim() !== "" 
+            ? PasswordUsuario 
+            : "1234";
+
+        const verificarEmailQuery = "SELECT idUsuario FROM usuarios WHERE MailUsuario = ?";
+        
+        db.query(verificarEmailQuery, [emailFinal], (error, usuarioExistente) => {
+            if (error) {
+                return res.status(500).json({ message: 'Error al verificar email' });
+            }
+
+            if (usuarioExistente.length > 0) {
+                return res.status(400).json({ message: "El email ya está registrado" });
+            }
+
+            const verificarDNIQuery = "SELECT idPaciente FROM pacientes WHERE DNI = ?";
+            
+            db.query(verificarDNIQuery, [DNI], async (error, pacienteExistente) => {
+                if (error) {
+                    return res.status(500).json({ message: 'Error al verificar DNI' });
+                }
+
+                if (pacienteExistente.length > 0) {
+                    return res.status(400).json({ message: "El DNI ya está registrado" });
+                }
+
+                try {
+                    const hashedPassword = await bcrypt.hash(passwordFinal, 10);
+                    const idRolPaciente = 3; 
+                    const crearUsuarioQuery = `
+                        INSERT INTO usuarios (MailUsuario, PasswordUsuario, idRol) 
+                        VALUES (?, ?, ?)
+                    `;
+                    
+                    db.query(crearUsuarioQuery, [emailFinal, hashedPassword, idRolPaciente], (error, resultUsuario) => {
+                        if (error) {
+                            return res.status(500).json({ message: 'Error al crear usuario' });
+                        }
+
+                        const idUsuarioNuevo = resultUsuario.insertId;
+
+                        const crearPacienteQuery = `
+                            INSERT INTO pacientes 
+                            (DNI, NombrePaciente, ApellidoPaciente, FechaNacPaciente, 
+                             TelefonoPaciente, DireccionPaciente, Sexo, idLocalidad, idUsuario)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        `;
+
+                        const paramsPaciente = [
+                            DNI, NombrePaciente, ApellidoPaciente, FechaNacPaciente,
+                            TelefonoPaciente, DireccionPaciente, sexoNormalizado, idLocalidad, idUsuarioNuevo
+                        ];
+
+                        db.query(crearPacienteQuery, paramsPaciente, (error, resultPaciente) => {
+                            if (error) {
+                                db.query("DELETE FROM usuarios WHERE idUsuario = ?", [idUsuarioNuevo], () => {});
+                                return res.status(500).json({ message: 'Error al crear paciente' });
+                            }
+
+                            res.status(201).json({
+                                message: "Paciente creado correctamente",
+                                idPaciente: resultPaciente.insertId,
+                                usuario: {
+                                    idUsuario: idUsuarioNuevo,
+                                    MailUsuario: emailFinal,
+                                    PasswordTemporal: passwordFinal === "1234"
+                                }
+                            });
+                        });
+                    });
+                } catch (hashError) {
+                    res.status(500).json({ message: 'Error al procesar contraseña' });
+                }
+            });
+        });
+        
+    } catch (error) {
+        res.status(500).json({ message: 'Error del servidor' });
+    }
+};
+export const traerLocalidades = (req, res) => {
+  const query = "SELECT idLocalidad, NombreLocalidad FROM localidades WHERE IsActive = 1";
+  db.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: "Error en el servidor" });
+    }
+    return res.status(200).json(results);
+  });
+};
+ // traer paciente por id
+export const obtenerPacientePorId = (req, res) => {
+   try {
+    const { idPaciente } = req.params;
+    const obtenerPacientePorId = "SELECT p.DNI, p.NombrePaciente, p.ApellidoPaciente, p.FechaNacPaciente, p.TelefonoPaciente, p.DireccionPaciente, p.Sexo, p.idLocalidad, p.IsActive, l.NombreLocalidad, u.idUsuario, u.MailUsuario FROM pacientes p INNER JOIN localidades l ON p.idLocalidad = l.idLocalidad LEFT JOIN usuarios u ON p.idUsuario = u.idUsuario WHERE p.idPaciente = ?";
+    db.query(obtenerPacientePorId, [idPaciente], (error, results) => {
+      if (error) {
+        return res.status(500).json({ message: "Error en el servidor" });
+      }
+      if (results.length === 0) {
+        return res.status(404).json({ message: "Paciente no encontrado" });
+      }
+      res.status(200).json(results[0]);
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error en el servidor" });
+  }
+};
+//Obtener turnos de paciente por id de paciente
+export const obtenerTurnosPorIdPaciente = (req, res) => {
+  try {
+    const { idPaciente } = req.params;
+    if (!idPaciente) {
+      return res.status(400).json({ message: "Falta idPaciente" });
+    }
+    const obtenerTurnosPaciente = "SELECT t.idTurno, t.FechaSolicitudTurno, t.HorarioRequeridoTurno, t.EstadoTurno, tr.NombreTratamiento, CONCAT (e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS NombreEmpleado FROM turnos t JOIN tratamientos tr ON t.idTratamiento = tr.idTratamiento LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE t.idPaciente = ?";
+    db.query(obtenerTurnosPaciente, [idPaciente], (error, results) => {
+      if (error) {
+        return res.status(500).json({ message: "Error en el servidor" });
+      }
+      res.status(200).json(results);
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error en el servidor" });
   }
 };

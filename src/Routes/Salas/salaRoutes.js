@@ -5,11 +5,11 @@ import {
   traerSalaPorId,
   actualizarSala,
   borradoLogicoSala,
-} from "../Controllers/Salas/salaController.js";
+} from "../../Controllers/Salas/salaController.js";
 import {
   validarCrearSala,
   validarActualizarSala,
-} from "../Middlewares/sala.validation.js";
+} from "../../Middlewares/sala.validation.js";
 
 const router = express.Router();
 

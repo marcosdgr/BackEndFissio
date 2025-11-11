@@ -62,6 +62,7 @@ export const actualizarComentarioSchema = Joi.object({
 });
 
 // Obtener comentarios publicados (para HomePage)
+// Modificado para ordenar por fecha de comentario descendente
 export const traerComentariosPublicados = async (req, res) => {
   try {
     const ListarComentariosPublicadosQuery = `

@@ -1,6 +1,9 @@
 import db from "../../Config/db.js";
 import { uploadToCloudinary } from "../../Middlewares/cloudinary.js";
-import { enviarEmailConfirmacion, enviarEmailConfirmacionFinal } from "../../Config/mailer.js";
+import {
+  enviarEmailConfirmacion,
+  enviarEmailConfirmacionFinal,
+} from "../../Config/mailer.js";
 
 // PASO 1: Solicitar turno desde la web (Paciente)
 export const solicitarTurno = async (req, res) => {
@@ -52,43 +55,47 @@ export const solicitarTurno = async (req, res) => {
           AND EstadoTurno IN ('Solicitado', 'Pendiente', 'Finalizado')
       `;
 
-      db.query(verificarDisponibilidadHorario, [FechaRequeridaTurno, HorarioRequeridoTurno], async (err, disponibilidadResults) => {
-        if (err) {
-          console.error("Error al verificar disponibilidad de horario:", err);
-          return res.status(500).json({ message: "Error en el servidor" });
-        }
+      db.query(
+        verificarDisponibilidadHorario,
+        [FechaRequeridaTurno, HorarioRequeridoTurno],
+        async (err, disponibilidadResults) => {
+          if (err) {
+            console.error("Error al verificar disponibilidad de horario:", err);
+            return res.status(500).json({ message: "Error en el servidor" });
+          }
 
-        const totalSolicitudes = disponibilidadResults[0].totalSolicitudes;
+          const totalSolicitudes = disponibilidadResults[0].totalSolicitudes;
 
-        if (totalSolicitudes >= 5) {
-          return res.status(400).json({ 
-            message: "No hay disponibilidad para esa fecha y horario. Máximo 5 turnos por hora.",
-            sugerencia: "Por favor, seleccione otro horario disponible."
-          });
-        }
+          if (totalSolicitudes >= 5) {
+            return res.status(400).json({
+              message:
+                "No hay disponibilidad para esa fecha y horario. Máximo 5 turnos por hora.",
+              sugerencia: "Por favor, seleccione otro horario disponible.",
+            });
+          }
 
-        // Subir orden médica a Cloudinary si existe
-        let OrdenMedicaURL = null;
-        let OrdenMedicaPublicId = null;
-      if (ordenMedica) {
-        try {
-          const resultadoImagen = await uploadToCloudinary(
-            ordenMedica.buffer,
-            "ordenes_medicas"
-          );
-          OrdenMedicaURL = resultadoImagen.secure_url;
-          OrdenMedicaPublicId = resultadoImagen.public_id;
-        } catch (error) {
-          console.error("Error al subir orden médica a Cloudinary:", error);
-          return res
-            .status(500)
-            .json({ message: "Error al subir orden médica" });
-        }
-      }
+          // Subir orden médica a Cloudinary si existe
+          let OrdenMedicaURL = null;
+          let OrdenMedicaPublicId = null;
+          if (ordenMedica) {
+            try {
+              const resultadoImagen = await uploadToCloudinary(
+                ordenMedica.buffer,
+                "ordenes_medicas"
+              );
+              OrdenMedicaURL = resultadoImagen.secure_url;
+              OrdenMedicaPublicId = resultadoImagen.public_id;
+            } catch (error) {
+              console.error("Error al subir orden médica a Cloudinary:", error);
+              return res
+                .status(500)
+                .json({ message: "Error al subir orden médica" });
+            }
+          }
 
-      // Crear solicitud de turno sin asignar empleado ni sala (quedan NULL)
-      // La secretaria los asignará después
-      const crearSolicitudQuery = `
+          // Crear solicitud de turno sin asignar empleado ni sala (quedan NULL)
+          // La secretaria los asignará después
+          const crearSolicitudQuery = `
       INSERT INTO turnos (
         FechaSolicitudTurno, 
         FechaRequeridaTurno, 
@@ -99,26 +106,31 @@ export const solicitarTurno = async (req, res) => {
       ) VALUES (CURDATE(), ?, ?, ?, 'Solicitado', ?)
     `;
 
-      const observaciones = `SOLICITUD WEB${
-        InformeTurno ? ` | Observaciones: ${InformeTurno}` : ""
-      }${OrdenMedicaURL ? ` | Orden médica: ${OrdenMedicaURL}` : ""}`;
+          const observaciones = `SOLICITUD WEB${
+            InformeTurno ? ` | Observaciones: ${InformeTurno}` : ""
+          }${OrdenMedicaURL ? ` | Orden médica: ${OrdenMedicaURL}` : ""}`;
 
-      db.query(
-        crearSolicitudQuery,
-        [FechaRequeridaTurno, HorarioRequeridoTurno, observaciones, idPaciente],
-        (err, results) => {
-          if (err) {
-            console.error("Error al crear solicitud de turno:", err);
-            return res
-              .status(500)
-              .json({ message: "Error al solicitar turno" });
-          }
+          db.query(
+            crearSolicitudQuery,
+            [
+              FechaRequeridaTurno,
+              HorarioRequeridoTurno,
+              observaciones,
+              idPaciente,
+            ],
+            (err, results) => {
+              if (err) {
+                console.error("Error al crear solicitud de turno:", err);
+                return res
+                  .status(500)
+                  .json({ message: "Error al solicitar turno" });
+              }
 
-          const turnoId = results.insertId;
+              const turnoId = results.insertId;
 
-          // Si hay orden médica, también guardarla en estudios_paciente
-          if (OrdenMedicaURL) {
-            const insertarEstudioQuery = `
+              // Si hay orden médica, también guardarla en estudios_paciente
+              if (OrdenMedicaURL) {
+                const insertarEstudioQuery = `
               INSERT INTO estudios_paciente (
                 idPaciente, 
                 ArchivoURL, 
@@ -127,72 +139,209 @@ export const solicitarTurno = async (req, res) => {
               ) VALUES (?, ?, NOW(), ?)
             `;
 
-            const descripcionEstudio = `Orden médica - Solicitud de turno #${turnoId}${
-              InformeTurno ? ` | ${InformeTurno}` : ""
-            }`;
+                const descripcionEstudio = `Orden médica - Solicitud de turno #${turnoId}${
+                  InformeTurno ? ` | ${InformeTurno}` : ""
+                }`;
 
-            db.query(
-              insertarEstudioQuery,
-              [idPaciente, OrdenMedicaURL, descripcionEstudio],
-              (err, estudioResults) => {
-                if (err) {
-                  console.error(
-                    "Error al guardar orden médica en estudios:",
-                    err
-                  );
-                  // No retornamos error aquí porque el turno ya se creó exitosamente
-                }
+                db.query(
+                  insertarEstudioQuery,
+                  [idPaciente, OrdenMedicaURL, descripcionEstudio],
+                  (err, estudioResults) => {
+                    if (err) {
+                      console.error(
+                        "Error al guardar orden médica en estudios:",
+                        err
+                      );
+                      // No retornamos error aquí porque el turno ya se creó exitosamente
+                    }
+                  }
+                );
               }
-            );
-          }
 
-          // Obtener email del paciente para enviar confirmación
-          const obtenerEmailPaciente = `
-            SELECT u.MailUsuario
+              // Obtener email y datos del paciente para enviar confirmación
+              const obtenerDatosPaciente = `
+            SELECT u.MailUsuario, p.NombrePaciente, p.ApellidoPaciente
             FROM usuarios u
             INNER JOIN pacientes p ON u.idUsuario = p.idUsuario
             WHERE p.idPaciente = ?
           `;
 
-          db.query(obtenerEmailPaciente, [idPaciente], async (err, emailResults) => {
-            if (err) {
-              console.error("Error al obtener email del paciente:", err);
-            } else if (emailResults.length > 0) {
-              // Enviar email de confirmación
-              const emailPaciente = emailResults[0].MailUsuario;
-              const datosTurno = {
-                idTurno: turnoId,
-                nombrePaciente: results[0].NombrePaciente,
-                apellidoPaciente: results[0].ApellidoPaciente,
-                FechaRequeridaTurno: FechaRequeridaTurno,
-                HorarioRequeridoTurno: HorarioRequeridoTurno,
-                mensaje: "Su solicitud será procesada por nuestro personal. Recibirá confirmación pronto."
-              };
+              db.query(
+                obtenerDatosPaciente,
+                [idPaciente],
+                async (err, pacienteResults) => {
+                  if (err) {
+                    console.error("Error al obtener datos del paciente:", err);
+                  } else if (pacienteResults.length > 0) {
+                    // Enviar email de confirmación
+                    const emailPaciente = pacienteResults[0].MailUsuario;
+                    const datosTurno = {
+                      idTurno: turnoId,
+                      nombrePaciente: pacienteResults[0].NombrePaciente,
+                      apellidoPaciente: pacienteResults[0].ApellidoPaciente,
+                      FechaRequeridaTurno: FechaRequeridaTurno,
+                      HorarioRequeridoTurno: HorarioRequeridoTurno,
+                      mensaje:
+                        "Su solicitud será procesada por nuestro personal. Recibirá confirmación pronto.",
+                    };
 
-              try {
-                await enviarEmailConfirmacion(emailPaciente, datosTurno);
-                console.log(`✅ Email de confirmación enviado a: ${emailPaciente}`);
-              } catch (emailError) {
-                console.error("Error al enviar email de confirmación:", emailError);
-              }
+                    try {
+                      await enviarEmailConfirmacion(emailPaciente, datosTurno);
+                      console.log(
+                        `✅ Email de confirmación enviado a: ${emailPaciente}`
+                      );
+                    } catch (emailError) {
+                      console.error(
+                        "Error al enviar email de confirmación:",
+                        emailError
+                      );
+                    }
+                  }
+
+                  // Respuesta independientemente del resultado del email
+                  res.status(201).json({
+                    message: "Solicitud de turno enviada exitosamente",
+                    idTurno: turnoId,
+                    estado: "Solicitado",
+                    mensaje:
+                      "Su solicitud será procesada por nuestro personal. Recibirá confirmación pronto.",
+                    ordenMedicaGuardada: OrdenMedicaURL ? true : false,
+                    emailEnviado: pacienteResults.length > 0,
+                  });
+                }
+              );
             }
-
-            // Respuesta independientemente del resultado del email
-            res.status(201).json({
-              message: "Solicitud de turno enviada exitosamente",
-              idTurno: turnoId,
-              estado: "Solicitado",
-              mensaje: "Su solicitud será procesada por nuestro personal. Recibirá confirmación pronto.",
-              ordenMedicaGuardada: OrdenMedicaURL ? true : false,
-              emailEnviado: emailResults.length > 0
-            });
-          });
+          );
         }
       );
-      }); 
-    }); 
+    });
   } catch (error) {
     console.error("Error en solicitarTurno:", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
+// PASO 1B: Solicitar turno para secretaria (sin orden médica)
+export const solicitarTurnoSecretaria = (req, res) => {
+  try {
+    const {
+      FechaRequeridaTurno,
+      HorarioRequeridoTurno,
+      InformeTurno,
+      DNIPaciente, // Cambiado de idPaciente a DNIPaciente
+    } = req.body;
+
+    // validaciones similares al método anterior.
+    if (
+      !FechaRequeridaTurno ||
+      !HorarioRequeridoTurno ||
+      !DNIPaciente ||
+      !InformeTurno
+    ) {
+      return res.status(400).json({
+        message: "Todos los campos son requeridos",
+      });
+    }
+
+    // filtrar pacientes por DNI y estado activo
+    const verificarPaciente = `
+          SELECT idPaciente, NombrePaciente, ApellidoPaciente, IsActive
+          FROM pacientes 
+          WHERE DNI = ? AND IsActive = 1
+        `;
+    db.query(verificarPaciente, [DNIPaciente], (err, results) => {
+      if (err) {
+        console.error("Error al verificar paciente:", err);
+        return res.status(500).json({ message: "Error en el servidor" });
+      }
+      if (results.length === 0) {
+        return res.status(404).json({
+          message: "Paciente no encontrado con ese DNI o paciente inactivo",
+        });
+      }
+
+      const paciente = results[0];
+      const idPaciente = paciente.idPaciente;
+
+      // Verificar disponibilidad de horario (máximo 5 solicitudes por hora)
+      const verificarDisponibilidadHorario = `
+        SELECT COUNT(*) as totalSolicitudes
+        FROM turnos 
+        WHERE FechaRequeridaTurno = ? 
+          AND HorarioRequeridoTurno = ?
+          AND EstadoTurno IN ('Solicitado', 'Pendiente', 'Finalizado')
+      `;
+
+      db.query(
+        verificarDisponibilidadHorario,
+        [FechaRequeridaTurno, HorarioRequeridoTurno],
+        (err, disponibilidadResults) => {
+          if (err) {
+            console.error("Error al verificar disponibilidad de horario:", err);
+            return res.status(500).json({ message: "Error en el servidor" });
+          }
+
+          const totalSolicitudes = disponibilidadResults[0].totalSolicitudes;
+
+          if (totalSolicitudes >= 5) {
+            return res.status(400).json({
+              message:
+                "No hay disponibilidad para esa fecha y horario. Máximo 5 turnos por hora.",
+              sugerencia: "Por favor, seleccione otro horario disponible.",
+            });
+          }
+
+          // crear solicitud de turno
+          const crearSolicitudQuery = `
+                INSERT INTO turnos (
+                  FechaSolicitudTurno,
+                  FechaRequeridaTurno,
+                  HorarioRequeridoTurno,
+                  InformeTurno,
+                  EstadoTurno,
+                  idPaciente
+                ) VALUES (CURDATE(), ?, ?, ?, 'Solicitado', ?)
+              `;
+          const observaciones = `SOLICITUD SECRETARIA${
+            InformeTurno ? ` | Observaciones: ${InformeTurno}` : ""
+          }`;
+
+          db.query(
+            crearSolicitudQuery,
+            [
+              FechaRequeridaTurno,
+              HorarioRequeridoTurno,
+              observaciones,
+              idPaciente,
+            ],
+            (err, results) => {
+              if (err) {
+                console.error("Error al crear solicitud de turno:", err);
+                return res
+                  .status(500)
+                  .json({ message: "Error al solicitar turno" });
+              }
+              const turnoId = results.insertId;
+
+              res.status(201).json({
+                message:
+                  "Solicitud de turno creada exitosamente por secretaria",
+                idTurno: turnoId,
+                paciente: {
+                  nombre: `${paciente.NombrePaciente} ${paciente.ApellidoPaciente}`,
+                  dni: DNIPaciente,
+                },
+                estado: "Solicitado",
+                fecha: FechaRequeridaTurno,
+                horario: HorarioRequeridoTurno,
+              });
+            }
+          );
+        }
+      );
+    });
+  } catch (error) {
+    console.error("Error en solicitarTurnoSecretaria:", error);
     return res.status(500).json({ message: "Error interno del servidor" });
   }
 };
@@ -204,14 +353,13 @@ export const asignarRecursosDelDia = (req, res) => {
     HorarioInicioTurno,
     HorarioFinTurno,
     idEmpleado, // Kinesiólogo asignado
-    idSala,
     ObservacionesSecretaria,
   } = req.body;
 
   // Validación de campos obligatorios
-  if (!HorarioInicioTurno || !HorarioFinTurno || !idEmpleado || !idSala) {
+  if (!HorarioInicioTurno || !HorarioFinTurno || !idEmpleado) {
     return res.status(400).json({
-      message: "Horario de inicio, fin, empleado y sala son requeridos",
+      message: "Horario de inicio, fin y empleado son requeridos",
     });
   }
 
@@ -223,7 +371,7 @@ export const asignarRecursosDelDia = (req, res) => {
     WHERE t.idTurno = ? 
       AND t.EstadoTurno = 'Solicitado' 
       AND DATE(t.FechaRequeridaTurno) = CURDATE()
-      AND t.InformeTurno LIKE 'SOLICITUD WEB%'
+      AND (t.InformeTurno LIKE 'SOLICITUD WEB%' OR t.InformeTurno LIKE 'SOLICITUD SECRETARIA%')
   `;
 
   db.query(verificarTurno, [idTurno], (err, turnoResults) => {
@@ -266,11 +414,11 @@ export const asignarRecursosDelDia = (req, res) => {
         });
       }
 
-      // Verificar disponibilidad de sala 
-      const verificarDisponibilidadSala = `
+      // Verificar disponibilidad del kinesiólogo
+      const verificarDisponibilidadEmpleado = `
         SELECT idTurno 
         FROM turnos 
-        WHERE idSala = ? 
+        WHERE idEmpleado = ? 
           AND FechaRequeridaTurno = ? 
           AND EstadoTurno IN ('Pendiente', 'Finalizado')
           AND HorarioInicioTurno IS NOT NULL
@@ -281,11 +429,10 @@ export const asignarRecursosDelDia = (req, res) => {
             (HorarioInicioTurno >= ? AND HorarioFinTurno <= ?)
           )
       `;
-
       db.query(
-        verificarDisponibilidadSala,
+        verificarDisponibilidadEmpleado,
         [
-          idSala,
+          idEmpleado,
           turno.FechaRequeridaTurno,
           HorarioFinTurno,
           HorarioInicioTurno,
@@ -294,70 +441,28 @@ export const asignarRecursosDelDia = (req, res) => {
           HorarioInicioTurno,
           HorarioFinTurno,
         ],
-        (err, salaResults) => {
+        (err, empleadoDisponibleResults) => {
           if (err) {
-            console.error("Error al verificar disponibilidad de sala:", err);
+            console.error(
+              "Error al verificar disponibilidad del empleado:",
+              err
+            );
             return res.status(500).json({ message: "Error en el servidor" });
           }
 
-          if (salaResults.length > 0) {
+          if (empleadoDisponibleResults.length > 0) {
             return res.status(400).json({
-              message: "La sala no está disponible en el horario seleccionado",
+              message:
+                "El kinesiólogo no está disponible en el horario seleccionado",
             });
           }
 
-          // Verificar disponibilidad del kinesiólogo 
-          const verificarDisponibilidadEmpleado = `
-            SELECT idTurno 
-            FROM turnos 
-            WHERE idEmpleado = ? 
-              AND FechaRequeridaTurno = ? 
-              AND EstadoTurno IN ('Pendiente', 'Finalizado')
-              AND HorarioInicioTurno IS NOT NULL
-              AND HorarioFinTurno IS NOT NULL
-              AND (
-                (HorarioInicioTurno < ? AND HorarioFinTurno > ?) OR
-                (HorarioInicioTurno < ? AND HorarioFinTurno > ?) OR
-                (HorarioInicioTurno >= ? AND HorarioFinTurno <= ?)
-              )
-          `;
-          db.query(
-            verificarDisponibilidadEmpleado,
-            [
-              idEmpleado,
-              turno.FechaRequeridaTurno,
-              HorarioFinTurno,
-              HorarioInicioTurno,
-              HorarioFinTurno,
-              HorarioInicioTurno,
-              HorarioInicioTurno,
-              HorarioFinTurno,
-            ],
-            (err, empleadoDisponibleResults) => {
-              if (err) {
-                console.error(
-                  "Error al verificar disponibilidad del empleado:",
-                  err
-                );
-                return res
-                  .status(500)
-                  .json({ message: "Error en el servidor" });
-              }
-
-              if (empleadoDisponibleResults.length > 0) {
-                return res.status(400).json({
-                  message:
-                    "El kinesiólogo no está disponible en el horario seleccionado",
-                });
-              }
-
-              // Actualizar turno con asignaciones
-              const actualizarTurno = `
+          // Actualizar turno con asignaciones
+          const actualizarTurno = `
             UPDATE turnos 
             SET HorarioInicioTurno = ?,
                 HorarioFinTurno = ?,
                 idEmpleado = ?,
-                idSala = ?,
                 EstadoTurno = 'Pendiente',
                 InformeTurno = CONCAT(
                   COALESCE(InformeTurno, ''), 
@@ -368,41 +473,37 @@ export const asignarRecursosDelDia = (req, res) => {
             WHERE idTurno = ?
           `;
 
-              db.query(
-                actualizarTurno,
-                [
-                  HorarioInicioTurno,
-                  HorarioFinTurno,
-                  idEmpleado,
-                  idSala,
-                  ObservacionesSecretaria,
-                  ObservacionesSecretaria,
-                  idTurno,
-                ],
-                (err, results) => {
-                  if (err) {
-                    console.error("Error al procesar turno:", err);
-                    return res
-                      .status(500)
-                      .json({ message: "Error al procesar turno" });
-                  }
+          db.query(
+            actualizarTurno,
+            [
+              HorarioInicioTurno,
+              HorarioFinTurno,
+              idEmpleado,
+              ObservacionesSecretaria,
+              ObservacionesSecretaria,
+              idTurno,
+            ],
+            (err, results) => {
+              if (err) {
+                console.error("Error al procesar turno:", err);
+                return res
+                  .status(500)
+                  .json({ message: "Error al procesar turno" });
+              }
 
-                  res.status(200).json({
-                    message: "Recursos asignados exitosamente - Turno en curso",
-                    turno: {
-                      idTurno: idTurno,
-                      paciente: `${turno.NombrePaciente} ${turno.ApellidoPaciente}`,
-                      fecha: turno.FechaRequeridaTurno,
-                      horario: `${HorarioInicioTurno} - ${HorarioFinTurno}`,
-                      kinesiologo: `${empleadoResults[0].NombreEmpleado} ${empleadoResults[0].ApellidoEmpleado}`,
-                      sala: idSala,
-                      estadoAnterior: "Solicitado",
-                      estadoActual: "Pendiente",
-                      mensaje: "El paciente ya puede comenzar su sesión"
-                    }
-                  });
-                }
-              );
+              res.status(200).json({
+                message: "Recursos asignados exitosamente - Turno en curso",
+                turno: {
+                  idTurno: idTurno,
+                  paciente: `${turno.NombrePaciente} ${turno.ApellidoPaciente}`,
+                  fecha: turno.FechaRequeridaTurno,
+                  horario: `${HorarioInicioTurno} - ${HorarioFinTurno}`,
+                  kinesiologo: `${empleadoResults[0].NombreEmpleado} ${empleadoResults[0].ApellidoEmpleado}`,
+                  estadoAnterior: "Solicitado",
+                  estadoActual: "Pendiente",
+                  mensaje: "El paciente ya puede comenzar su sesión",
+                },
+              });
             }
           );
         }
@@ -411,12 +512,12 @@ export const asignarRecursosDelDia = (req, res) => {
   });
 };
 
-// PASO 3A: Listar turnos del día 
+// PASO 3A: Listar turnos del día
 export const listarTurnosDelDia = (req, res) => {
-  const { fecha } = req.query; 
-  
-  const fechaConsulta = fecha || 'CURDATE()';
-  
+  const { fecha } = req.query;
+
+  const fechaConsulta = fecha || "CURDATE()";
+
   const turnosDelDiaQuery = `
     SELECT 
       t.idTurno,
@@ -433,14 +534,12 @@ export const listarTurnosDelDia = (req, res) => {
       p.TelefonoPaciente,
       p.DNI,
       e.NombreEmpleado,
-      e.ApellidoEmpleado,
-      s.NombreSala
+      e.ApellidoEmpleado
     FROM turnos t
     INNER JOIN pacientes p ON t.idPaciente = p.idPaciente
     LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado
-    LEFT JOIN salas s ON t.idSala = s.idSala
-    WHERE DATE(t.FechaRequeridaTurno) = ${fecha ? '?' : 'CURDATE()'}
-      AND t.EstadoTurno IN ('Solicitado', 'Pendiente', 'Finalizado')
+    WHERE DATE(t.FechaRequeridaTurno) = ${fecha ? "?" : "CURDATE()"}
+      AND t.EstadoTurno IN ('Solicitado', 'Pendiente', 'Finalizado', 'Cancelado')
     ORDER BY t.HorarioRequeridoTurno ASC, t.EstadoTurno ASC
   `;
 
@@ -454,21 +553,23 @@ export const listarTurnosDelDia = (req, res) => {
 
     // Organizar por estado
     const turnosPorEstado = {
-      solicitados: results.filter(t => t.EstadoTurno === 'Solicitado'),
-      enCurso: results.filter(t => t.EstadoTurno === 'Pendiente'),
-      finalizados: results.filter(t => t.EstadoTurno === 'Finalizado')
+      solicitados: results.filter((t) => t.EstadoTurno === "Solicitado"),
+      enCurso: results.filter((t) => t.EstadoTurno === "Pendiente"),
+      finalizados: results.filter((t) => t.EstadoTurno === "Finalizado"),
+      cancelados: results.filter((t) => t.EstadoTurno === "Cancelado"),
     };
 
     res.status(200).json({
       message: "Turnos del día obtenidos exitosamente",
-      fechaConsulta: fecha || new Date().toISOString().split('T')[0],
+      fechaConsulta: fecha || new Date().toISOString().split("T")[0],
       turnos: turnosPorEstado,
       resumen: {
         total: results.length,
         solicitados: turnosPorEstado.solicitados.length,
         enCurso: turnosPorEstado.enCurso.length,
-        finalizados: turnosPorEstado.finalizados.length
-      }
+        finalizados: turnosPorEstado.finalizados.length,
+        cancelados: turnosPorEstado.cancelados.length,
+      },
     });
   });
 };
@@ -511,11 +612,11 @@ export const listarSolicitudesPendientes = (req, res) => {
 
 // PASO 4: Obtener kinesiólogos disponibles para una fecha/hora
 export const obtenerKinesiologosDisponibles = (req, res) => {
-  const { fecha, horaInicio, horaFin } = req.query;
+  const { fecha } = req.query;
 
-  if (!fecha || !horaInicio || !horaFin) {
+  if (!fecha) {
     return res.status(400).json({
-      message: "Fecha, hora de inicio y fin son requeridas",
+      message: "Fecha es requerida",
     });
   }
 
@@ -524,111 +625,49 @@ export const obtenerKinesiologosDisponibles = (req, res) => {
       e.idEmpleado,
       e.NombreEmpleado,
       e.ApellidoEmpleado,
-      c.NombreCat
+      c.NombreCat,
+      a.HoraEntrada,
+      a.Fecha as FechaAsistencia
     FROM empleados e
     INNER JOIN catEmpleados c ON e.idCatEmpleado = c.idCatEmpleado
+    INNER JOIN asistencias a ON e.idEmpleado = a.idEmpleado
     WHERE c.NombreCat = 'Kinesiologo' 
       AND e.IsActive = 1
-      AND e.idEmpleado NOT IN (
-        SELECT t.idEmpleado 
-        FROM turnos t 
-        WHERE t.FechaRequeridaTurno = ?
-          AND t.EstadoTurno IN ('Pendiente', 'Finalizado')
-          AND t.idEmpleado IS NOT NULL
-          AND t.HorarioInicioTurno IS NOT NULL
-          AND t.HorarioFinTurno IS NOT NULL
-          AND (
-            (t.HorarioInicioTurno < ? AND t.HorarioFinTurno > ?) OR
-            (t.HorarioInicioTurno < ? AND t.HorarioFinTurno > ?) OR
-            (t.HorarioInicioTurno >= ? AND t.HorarioFinTurno <= ?)
-          )
-      )
+      AND a.Presente = 1
+      AND a.Fecha = ?
     ORDER BY e.NombreEmpleado, e.ApellidoEmpleado
   `;
 
-  db.query(
-    kinesiologosDisponiblesQuery,
-    [fecha, horaFin, horaInicio, horaFin, horaInicio, horaInicio, horaFin],
-    (err, results) => {
-      if (err) {
-        console.error("Error al obtener kinesiólogos disponibles:", err);
-        return res.status(500).json({ message: "Error en el servidor" });
-      }
-
-      res.status(200).json({
-        message: "Kinesiólogos disponibles obtenidos exitosamente",
-        kinesiologos: results,
-      });
+  db.query(kinesiologosDisponiblesQuery, [fecha], (err, results) => {
+    if (err) {
+      console.error("Error al obtener kinesiólogos disponibles:", err);
+      return res.status(500).json({ message: "Error en el servidor" });
     }
-  );
+
+    res.status(200).json({
+      message: "Kinesiólogos presentes obtenidos exitosamente",
+      kinesiologos: results,
+      totalPresentes: results.length,
+    });
+  });
 };
 
 // PASO 5: Obtener salas disponibles para una fecha/hora
-export const obtenerSalasDisponibles = (req, res) => {
-  const { fecha, horaInicio, horaFin } = req.query;
-
-  if (!fecha || !horaInicio || !horaFin) {
-    return res.status(400).json({
-      message: "Fecha, hora de inicio y fin son requeridas",
-    });
-  }
-
-  const salasDisponiblesQuery = `
-    SELECT 
-      s.idSala,
-      s.NombreSala,
-      s.Capacidad
-    FROM salas s
-    WHERE s.IsActive = 1
-      AND s.idSala NOT IN (
-        SELECT t.idSala 
-        FROM turnos t 
-        WHERE t.FechaRequeridaTurno = ?
-          AND t.EstadoTurno IN ('Pendiente', 'Finalizado')
-          AND t.idSala IS NOT NULL
-          AND t.HorarioInicioTurno IS NOT NULL
-          AND t.HorarioFinTurno IS NOT NULL
-          AND (
-            (t.HorarioInicioTurno < ? AND t.HorarioFinTurno > ?) OR
-            (t.HorarioInicioTurno < ? AND t.HorarioFinTurno > ?) OR
-            (t.HorarioInicioTurno >= ? AND t.HorarioFinTurno <= ?)
-          )
-      )
-    ORDER BY s.NombreSala
-  `;
-
-  db.query(
-    salasDisponiblesQuery,
-    [fecha, horaFin, horaInicio, horaFin, horaInicio, horaInicio, horaFin],
-    (err, results) => {
-      if (err) {
-        console.error("Error al obtener salas disponibles:", err);
-        return res.status(500).json({ message: "Error en el servidor" });
-      }
-
-      res.status(200).json({
-        message: "Salas disponibles obtenidas exitosamente",
-        salas: results,
-      });
-    }
-  );
-};
-
 //  Verificar disponibilidad de horarios para una fecha
 export const verificarDisponibilidadHorarios = (req, res) => {
   const { fecha } = req.params; // Formato: YYYY-MM-DD
 
   // Validar formato de fecha
   if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-    return res.status(400).json({ 
-      message: "Formato de fecha inválido. Use YYYY-MM-DD" 
+    return res.status(400).json({
+      message: "Formato de fecha inválido. Use YYYY-MM-DD",
     });
   }
 
   // Generar todos los horarios posibles (ejemplo: de 8:00 a 18:00, cada hora)
   const horariosCompletos = [];
-  for (let hora = 8; hora <= 17; hora++) {
-    const horarioFormateado = `${hora.toString().padStart(2, '0')}:00:00`;
+  for (let hora = 8; hora <= 18; hora++) {
+    const horarioFormateado = `${hora.toString().padStart(2, "0")}:00`;
     horariosCompletos.push(horarioFormateado);
   }
 
@@ -652,34 +691,51 @@ export const verificarDisponibilidadHorarios = (req, res) => {
 
     // Crear mapa de horarios ocupados
     const horariosOcupados = {};
-    results.forEach(row => {
+    results.forEach((row) => {
       horariosOcupados[row.horario] = {
         totalTurnos: row.totalTurnos,
         disponibles: row.disponibles > 0 ? row.disponibles : 0,
-        disponible: row.totalTurnos < 5
+        disponible: row.totalTurnos < 5,
       };
     });
 
     // Generar respuesta completa con todos los horarios
-    const horariosDisponibilidad = horariosCompletos.map(horario => {
-      const ocupacion = horariosOcupados[horario];
+    const horariosDisponibilidad = horariosCompletos.map((horario) => {
+      const ocupacion =
+        horariosOcupados[horario] || horariosOcupados[horario + ":00"];
       return {
         horario: horario,
+        horarioCompleto: horario + ":00",
         totalTurnos: ocupacion ? ocupacion.totalTurnos : 0,
         disponibles: ocupacion ? ocupacion.disponibles : 5,
-        disponible: ocupacion ? ocupacion.disponible : true
+        disponible: ocupacion ? ocupacion.disponible : true,
+        label: `${horario} (${
+          ocupacion ? ocupacion.disponibles : 5
+        } disponibles)`,
       };
     });
+
+    // Filtrar solo horarios disponibles para el desplegable
+    const horariosParaSelect = horariosDisponibilidad
+      .filter((h) => h.disponible)
+      .map((h) => ({
+        value: h.horarioCompleto,
+        label: h.label,
+        horario: h.horario,
+      }));
 
     res.status(200).json({
       message: "Disponibilidad de horarios obtenida exitosamente",
       fecha: fecha,
       horarios: horariosDisponibilidad,
+      horariosDisponibles: horariosParaSelect,
       resumen: {
         totalHorarios: horariosCompletos.length,
-        horariosDisponibles: horariosDisponibilidad.filter(h => h.disponible).length,
-        horariosCompletos: horariosDisponibilidad.filter(h => !h.disponible).length
-      }
+        horariosDisponibles: horariosDisponibilidad.filter((h) => h.disponible)
+          .length,
+        horariosCompletos: horariosDisponibilidad.filter((h) => !h.disponible)
+          .length,
+      },
     });
   });
 };
@@ -696,12 +752,10 @@ export const finalizarTurno = (req, res) => {
       p.NombrePaciente,
       p.ApellidoPaciente,
       e.NombreEmpleado,
-      e.ApellidoEmpleado,
-      s.NombreSala
+      e.ApellidoEmpleado
     FROM turnos t
     INNER JOIN pacientes p ON t.idPaciente = p.idPaciente
     LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado
-    LEFT JOIN salas s ON t.idSala = s.idSala
     WHERE t.idTurno = ? AND t.EstadoTurno = 'Pendiente'
   `;
 
@@ -713,7 +767,7 @@ export const finalizarTurno = (req, res) => {
 
     if (results.length === 0) {
       return res.status(404).json({
-        message: "Turno no encontrado o no está en estado pendiente"
+        message: "Turno no encontrado o no está en estado pendiente",
       });
     }
 
@@ -732,26 +786,137 @@ export const finalizarTurno = (req, res) => {
       WHERE idTurno = ?
     `;
 
-    db.query(finalizarQuery, [observacionesFinal, observacionesFinal, idTurno], (err, updateResults) => {
-      if (err) {
-        console.error("Error al finalizar turno:", err);
-        return res.status(500).json({ message: "Error al finalizar turno" });
-      }
-
-      res.status(200).json({
-        message: "Turno finalizado exitosamente",
-        turno: {
-          idTurno: idTurno,
-          paciente: `${turno.NombrePaciente} ${turno.ApellidoPaciente}`,
-          fecha: turno.FechaRequeridaTurno,
-          horario: `${turno.HorarioInicioTurno} - ${turno.HorarioFinTurno}`,
-          kinesiologo: turno.NombreEmpleado ? `${turno.NombreEmpleado} ${turno.ApellidoEmpleado}` : null,
-          sala: turno.NombreSala,
-          estadoAnterior: "Pendiente",
-          estadoActual: "Finalizado",
-          fechaFinalizacion: new Date().toISOString()
+    db.query(
+      finalizarQuery,
+      [observacionesFinal, observacionesFinal, idTurno],
+      (err, updateResults) => {
+        if (err) {
+          console.error("Error al finalizar turno:", err);
+          return res.status(500).json({ message: "Error al finalizar turno" });
         }
+
+        res.status(200).json({
+          message: "Turno finalizado exitosamente",
+          turno: {
+            idTurno: idTurno,
+            paciente: `${turno.NombrePaciente} ${turno.ApellidoPaciente}`,
+            fecha: turno.FechaRequeridaTurno,
+            horario: `${turno.HorarioInicioTurno} - ${turno.HorarioFinTurno}`,
+            kinesiologo: turno.NombreEmpleado
+              ? `${turno.NombreEmpleado} ${turno.ApellidoEmpleado}`
+              : null,
+            estadoAnterior: "Pendiente",
+            estadoActual: "Finalizado",
+            fechaFinalizacion: new Date().toISOString(),
+          },
+        });
+      }
+    );
+  });
+};
+
+// Cancelar un turno
+export const cancelarTurno = (req, res) => {
+  try {
+    const { idTurno } = req.params;
+
+    // Validar que el turno existe y no esté ya finalizado o cancelado
+    const verificarTurnoQuery = `
+      SELECT EstadoTurno 
+      FROM turnos 
+      WHERE idTurno = ?
+    `;
+    db.query(verificarTurnoQuery, [idTurno], (err, results) => {
+      if (err) {
+        console.error("Error al verificar turno:", err);
+        return res.status(500).json({ message: "Error en el servidor" });
+      }
+      if (results.length === 0) {
+        return res.status(404).json({ message: "Turno no encontrado" });
+      }
+      const estadoActual = results[0].EstadoTurno;
+      if (estadoActual === "Finalizado" || estadoActual === "Cancelado") {
+        return res
+          .status(400)
+          .json({
+            message: `No se puede cancelar un turno que ya está ${estadoActual}`,
+          });
+      }
+      // Actualizar el estado del turno a 'Cancelado'
+      const cancelarTurnoQuery = `
+        UPDATE turnos 
+        SET EstadoTurno = 'Cancelado' 
+        WHERE idTurno = ?
+      `;
+      db.query(cancelarTurnoQuery, [idTurno], (err, updateResults) => {
+        if (err) {
+          console.error("Error al cancelar turno:", err);
+          return res.status(500).json({ message: "Error al cancelar turno" });
+        }
+        res.status(200).json({
+          message: "Turno cancelado exitosamente",
+          idTurno: idTurno,
+          estadoAnterior: estadoActual,
+          estadoActual: "Cancelado",
+        });
       });
+    });
+  } catch (error) {
+    console.error("Error en cancelarTurno:", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
+// FUNCIÓN: Obtener detalles completos de un turno específico
+export const obtenerDetallesTurno = (req, res) => {
+  const { idTurno } = req.params;
+
+  const detallesTurnoQuery = `
+    SELECT 
+      t.idTurno,
+      t.EstadoTurno,
+      p.NombrePaciente,
+      p.ApellidoPaciente,
+      p.DNI,
+      ep.ArchivoURL as OrdenMedicaURL,
+      ep.FechaEstudio as FechaOrdenMedica,
+      ep.Descripcion as DescripcionOrdenMedica
+    FROM turnos t
+    INNER JOIN pacientes p ON t.idPaciente = p.idPaciente
+    LEFT JOIN estudios_paciente ep ON p.idPaciente = ep.idPaciente 
+      AND ep.Descripcion LIKE CONCAT('%Solicitud de turno #', t.idTurno, '%')
+    WHERE t.idTurno = ?
+    LIMIT 1
+  `;
+
+  db.query(detallesTurnoQuery, [idTurno], (err, results) => {
+    if (err) {
+      console.error("Error al obtener detalles del turno:", err);
+      return res.status(500).json({ message: "Error en el servidor" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({
+        message: "Turno no encontrado"
+      });
+    }
+
+    const turno = results[0];
+
+    res.status(200).json({
+      message: "Detalles del turno obtenidos exitosamente",
+      turno: {
+        idTurno: turno.idTurno,
+        estado: turno.EstadoTurno,
+        nombre: turno.NombrePaciente,
+        apellido: turno.ApellidoPaciente,
+        dni: turno.DNI,
+        ordenMedica: turno.OrdenMedicaURL ? {
+          url: turno.OrdenMedicaURL,
+          fechaSubida: turno.FechaOrdenMedica,
+          descripcion: turno.DescripcionOrdenMedica
+        } : null
+      }
     });
   });
 };
