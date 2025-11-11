@@ -1,27 +1,24 @@
-import {Router} from 'express';
+import { Router } from 'express';
+import {
+  obtenerCobros,
+  obtenerCobroPorId,
+  crearCobro,
+  actualizarCobro,
+  eliminarCobro,
+  cambiarEstadoCobro
+} from '../../Controllers/Cobros/cobros.controller.js';
 
-//Importaciones de los controladores
+const router = Router();
 
-import {obtenerCobros, obtenerCobroPorId, obtenerCobrosPorEstado,obtenerCobrosPorTurno, obtenerCobrosPorFecha, crearCobro, actualizarCobro, eliminarCobro} from "../../Controllers/Cobros/cobros.controller.js";
+// RUTAS PRINCIPALES
+router.get('/', obtenerCobros);         
+router.get('/:idCobro', obtenerCobroPorId); 
 
-const router = Router();    
+router.post('/', crearCobro);             
 
-//Rutas para cobros
+router.put('/:idCobro', actualizarCobro); 
+router.put('/cambiarEstado/:idCobro', cambiarEstadoCobro); 
 
-//Metodo get
-router.get("/", obtenerCobros);
-router.get("/estado/:estado", obtenerCobrosPorEstado);
-router.get("/turno/:idTurno", obtenerCobrosPorTurno);
-router.get("/fecha/:fecha", obtenerCobrosPorFecha);
-router.get("/:idCobro", obtenerCobroPorId);
-
-// Metodo post
-router.post("/", crearCobro);
-
-// Metodo put
-router.put("/:idCobro", actualizarCobro);
-
-// Metodo delete
-router.delete("/:idCobro", eliminarCobro);  
+router.delete('/:idCobro', eliminarCobro); 
 
 export default router;
