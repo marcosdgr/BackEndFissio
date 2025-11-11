@@ -114,7 +114,7 @@ export const obtenerTurnosPorTratamiento = async (req, res) => {
 };
 
 // Asignar un tratamiento a un turno
-export const crearTurnoTratamiento = async (req, res) => {
+export const asignarTratamientoATurno = async (req, res) => {
     try {
         const { idTurno, idTratamiento, Cantidad } = req.body;
 

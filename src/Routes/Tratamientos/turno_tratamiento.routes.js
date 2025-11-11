@@ -23,7 +23,7 @@ router.get("/turnos-por-tratamiento/:idTratamiento", obtenerTurnosPorTratamiento
 router.get("/estadisticas", obtenerEstadisticasTratamientos);
 
 //Metodo post
-router.post("/", asignarTratamientoATurno);
+router.post("/crear", asignarTratamientoATurno);
 router.post("/asignar-multiples", asignarMultiplesTratamientos);
 
 //Metodo delete
