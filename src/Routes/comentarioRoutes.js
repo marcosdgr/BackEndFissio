@@ -6,8 +6,8 @@ const router = express.Router();
 
 router.get('/', traerComentariosActivos);  // Todos activos
 router.get('/:id', traerComentarioPorId);  // Por ID
-router.post('/', validarCrearComentario, crearComentario);  // Crear con validación
-router.put('/:id', validarActualizarComentario, actualizarComentario);  // Actualizar con validación
-router.delete('/:id', borradoLogicoComentario);  // Borrado lógico
+router.post('/crear', validarCrearComentario, crearComentario);  // Crear con validación
+router.put('/actualizar/:id', validarActualizarComentario, actualizarComentario);  // Actualizar con validación
+router.put('/borrado-logico/:id', borradoLogicoComentario);  // Borrado lógico
 
 export default router;
