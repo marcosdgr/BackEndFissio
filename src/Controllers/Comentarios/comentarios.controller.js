@@ -1,6 +1,7 @@
 import db from "../../Config/db.js";
 
-// crear comentario
+// crear comentario sahgdhs
+// Modificado para asociar el comentario con idPaciente basado en idUsuario
 export const crearComentario = async (req, res) => {
   try {
     const { CalificacionComentario, Comentario: textoComentario, idUsuario } = req.body;
