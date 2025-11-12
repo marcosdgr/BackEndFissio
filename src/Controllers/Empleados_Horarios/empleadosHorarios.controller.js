@@ -1,15 +1,16 @@
-import e from "cors";
 import db from "../../Config/db.js";
 
 //Traer todos los empleados con su horario 
 export const obtenerEmpleadosHorarios = async (req, res) => {
     try {
-        const obtenerEmpleados = "SELECT eh.idEmpHor,e.idEmpleado, e.NombreEmpleado, e.ApellidoEmpleado, h.idHorario, h.DiaSemana, h.HoraEntradaEsperada, h.HoraSalidaEsperada FROM empleados_horarios eh JOIN empleados e ON eh.idEmpleado = e.idEmpleado JOIN horariosTrabajo h ON eh.idHorario = h.idHorario ORDER BY eh.idEmpHor DESC";
+        const obtenerEmpleados = "SELECT eh.idEmpHor,e.idEmpleado, e.NombreEmpleado, e.ApellidoEmpleado, h.idHorario, h.Fecha, h.HoraEntradaEsperada, h.HoraSalidaEsperada FROM empleados_horarios eh JOIN empleados e ON eh.idEmpleado = e.idEmpleado JOIN horariosTrabajo h ON eh.idHorario = h.idHorario ORDER BY eh.idEmpHor DESC";
 
         db.query(obtenerEmpleados, (error, results) => {
             if (error) {
                 console.error("Error al obtener empleados y horarios:", error);
-                return res.status(500).json({ error: "Error del servidor al obtener empleados y horarios" });
+                console.error("Query SQL:", obtenerEmpleados);
+                console.error("Detalles del error:", error.message, error.code, error.sqlMessage);
+                return res.status(500).json({ error: "Error del servidor al obtener empleados y horarios", detalle: error.sqlMessage || error.message });
             }
             if (!results || results.length === 0) {
                 return res.status(404).json({ message: "No hay registros de empleados con horarios" });
@@ -25,7 +26,7 @@ export const obtenerEmpleadosHorarios = async (req, res) => {
 export const obtenerHorariosActivosPorEmpleado = async (req, res) => {
     try {
         const { idEmpleado } = req.params;
-        const query = "SELECT h.idHorario, h.DiaSemana, h.HoraEntradaEsperada, h.HoraSalidaEsperada FROM horariosTrabajo h JOIN empleados_horarios eh ON h.idHorario = eh.idHorario WHERE eh.idEmpleado = ? AND h.isActive = 1";
+        const query = "SELECT h.idHorario, h.Fecha, h.HoraEntradaEsperada, h.HoraSalidaEsperada FROM horariosTrabajo h JOIN empleados_horarios eh ON h.idHorario = eh.idHorario WHERE eh.idEmpleado = ? AND h.IsActive = 1";
         db.query(query, [idEmpleado], (error, results) => {
             if (error) {
                 console.error("Error al obtener los horarios activos del empleado:", error);
@@ -68,7 +69,7 @@ export const obtenerEmpleadoHorarioPorId = async (req, res) => {
     try {
         const { idEmpHor } = req.params;
 
-        const empleadoHorario = "SELECT eh.idEmpHor, e.idEmpleado, e.NombreEmpleado, e.ApellidoEmpleado, h.idHorario, h.DiaSemana, h.HoraEntradaEsperada, h.HoraSalidaEsperada FROM empleados_horarios eh JOIN empleados e ON eh.idEmpleado = e.idEmpleado JOIN horariosTrabajo h ON eh.idHorario = h.idHorario WHERE eh.idEmpHor = ?";
+        const empleadoHorario = "SELECT eh.idEmpHor, e.idEmpleado, e.NombreEmpleado, e.ApellidoEmpleado, h.idHorario, h.Fecha, h.HoraEntradaEsperada, h.HoraSalidaEsperada FROM empleados_horarios eh JOIN empleados e ON eh.idEmpleado = e.idEmpleado JOIN horariosTrabajo h ON eh.idHorario = h.idHorario WHERE eh.idEmpHor = ?";
         db.query(empleadoHorario, [idEmpHor], (error, results) => {
             if (error) {
                 console.error("Error al obtener el horario del empleado:", error);
@@ -149,4 +150,3 @@ export const eliminarEmpleadoHorario = async (req, res) => {
         res.status(500).json({ error: "Error del servidor" });
     }
 };
-
