@@ -32,31 +32,27 @@ export const responderChatWeb = (req, res) => {
   // 5. Generar respuesta con la lógica del bot
   const respuesta = chatPrincipal(estadosChat[sessionId], message);
 
-  // 6. Guardar la conversación completa (pregunta + respuesta) en UN solo registro
+  // 5.1. Validar que la respuesta no sea undefined
+  if (!respuesta) {
+    return res.status(500).json({ 
+      error: "Error interno del bot",
+      reply: "Disculpá, hubo un error. Intentá de nuevo por favor."
+    });
+  }
+
+  // 6. Enviar respuesta INMEDIATAMENTE al cliente (no esperar a que se guarde en BD)
+  res.json({ 
+    reply: respuesta,
+    sessionId: sessionId
+  });
+
+  // 7. Guardar la conversación en segundo plano (no bloquea la respuesta al usuario)
   const query = "INSERT INTO chatbot (sessionId, preguntaUsuario, respuestaBot, origen) VALUES (?, ?, ?, ?)";
   const valores = [sessionId, message, respuesta, "usuario"];
 
-  console.log(" Guardando conversación completa...");
-  console.log("Query:", query);
-  console.log("Valores:", valores);
-
   db.query(query, valores, (error, resultado) => {
     if (error) {
-      console.error("ERROR COMPLETO:", error);
-      console.error("Código de error:", error.code);
-      console.error("Mensaje:", error.sqlMessage);
-      return res.status(500).json({ 
-        error: "Error al guardar la conversación",
-        detalles: error.sqlMessage 
-      });
+      console.error("Error al guardar conversación en BD:", error.sqlMessage);
     }
-
-    console.log("✅ Conversación guardada. ID:", resultado.insertId);
-
-    // 7. Enviar respuesta al cliente
-    res.json({ 
-      reply: respuesta,
-      sessionId: sessionId
-    });
   });
 };
