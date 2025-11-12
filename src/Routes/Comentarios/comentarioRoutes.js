@@ -3,6 +3,7 @@ import { traerComentariosActivos, traerComentarioPorId, crearComentario, actuali
 import { validarCrearComentario, validarActualizarComentario } from '../../Middlewares/validation.js'; 
 import { despublicarComentario, publicarComentario, traerComentariosPublicados } from '../../Models/comentario.schema.js';
 
+
 const router = express.Router();
 
 router.get('/', traerComentariosActivos);  // Todos activos
