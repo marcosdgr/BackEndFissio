@@ -8,22 +8,30 @@ import {
   traerPacientes,
   traerLocalidades,
   obtenerPacientePorId,
-  obtenerTurnosPorIdPaciente
+  obtenerTurnosPorIdPaciente,
+  obtenerDetallesTurno,
+  obtenerMailPacientePorId,
+  cancelarTurnoPaciente
 } from "../../Controllers/Pacientes/pacientes.controller.js";
 
 const router = Router();
 
-// ruta GET para traer todos los pacientes
+// Rutas específicas primero (antes de los parámetros dinámicos)
 router.get("/", traerPacientes);
 router.get("/localidades", traerLocalidades);
-router.get("/:idPaciente", obtenerPacientePorId);
+
+// Rutas con parámetros dinámicos
+router.get("/:idPaciente/turnos/detalles", obtenerDetallesTurno);
+router.get("/:idPaciente/mail", obtenerMailPacientePorId);
 router.get("/:idPaciente/turnos", obtenerTurnosPorIdPaciente);
+router.get("/:idPaciente", obtenerPacientePorId);
 
 // ruta POST para crear nuevo paciente
 router.post("/", crearPaciente);
 
 // ruta PUT para actualizar datos del paciente
 router.put("/actualizar/:idPaciente", actualizarPaciente);
+router.put("/:idPaciente/turnos/:idTurno/cancelar", cancelarTurnoPaciente);
 router.put("/estado/:idPaciente", cambiarEstadoPaciente);
 
 export default router;
