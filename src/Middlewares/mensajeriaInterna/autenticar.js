@@ -97,3 +97,30 @@ export const verifyTokenAndAdmin = (req, res, next) => {
     verifyAdmin(req, res, next);
   });
 };
+
+
+// Middleware para verificar que solo empleados o administradores puedan acceder
+export const verificarEmpleado = (req, res, next) => {
+  if (!req.usuarioAutenticado) {
+    return res.status(401).json({ 
+      message: "Acceso denegado. Usuario no autenticado." 
+    });
+  }
+
+  // Verificar que el rol sea Empleado o Administrador
+  const rolesPermitidos = ["Empleado", "Administrador"];
+  if (!rolesPermitidos.includes(req.usuarioAutenticado.NombreRol)) {
+    return res.status(403).json({ 
+      message: "Acceso denegado. Solo empleados pueden usar la mensajería interna." 
+    });
+  }
+
+  // Verificar que tenga idEmpleado
+  if (!req.usuarioAutenticado.idEmpleado) {
+    return res.status(403).json({ 
+      message: "Acceso denegado. No se encontró registro de empleado." 
+    });
+  }
+
+  next();
+};
