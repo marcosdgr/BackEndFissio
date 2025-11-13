@@ -425,3 +425,36 @@ export const cancelarTurnoPaciente = (req, res) => {
     return res.status(500).json({ message: "Error interno del servidor" });
   }
 };
+// obtener los comentarios de un paciente por idPaciente
+export const obtenerComentariosPaciente = (req, res) => {
+  try {
+    const { idPaciente } = req.params;
+
+    if (!idPaciente) {
+      return res.status(400).json({ message: "ID de paciente requerido" });
+    }
+
+    const query = `
+      SELECT 
+        c.idComentario,
+        c.CalificacionComentario,
+        c.FechaComentario,
+        c.Comentario,
+        c.IsActive,
+        c.IsPublicado
+      FROM comentarios c
+      WHERE c.idPaciente = ? AND c.IsActive = 1
+      ORDER BY c.FechaComentario DESC
+    `;
+
+    db.query(query, [idPaciente], (error, results) => {
+      if (error) {
+        return res.status(500).json({ message: "Error al obtener comentarios" });
+      }
+
+      res.status(200).json(results);
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error del servidor" });
+  }
+};

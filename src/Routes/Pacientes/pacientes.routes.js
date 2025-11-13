@@ -11,7 +11,8 @@ import {
   obtenerTurnosPorIdPaciente,
   obtenerDetallesTurno,
   obtenerMailPacientePorId,
-  cancelarTurnoPaciente
+  cancelarTurnoPaciente,
+  obtenerComentariosPaciente
 } from "../../Controllers/Pacientes/pacientes.controller.js";
 
 const router = Router();
@@ -24,6 +25,7 @@ router.get("/localidades", traerLocalidades);
 router.get("/:idPaciente/turnos/detalles", obtenerDetallesTurno);
 router.get("/:idPaciente/mail", obtenerMailPacientePorId);
 router.get("/:idPaciente/turnos", obtenerTurnosPorIdPaciente);
+router.get("/:idPaciente/comentarios", obtenerComentariosPaciente);
 router.get("/:idPaciente", obtenerPacientePorId);
 
 // ruta POST para crear nuevo paciente
