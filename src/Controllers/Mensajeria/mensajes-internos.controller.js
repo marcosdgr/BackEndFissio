@@ -138,3 +138,12 @@ export const marcarLeido = (req, res) => {
     });
   }
 };
+
+
+// Registrar actividad del usuario (heartbeat) - señal que confirma que el servidor o el sistema sigue activo.
+export const registrarHeartbeat = (req, res) => {
+  res.json({ 
+    message: "Heartbeat registrado", 
+    timestamp: new Date() 
+  });
+};
