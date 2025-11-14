@@ -62,10 +62,11 @@ export const obtenerCobroPorId = (req, res) => {
 };
 
 // === CREAR COBRO ===
+
 export const crearCobro = (req, res) => {
   const {
     FechaCobro, idTurno, TipoCobro = "Paciente", idMedioPago, MontoCobro,
-    EstadoCobro = "Cobrado", Descripcion
+    Descripcion
   } = req.body;
 
   if (!FechaCobro || !idTurno || !idMedioPago || !MontoCobro) {
@@ -74,17 +75,18 @@ export const crearCobro = (req, res) => {
 
   db.query(
     `INSERT INTO cobros (FechaCobro, idTurno, TipoCobro, idMedioPago, MontoCobro, EstadoCobro, Descripcion)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [FechaCobro, idTurno, TipoCobro, idMedioPago, MontoCobro, EstadoCobro, Descripcion || null],
+     VALUES (?, ?, ?, ?, ?, 'Cobrado', ?)`,
+    [FechaCobro, idTurno, TipoCobro, idMedioPago, MontoCobro, Descripcion || null],
     (err, result) => {
       if (err) {
         console.error("Error al crear cobro:", err);
         return res.status(500).json({ error: "Error al crear" });
       }
-      res.status(201).json({ idCobro: result.insertId, ...req.body });
+      res.status(201).json({ idCobro: result.insertId, ...req.body, EstadoCobro: 'Cobrado' });
     }
   );
 };
+
 
 // === ACTUALIZAR COBRO ===
 export const actualizarCobro = (req, res) => {

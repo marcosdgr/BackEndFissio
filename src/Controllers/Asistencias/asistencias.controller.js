@@ -155,7 +155,7 @@ export const registrarEntrada = (req, res) => {
             return res.status(400).json({ message: "Los campos 'Fecha', 'HoraEntrada' e 'idEmpleado' son obligatorios" });
         }
 
-        const entradaNueva = "INSERT INTO asistencias (Fecha, HoraEntrada, idEmpleado, Observaciones) VALUES (?, ?, ?, ?)";
+        const entradaNueva = "INSERT INTO asistencias (Fecha, HoraEntrada, idEmpleado, Observaciones, Presente) VALUES (?, ?, ?, ?, 1)";
         db.query(entradaNueva, [Fecha, HoraEntrada, idEmpleado, Observaciones || null], (error, results) => {
             if (error) {
                 console.error("Error al registrar la entrada:", error);
@@ -183,7 +183,7 @@ export const registrarSalida = (req, res) => {
         }
 
         // Construir query dinámicamente
-        let salidaNueva = "UPDATE asistencias SET HoraSalida = ?"; //query dinamica que cambia si hay observaciones o no, osea solo se puede notificar el horario de salida o tambien puede notificar el horario de salida con la observacion.
+        let salidaNueva = "UPDATE asistencias SET HoraSalida = ? Presente = 0"; //query dinamica que cambia si hay observaciones o no, osea solo se puede notificar el horario de salida o tambien puede notificar el horario de salida con la observacion.
         const params = [HoraSalida];
         
         // agrega observaciones  por ejemplo en el caso de salir temprano y notificarlo

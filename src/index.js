@@ -49,7 +49,7 @@ import categoriaEmpleadoRoutes from "./Routes/Empleados/categoria_empleados.rout
 import comentarioRoutes from "./Routes/Comentarios/comentarioRoutes.js";
 import historiaClinicaRoutes from "./Routes/HistoriaClinica/historiaClinica.routes.js";
 import salaRoutes from "./Routes/Salas/salaRoutes.js";
-import metricaDiariaRoutes from "./Routes/MetricasDiarias/metricasDiariasRoutes.js";
+import metricasRoutes from "./Routes/Metricas/metricasRoutes.js";
 import catFaqsRoutes from "./Routes/Faqs/catFaqsRoutes.js";
 import faqsRoutes from "./Routes/Faqs/faqsRoutes.js";
 
@@ -105,7 +105,7 @@ app.use("/api/historiasClinicas/v1", historiaClinicaRoutes);
 // salas
 app.use("/api/salas/v1", salaRoutes);
 // metricas diarias
-app.use("/api/metricas/v1", metricaDiariaRoutes);
+app.use("/api/metricas", metricasRoutes);
 //categorias FAQ
 app.use("/api/cat-faqs/v1", catFaqsRoutes);
 // FAQs
