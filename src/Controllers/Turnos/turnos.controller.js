@@ -652,8 +652,7 @@ export const obtenerKinesiologosDisponibles = (req, res) => {
   });
 };
 
-// PASO 5: Obtener salas disponibles para una fecha/hora
-//  Verificar disponibilidad de horarios para una fecha
+// PASO 5: Verificar disponibilidad de horarios para una fecha (usa tabla horarios_turnos)
 export const verificarDisponibilidadHorarios = (req, res) => {
   const { fecha } = req.params; // Formato: YYYY-MM-DD
 
@@ -664,78 +663,134 @@ export const verificarDisponibilidadHorarios = (req, res) => {
     });
   }
 
-  // Generar todos los horarios posibles (ejemplo: de 8:00 a 18:00, cada hora)
-  const horariosCompletos = [];
-  for (let hora = 8; hora <= 18; hora++) {
-    const horarioFormateado = `${hora.toString().padStart(2, "0")}:00`;
-    horariosCompletos.push(horarioFormateado);
-  }
+  // Calcular el día de la semana (1=Lunes, 7=Domingo)
+  const fechaObj = new Date(fecha + 'T00:00:00');
+  const diaSemana = fechaObj.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
+  const diaSemanaAjustado = diaSemana === 0 ? 7 : diaSemana; // Convertir a 1-7
 
-  // Consultar cuántos turnos hay por cada horario
-  const consultarDisponibilidad = `
+  // Obtener los horarios configurados para ese día de la semana
+  const obtenerHorariosQuery = `
     SELECT 
-      HorarioRequeridoTurno as horario,
-      COUNT(*) as totalTurnos,
-      (5 - COUNT(*)) as disponibles
-    FROM turnos 
-    WHERE FechaRequeridaTurno = ? 
-      AND EstadoTurno IN ('Solicitado', 'Pendiente', 'Finalizado')
-    GROUP BY HorarioRequeridoTurno
+      idHorario,
+      HoraInicio,
+      HoraFin,
+      CupoPorHora
+    FROM horarios_turnos
+    WHERE DiaSemana = ? AND IsActive = 1
+    ORDER BY HoraInicio ASC
   `;
 
-  db.query(consultarDisponibilidad, [fecha], (err, results) => {
+  db.query(obtenerHorariosQuery, [diaSemanaAjustado], (err, horariosConfig) => {
     if (err) {
-      console.error("Error al verificar disponibilidad de horarios:", err);
+      console.error("Error al obtener horarios configurados:", err);
       return res.status(500).json({ message: "Error en el servidor" });
     }
 
-    // Crear mapa de horarios ocupados
-    const horariosOcupados = {};
-    results.forEach((row) => {
-      horariosOcupados[row.horario] = {
-        totalTurnos: row.totalTurnos,
-        disponibles: row.disponibles > 0 ? row.disponibles : 0,
-        disponible: row.totalTurnos < 5,
-      };
+    if (horariosConfig.length === 0) {
+      return res.status(200).json({
+        message: "No hay horarios configurados para este día",
+        fecha: fecha,
+        diaSemana: diaSemanaAjustado,
+        horarios: [],
+        horariosDisponibles: [],
+        resumen: {
+          totalHorarios: 0,
+          horariosDisponibles: 0,
+          horariosCompletos: 0,
+        },
+      });
+    }
+
+    // Generar todos los horarios hora por hora según la configuración
+    // Usar un Map para evitar duplicados (sin sumar cupos)
+    const horariosMap = new Map();
+    
+    horariosConfig.forEach((config) => {
+      const horaInicio = parseInt(config.HoraInicio.split(':')[0]);
+      const horaFin = parseInt(config.HoraFin.split(':')[0]);
+      
+      for (let hora = horaInicio; hora < horaFin; hora++) {
+        const horarioFormateado = `${hora.toString().padStart(2, "0")}:00`;
+        
+        // Solo agregar si no existe (ignora duplicados)
+        if (!horariosMap.has(horarioFormateado)) {
+          horariosMap.set(horarioFormateado, {
+            horario: horarioFormateado,
+            cupoMaximo: config.CupoPorHora
+          });
+        }
+      }
     });
+    
+    // Convertir el Map a array y ordenar por horario
+    const horariosCompletos = Array.from(horariosMap.values()).sort((a, b) => 
+      a.horario.localeCompare(b.horario)
+    );
 
-    // Generar respuesta completa con todos los horarios
-    const horariosDisponibilidad = horariosCompletos.map((horario) => {
-      const ocupacion =
-        horariosOcupados[horario] || horariosOcupados[horario + ":00"];
-      return {
-        horario: horario,
-        horarioCompleto: horario + ":00",
-        totalTurnos: ocupacion ? ocupacion.totalTurnos : 0,
-        disponibles: ocupacion ? ocupacion.disponibles : 5,
-        disponible: ocupacion ? ocupacion.disponible : true,
-        label: `${horario} (${
-          ocupacion ? ocupacion.disponibles : 5
-        } disponibles)`,
-      };
-    });
+    // Consultar cuántos turnos hay por cada horario
+    const consultarDisponibilidad = `
+      SELECT 
+        HorarioRequeridoTurno as horario,
+        COUNT(*) as totalTurnos
+      FROM turnos 
+      WHERE FechaRequeridaTurno = ? 
+        AND EstadoTurno IN ('Solicitado', 'Pendiente', 'Finalizado')
+      GROUP BY HorarioRequeridoTurno
+    `;
 
-    // Filtrar solo horarios disponibles para el desplegable
-    const horariosParaSelect = horariosDisponibilidad
-      .filter((h) => h.disponible)
-      .map((h) => ({
-        value: h.horarioCompleto,
-        label: h.label,
-        horario: h.horario,
-      }));
+    db.query(consultarDisponibilidad, [fecha], (err, results) => {
+      if (err) {
+        console.error("Error al verificar disponibilidad de horarios:", err);
+        return res.status(500).json({ message: "Error en el servidor" });
+      }
 
-    res.status(200).json({
-      message: "Disponibilidad de horarios obtenida exitosamente",
-      fecha: fecha,
-      horarios: horariosDisponibilidad,
-      horariosDisponibles: horariosParaSelect,
-      resumen: {
-        totalHorarios: horariosCompletos.length,
-        horariosDisponibles: horariosDisponibilidad.filter((h) => h.disponible)
-          .length,
-        horariosCompletos: horariosDisponibilidad.filter((h) => !h.disponible)
-          .length,
-      },
+      // Crear mapa de horarios ocupados
+      const horariosOcupados = {};
+      results.forEach((row) => {
+        const horarioKey = row.horario.substring(0, 5); // Formato HH:mm
+        horariosOcupados[horarioKey] = row.totalTurnos;
+      });
+
+      // Generar respuesta completa con todos los horarios
+      const horariosDisponibilidad = horariosCompletos.map((item) => {
+        const totalTurnos = horariosOcupados[item.horario] || 0;
+        const disponibles = item.cupoMaximo - totalTurnos;
+        const disponible = disponibles > 0;
+
+        return {
+          horario: item.horario,
+          horarioCompleto: item.horario + ":00",
+          totalTurnos: totalTurnos,
+          cupoMaximo: item.cupoMaximo,
+          disponibles: disponibles > 0 ? disponibles : 0,
+          disponible: disponible,
+          label: `${item.horario} (${disponibles > 0 ? disponibles : 0} disponibles)`,
+        };
+      });
+
+      // Filtrar solo horarios disponibles para el desplegable
+      const horariosParaSelect = horariosDisponibilidad
+        .filter((h) => h.disponible)
+        .map((h) => ({
+          value: h.horarioCompleto,
+          label: h.label,
+          horario: h.horario,
+          cupoMaximo: h.cupoMaximo,
+          disponibles: h.disponibles
+        }));
+
+      res.status(200).json({
+        message: "Disponibilidad de horarios obtenida exitosamente",
+        fecha: fecha,
+        diaSemana: diaSemanaAjustado,
+        horarios: horariosDisponibilidad,
+        horariosDisponibles: horariosParaSelect,
+        resumen: {
+          totalHorarios: horariosCompletos.length,
+          horariosDisponibles: horariosDisponibilidad.filter((h) => h.disponible).length,
+          horariosCompletos: horariosDisponibilidad.filter((h) => !h.disponible).length,
+        },
+      });
     });
   });
 };

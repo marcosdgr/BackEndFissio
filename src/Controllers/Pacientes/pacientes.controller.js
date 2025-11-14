@@ -309,7 +309,7 @@ export const obtenerTurnosPorIdPaciente = (req, res) => {
     if (!idPaciente) {
       return res.status(400).json({ message: "Falta idPaciente" });
     }
-    const obtenerTurnosPaciente = "SELECT t.idTurno, t.FechaSolicitudTurno, t.HorarioRequeridoTurno, t.EstadoTurno, tr.NombreTratamiento, CONCAT (e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS NombreEmpleado FROM turnos t JOIN tratamientos tr ON t.idTratamiento = tr.idTratamiento LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE t.idPaciente = ?";
+    const obtenerTurnosPaciente = "SELECT t.idTurno, t.FechaSolicitudTurno, t.HorarioRequeridoTurno, t.EstadoTurno, tr.NombreTratamiento, CONCAT (e.NombreEmpleado, ' ', e.ApellidoEmpleado) AS NombreEmpleado FROM turnos t LEFT JOIN tratamientos tr ON t.idTratamiento = tr.idTratamiento LEFT JOIN empleados e ON t.idEmpleado = e.idEmpleado WHERE t.idPaciente = ?";
     db.query(obtenerTurnosPaciente, [idPaciente], (error, results) => {
       if (error) {
         return res.status(500).json({ message: "Error en el servidor" });
@@ -318,5 +318,110 @@ export const obtenerTurnosPorIdPaciente = (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Error en el servidor" });
+  }
+};
+//obtener detalles del turno de un paciente (estado , fecha requerida, hora requerida)
+export const obtenerDetallesTurno = (req, res) => {
+ try {
+  const {idPaciente} = req.params;
+  if (!idPaciente) {
+    return res.status(400).json({ message: "Falta idPaciente" });
+  }
+  const obtenerDetallesTurnoQuery = "SELECT t.idTurno, t.EstadoTurno, t.FechaRequeridaTurno, t.HorarioRequeridoTurno FROM turnos t WHERE t.idPaciente = ?";
+  db.query(obtenerDetallesTurnoQuery, [idPaciente], (error, results) => {
+    if (error) {
+      return res.status(500).json({ message: "Error en el servidor" });
+    }
+    res.status(200).json(results);
+  });
+} catch (error) {
+  res.status(500).json({ message: "Error en el servidor" });
+}
+};
+//obtener el mail de un paciente por idPaciente
+export const obtenerMailPacientePorId = (req, res) => {
+  try {
+    const { idPaciente } = req.params;
+    const obtenerMailQuery = "SELECT u.MailUsuario FROM pacientes p JOIN usuarios u ON p.idUsuario = u.idUsuario WHERE p.idPaciente = ?";
+    db.query(obtenerMailQuery, [idPaciente], (error, results) => {
+      if (error) {
+        return res.status(500).json({ message: "Error en el servidor" });
+      }
+      if (results.length === 0) {
+        return res.status(404).json({ message: "Paciente no encontrado" });
+      }
+      res.status(200).json(results[0]);
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error en el servidor" });
+  }
+};
+//funcion para el paciente cancele alguno de sus turnos 
+export const cancelarTurnoPaciente = (req, res) => {
+  try {
+    const { idPaciente, idTurno } = req.params;
+
+    if (!idPaciente || !idTurno) {
+      return res.status(400).json({ message: "ID del paciente y del turno son requeridos" });
+    }
+
+    // Verificar que el turno existe, pertenece al paciente y no esté ya finalizado o cancelado
+    const verificarTurnoQuery = `
+      SELECT EstadoTurno, idPaciente
+      FROM turnos 
+      WHERE idTurno = ?
+    `;
+
+    db.query(verificarTurnoQuery, [idTurno], (err, results) => {
+      if (err) {
+        return res.status(500).json({ message: "Error en el servidor" });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: "Turno no encontrado" });
+      }
+
+      const turno = results[0];
+
+      // Verificar que el turno pertenece al paciente
+      if (turno.idPaciente !== parseInt(idPaciente)) {
+        return res.status(403).json({ message: "Este turno no pertenece al paciente" });
+      }
+
+      const estadoActual = turno.EstadoTurno;
+
+      // Verificar que el turno no esté finalizado o cancelado
+      if (estadoActual === "Finalizado" || estadoActual === "Cancelado") {
+        return res.status(400).json({
+          message: `No se puede cancelar un turno que ya está ${estadoActual}`
+        });
+      }
+
+      // Actualizar el estado del turno a 'Cancelado'
+      const cancelarTurnoQuery = `
+        UPDATE turnos 
+        SET EstadoTurno = 'Cancelado' 
+        WHERE idTurno = ? AND idPaciente = ?
+      `;
+
+      db.query(cancelarTurnoQuery, [idTurno, idPaciente], (err, updateResults) => {
+        if (err) {
+          return res.status(500).json({ message: "Error al cancelar turno" });
+        }
+
+        if (updateResults.affectedRows === 0) {
+          return res.status(404).json({ message: "No se pudo cancelar el turno" });
+        }
+
+        res.status(200).json({
+          message: "Turno cancelado exitosamente",
+          idTurno: idTurno,
+          estadoAnterior: estadoActual,
+          estadoActual: "Cancelado"
+        });
+      });
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Error interno del servidor" });
   }
 };

@@ -83,7 +83,7 @@ export const obtenerServiciosPorTurno = async (req, res) => {
 // Crear turno-servicio
 export const crearTurnoServicio = async (req, res) => {
     try {
-        const { idTurno, idServicio, Cantidad, PrecioUnitario } = req.body;
+        const { idTurno, idServicio, Cantidad } = req.body;
 
         // 1. Validar campos obligatorios
         if (!idTurno || !idServicio) {
@@ -96,12 +96,7 @@ export const crearTurnoServicio = async (req, res) => {
             return res.status(400).json({ message: 'La cantidad debe ser mayor a 0' });
         }
 
-        // 3. Validar precio unitario si se proporciona
-        if (PrecioUnitario !== undefined && PrecioUnitario < 0) {
-            return res.status(400).json({ message: 'El precio unitario no puede ser negativo' });
-        }
-
-        // 4. Verificar que el turno existe
+        // 3. Verificar que el turno existe
         const verificarTurnoQuery = 'SELECT * FROM turnos WHERE idTurno = ?';
         db.query(verificarTurnoQuery, [idTurno], (error, results) => {
             if (error) {
@@ -113,7 +108,7 @@ export const crearTurnoServicio = async (req, res) => {
                 return res.status(400).json({ message: 'El turno especificado no existe' });
             }
 
-            // 5. Verificar que el servicio existe y está activo
+            // 4. Verificar que el servicio existe y está activo
             const verificarServicioQuery = 'SELECT * FROM servicios WHERE idServicio = ? AND IsActive = 1';
             db.query(verificarServicioQuery, [idServicio], (error, results) => {
                 if (error) {
@@ -125,7 +120,7 @@ export const crearTurnoServicio = async (req, res) => {
                     return res.status(400).json({ message: 'El servicio especificado no existe o está inactivo' });
                 }
 
-                // 6. Verificar que no exista ya la combinación turno-servicio
+                // 5. Verificar que no exista ya la combinación turno-servicio
                 const verificarDuplicadoQuery = 'SELECT * FROM turno_servicios WHERE idTurno = ? AND idServicio = ?';
                 db.query(verificarDuplicadoQuery, [idTurno, idServicio], (error, results) => {
                     if (error) {
@@ -137,12 +132,12 @@ export const crearTurnoServicio = async (req, res) => {
                         return res.status(409).json({ message: 'Este servicio ya está asignado a este turno' });
                     }
 
-                    // 7. Crear el turno-servicio
+                    // 6. Crear el turno-servicio
                     const crearTurnoServicioQuery = `
-                        INSERT INTO turno_servicios (idTurno, idServicio, Cantidad, PrecioUnitario)
-                        VALUES (?, ?, ?, ?)
+                        INSERT INTO turno_servicios (idTurno, idServicio, Cantidad)
+                        VALUES (?, ?, ?)
                     `;
-                    db.query(crearTurnoServicioQuery, [idTurno, idServicio, cantidad, PrecioUnitario], (error, results) => {
+                    db.query(crearTurnoServicioQuery, [idTurno, idServicio, cantidad], (error, results) => {
                         if (error) {
                             console.error('Error al crear turno-servicio:', error);
                             return res.status(500).json({ message: 'Error al crear turno-servicio' });
@@ -153,8 +148,7 @@ export const crearTurnoServicio = async (req, res) => {
                             id: results.insertId,
                             idTurno,
                             idServicio,
-                            Cantidad: cantidad,
-                            PrecioUnitario
+                            Cantidad: cantidad
                         });
                     });
                 });
