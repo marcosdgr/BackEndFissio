@@ -349,13 +349,14 @@ export const solicitarTurnoSecretaria = (req, res) => {
 // PASO 2: Asignar recursos el día del turno (Secretaria - cuando paciente se presenta)
 export const asignarRecursosDelDia = (req, res) => {
   const { idTurno } = req.params;
+  console.log(idTurno);
   const {
     HorarioInicioTurno,
     HorarioFinTurno,
     idEmpleado, // Kinesiólogo asignado
     ObservacionesSecretaria,
   } = req.body;
-
+console.log(req.body);
   // Validación de campos obligatorios
   if (!HorarioInicioTurno || !HorarioFinTurno || !idEmpleado) {
     return res.status(400).json({
