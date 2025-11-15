@@ -1,25 +1,32 @@
 import { Router } from "express";
-
-
 // Importaciones de los controladores
-import { obtenerHorariosTrabajo, obtenerHorarioPorId, obtenerHorariosActivos, obtenerHorariosInactivos, crearHorarioTrabajo, actualizarHorarioTrabajo, borradoLogicoHorarioTrabajo, activacionLogicaHorarioTrabajo } from "../../Controllers/HorariosTrabajo/horariosTrabajo.controller.js";
+import {
+  obtenerHorariosTrabajo,
+  obtenerHorarioPorId,
+  obtenerHorariosActivos,
+  obtenerHorariosInactivos,
+  crearHorarioTrabajo,
+  actualizarHorarioTrabajo,
+  borradoLogicoHorarioTrabajo,
+  activacionLogicaHorarioTrabajo
+} from "../../Controllers/HorariosTrabajo/horariosTrabajo.controller.js";
 
 const router = Router();
 
-//Inicializo todas las rutas de horarios de trabajo
+//Rutas para horarios de trabajo
 
-//Metodo get
-router.get("/",obtenerHorariosTrabajo );
+//Metodo get - RUTAS ESPECÍFICAS PRIMERO
 router.get("/activos", obtenerHorariosActivos);
 router.get("/inactivos", obtenerHorariosInactivos);
+router.get("/", obtenerHorariosTrabajo);
 router.get("/:idHorario", obtenerHorarioPorId);
 
 //Metodo post
 router.post("/", crearHorarioTrabajo);
 
-//Metodo put
+//Metodo put - RUTAS ESPECÍFICAS PRIMERO
+router.put("/:idHorario/desactivar", borradoLogicoHorarioTrabajo);
+router.put("/:idHorario/activar", activacionLogicaHorarioTrabajo);
 router.put("/:idHorario", actualizarHorarioTrabajo);
-router.put("/borradoLogico/:idHorario", borradoLogicoHorarioTrabajo);
-router.put("/reactivar/:idHorario", activacionLogicaHorarioTrabajo);
 
 export default router;
