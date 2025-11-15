@@ -6,6 +6,10 @@ import cors from "cors";
 // importo ruta de pago 
 import pagosRoutes from "./Routes/Pagos/pagos.routes.js";
 
+import pacientesCobrosRoutes from "./Routes/Pacientes/pacientesCobros.routes.js";
+
+import turnosCobrosRoutes from "./Routes/Turnos/turnosCobros.routes.js";
+
 // Importo rutas de categorias de medio de pago
 import catMedioPagoRoutes from "./Routes/Pagos/catMedioPago.routes.js";
 
@@ -49,7 +53,7 @@ import categoriaEmpleadoRoutes from "./Routes/Empleados/categoria_empleados.rout
 import comentarioRoutes from "./Routes/Comentarios/comentarioRoutes.js";
 import historiaClinicaRoutes from "./Routes/HistoriaClinica/historiaClinica.routes.js";
 import salaRoutes from "./Routes/Salas/salaRoutes.js";
-import metricaDiariaRoutes from "./Routes/MetricasDiarias/metricasDiariasRoutes.js";
+import metricasRoutes from "./Routes/Metricas/metricasRoutes.js";
 import catFaqsRoutes from "./Routes/Faqs/catFaqsRoutes.js";
 import faqsRoutes from "./Routes/Faqs/faqsRoutes.js";
 
@@ -105,12 +109,15 @@ app.use("/api/historiasClinicas/v1", historiaClinicaRoutes);
 // salas
 app.use("/api/salas/v1", salaRoutes);
 // metricas diarias
-app.use("/api/metricas/v1", metricaDiariaRoutes);
+app.use("/api/metricas", metricasRoutes);
 //categorias FAQ
 app.use("/api/cat-faqs/v1", catFaqsRoutes);
 // FAQs
 app.use("/api/faqs/v1", faqsRoutes);
 
+//turnos cobros
+app.use("/api/turnos", turnosCobrosRoutes); 
+app.use("/api/pacientes", pacientesCobrosRoutes); 
 // rutas principales
 app.use("/api/usuarios/v1", usuariosRoutes);
 app.use("/api/localidades/v1", localidadesRoutes);
