@@ -3,8 +3,7 @@ import { obtenerMetricasEnVivo } from "../../Controllers/Metricas/metricasEnVivo
 
 const router = express.Router();
 
-// MÉTRICAS 100% EN VIVO
-router.get("/vivo", obtenerMetricasEnVivo);        // → /api/metricas/vivo
-router.get("/vivo/:fecha", obtenerMetricasEnVivo); // → /api/metricas/vivo/2025-04-05
+router.get("/vivo", obtenerMetricasEnVivo);      
+router.get("/vivo/:fecha", obtenerMetricasEnVivo); 
 
 export default router;

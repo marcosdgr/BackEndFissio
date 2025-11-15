@@ -1,4 +1,3 @@
-
 import db from "../../Config/db.js";
 
 export const obtenerCobros = (req, res) => {

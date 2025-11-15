@@ -6,6 +6,10 @@ import cors from "cors";
 // importo ruta de pago 
 import pagosRoutes from "./Routes/Pagos/pagos.routes.js";
 
+import pacientesCobrosRoutes from "./Routes/Pacientes/pacientesCobros.routes.js";
+
+import turnosCobrosRoutes from "./Routes/Turnos/turnosCobros.routes.js";
+
 // Importo rutas de categorias de medio de pago
 import catMedioPagoRoutes from "./Routes/Pagos/catMedioPago.routes.js";
 
@@ -111,6 +115,9 @@ app.use("/api/cat-faqs/v1", catFaqsRoutes);
 // FAQs
 app.use("/api/faqs/v1", faqsRoutes);
 
+//turnos cobros
+app.use("/api/turnos", turnosCobrosRoutes); 
+app.use("/api/pacientes", pacientesCobrosRoutes); 
 // rutas principales
 app.use("/api/usuarios/v1", usuariosRoutes);
 app.use("/api/localidades/v1", localidadesRoutes);
