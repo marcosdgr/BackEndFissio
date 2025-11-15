@@ -37,7 +37,7 @@ export const crearComentario = async (req, res) => {
                 }
 
                 const ObtenerComentarioCreadoQuery = `
-                    SELECT c.*, p.NombrePaciente AS pacienteNombre
+                    SELECT c.*, p.NombrePaciente, p.ApellidoPaciente
                     FROM comentarios c
                     JOIN pacientes p ON c.idPaciente = p.idPaciente
                     WHERE c.idComentario = ?
@@ -65,7 +65,7 @@ export const crearComentario = async (req, res) => {
 export const traerComentariosActivos = async (req, res) => {
     try {
         const ListarComentariosActivosQuery = `
-            SELECT c.*, p.NombrePaciente AS pacienteNombre
+            SELECT c.*, p.NombrePaciente, p.ApellidoPaciente
             FROM comentarios c
             JOIN pacientes p ON c.idPaciente = p.idPaciente
             WHERE c.IsActive = 1
@@ -91,7 +91,7 @@ export const traerComentarioPorId = async (req, res) => {
         const { id } = req.params;
 
         const ObtenerComentarioPorIdQuery = `
-            SELECT c.*, p.NombrePaciente AS pacienteNombre
+            SELECT c.*, p.NombrePaciente, p.ApellidoPaciente
             FROM comentarios c
             JOIN pacientes p ON c.idPaciente = p.idPaciente
             WHERE c.idComentario = ? AND c.IsActive = 1
@@ -136,7 +136,7 @@ export const actualizarComentario = async (req, res) => {
             }
 
             const ObtenerComentarioActualizadoQuery = `
-                SELECT c.*, p.NombrePaciente AS pacienteNombre
+                SELECT c.*, p.NombrePaciente, p.ApellidoPaciente
                 FROM comentarios c
                 JOIN pacientes p ON c.idPaciente = p.idPaciente
                 WHERE c.idComentario = ?
@@ -190,7 +190,7 @@ export const borradoLogicoComentario = async (req, res) => {
 export const traerComentariosPublicados = async (req, res) => {
     try {
         const ListarComentariosPublicadosQuery = `
-            SELECT c.*, p.NombrePaciente AS pacienteNombre
+            SELECT c.*, p.NombrePaciente, p.ApellidoPaciente
             FROM comentarios c
             JOIN pacientes p ON c.idPaciente = p.idPaciente
             WHERE c.IsActive = 1 AND c.IsPublicado = 1
