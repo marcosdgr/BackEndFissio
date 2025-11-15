@@ -183,7 +183,7 @@ export const registrarSalida = (req, res) => {
         }
 
         // Construir query dinámicamente
-        let salidaNueva = "UPDATE asistencias SET HoraSalida = ? Presente = 0"; //query dinamica que cambia si hay observaciones o no, osea solo se puede notificar el horario de salida o tambien puede notificar el horario de salida con la observacion.
+        let salidaNueva = "UPDATE asistencias SET HoraSalida = ? , Presente = 0"; //query dinamica que cambia si hay observaciones o no, osea solo se puede notificar el horario de salida o tambien puede notificar el horario de salida con la observacion.
         const params = [HoraSalida];
         
         // agrega observaciones  por ejemplo en el caso de salir temprano y notificarlo
