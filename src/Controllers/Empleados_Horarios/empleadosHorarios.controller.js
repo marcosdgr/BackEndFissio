@@ -3,7 +3,7 @@ import db from "../../Config/db.js";
 //Traer todos los empleados con su horario 
 export const obtenerEmpleadosHorarios = async (req, res) => {
     try {
-        const obtenerEmpleados = "SELECT eh.idEmpHor,e.idEmpleado, e.NombreEmpleado, e.ApellidoEmpleado, h.idHorario, h.Fecha, h.HoraEntradaEsperada, h.HoraSalidaEsperada FROM empleados_horarios eh JOIN empleados e ON eh.idEmpleado = e.idEmpleado JOIN horariosTrabajo h ON eh.idHorario = h.idHorario ORDER BY eh.idEmpHor DESC";
+        const obtenerEmpleados = "SELECT eh.idEmpHor,e.idEmpleado, e.NombreEmpleado, e.ApellidoEmpleado, h.idHorario, h.Fecha, h.HoraEntradaEsperada, h.HoraSalidaEsperada FROM empleados_horarios eh JOIN empleados e ON eh.idEmpleado = e.idEmpleado JOIN horariosTrabajo h ON eh.idHorario = h.idHorario ORDER BY h.Fecha DESC, h.HoraEntradaEsperada ASC";
 
         db.query(obtenerEmpleados, (error, results) => {
             if (error) {
@@ -11,9 +11,6 @@ export const obtenerEmpleadosHorarios = async (req, res) => {
                 console.error("Query SQL:", obtenerEmpleados);
                 console.error("Detalles del error:", error.message, error.code, error.sqlMessage);
                 return res.status(500).json({ error: "Error del servidor al obtener empleados y horarios", detalle: error.sqlMessage || error.message });
-            }
-            if (!results || results.length === 0) {
-                return res.status(404).json({ message: "No hay registros de empleados con horarios" });
             }
             res.status(200).json(results);
         });
@@ -150,4 +147,3 @@ export const eliminarEmpleadoHorario = async (req, res) => {
         res.status(500).json({ error: "Error del servidor" });
     }
 };
-

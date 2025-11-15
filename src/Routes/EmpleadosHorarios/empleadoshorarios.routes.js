@@ -12,7 +12,7 @@ const router = Router();
 
 //Rutas para empleados y horarios
 
-//Metodo get    
+//Metodo get
 router.get("/", obtenerEmpleadosHorarios);
 router.get("/horariosActivos/empleado/:idEmpleado", obtenerHorariosActivosPorEmpleado);
 router.get("/empleadosPorHorario/:idHorario", obtenerEmpleadosPorHorario);

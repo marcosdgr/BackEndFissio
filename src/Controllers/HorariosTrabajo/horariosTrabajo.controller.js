@@ -3,14 +3,11 @@ import db from "../../Config/db.js";
 // Traer todos los horarios de trabajo
 export const obtenerHorariosTrabajo = async (req, res) => {
     try {
-        const obtenerHorarios = "SELECT * FROM horariosTrabajo";
+        const obtenerHorarios = "SELECT * FROM horariosTrabajo ORDER BY Fecha DESC, HoraEntradaEsperada ASC";
         db.query(obtenerHorarios,(error, results)=>{
             if (error){
                 console.error ("Error al obtener los horarios", error);
                 return res.status(500).json({error:"Error del servidor al traer los horarios"});
-            }
-            if (results.length === 0){
-                return res.status(404).json({message:"No hay horarios registrados"});
             }
             res.status(200).json(results);
         });
