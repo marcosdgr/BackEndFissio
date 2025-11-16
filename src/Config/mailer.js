@@ -208,4 +208,67 @@ export const enviarEmailConfirmacionFinal = async (emailPaciente, datosTurno) =>
   }
 };
 
+// Función para enviar email de recuperación de contraseña
+export const enviarEmailRecuperacion = async (emailUsuario, link) => {
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #3498db;">🔐 Recuperación de Contraseña - Fissio</h2>
+      
+      <div style="background-color: #d1ecf1; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3498db;">
+        <h3 style="color: #0c5460;">Hola,</h3>
+        <p style="color: #0c5460;">Recibimos una solicitud para restablecer la contraseña de tu cuenta.</p>
+      </div>
+      
+      <div style="background-color: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-align: center;">
+        <p style="margin-bottom: 20px;">Haz clic en el siguiente botón para crear una nueva contraseña:</p>
+        <a href="${link}" 
+           style="display: inline-block; padding: 12px 30px; background-color: #3498db; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+          Restablecer Contraseña
+        </a>
+        <p style="margin-top: 20px; color: #7f8c8d; font-size: 12px;">
+          O copia y pega este enlace en tu navegador:<br>
+          <span style="color: #3498db; word-break: break-all;">${link}</span>
+        </p>
+      </div>
+      
+      <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc3545;">
+        <p><strong>⚠️ Importante:</strong></p>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+          <li>Este enlace es válido por <strong>15 minutos</strong></li>
+          <li>Si no solicitaste este cambio, ignora este email</li>
+          <li>Tu contraseña actual seguirá siendo válida hasta que la cambies</li>
+        </ul>
+      </div>
+      
+      <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+        <p style="color: #856404;"><strong>💡 Consejo de seguridad:</strong></p>
+        <p style="color: #856404; margin: 5px 0;">Usa una contraseña segura con al menos 6 caracteres, combinando letras, números y símbolos.</p>
+      </div>
+      
+      <div style="text-align: center; margin-top: 30px; color: #7f8c8d; font-size: 12px;">
+        <p>--</p>
+        <p><strong>Fissio - Centro de Kinesiología</strong></p>
+        <p>Si tienes problemas, contáctanos: [TELÉFONO] | [EMAIL]</p>
+        <p style="margin-top: 15px; font-size: 11px;">Este es un email automático, por favor no respondas a este mensaje.</p>
+      </div>
+    </div>
+  `;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: emailUsuario,
+    subject: '🔐 Recuperación de Contraseña - Fissio',
+    html: htmlContent
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Email de recuperación enviado a ${emailUsuario}:`, info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error(`❌ Error al enviar email de recuperación a ${emailUsuario}:`, error);
+    return { success: false, error: error.message };
+  }
+};
+
 export default transporter;
