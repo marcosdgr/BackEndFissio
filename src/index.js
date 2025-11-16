@@ -117,7 +117,7 @@ app.use("/api/faqs/v1", faqsRoutes);
 
 //turnos cobros
 app.use("/api/turnos", turnosCobrosRoutes); 
-app.use("/api/pacientes", pacientesCobrosRoutes); 
+app.use("/api/pacientesCobros", pacientesCobrosRoutes); 
 // rutas principales
 app.use("/api/usuarios/v1", usuariosRoutes);
 app.use("/api/localidades/v1", localidadesRoutes);
