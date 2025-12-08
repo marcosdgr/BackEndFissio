@@ -169,7 +169,7 @@ export const crearEmpleado = async (req, res) => {
     }
 
     // Si se envía PermisosEmpleado (enum), validar valores permitidos
-    const permisosValidos = ['Administracion', 'Kinesiologia', 'Otros'];
+    const permisosValidos = ['Administración', 'Kinesiología', 'Otros'];
     if (PermisosEmpleado && !permisosValidos.includes(PermisosEmpleado)) {
       return res.status(400).json({ message: `PermisosEmpleado inválido. Valores permitidos: ${permisosValidos.join(', ')}` });
     }
