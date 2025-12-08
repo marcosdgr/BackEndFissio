@@ -9,7 +9,8 @@ export const obtenerEmpleados = async (req, res) => {
     const obtenerEmpleadosQuery = `
       SELECT e.idEmpleado, e.DNI, e.NombreEmpleado, e.ApellidoEmpleado, e.FechaNacEmpleado,
              e.TelefonoEmpleado, e.DireccionEmpleado, e.SalarioEmpleado, e.PermisosEmpleado,
-             u.MailUsuario, l.NombreLocalidad, c.NombreCat, e.IsActive
+             u.MailUsuario, l.NombreLocalidad, c.NombreCat, e.IsActive,
+             e.idCatEmpleado, e.idLocalidad
       FROM empleados e
       LEFT JOIN usuarios u ON e.idUsuario = u.idUsuario
       LEFT JOIN localidades l ON e.idLocalidad = l.idLocalidad
@@ -355,7 +356,7 @@ export const actualizarEmpleado = (req, res) => {
       // Si llega MailUsuario, actualizar la tabla usuarios antes de actualizar empleados
       const updateEmployeeAfterUser = () => {
         // Validar PermisosEmpleado si se proporciona
-        const permisosValidos = ['Administracion', 'Kinesiologia', 'Otros'];
+        const permisosValidos = ['Administración', 'Kinesiología', 'Otros'];
         if (PermisosEmpleado && !permisosValidos.includes(PermisosEmpleado)) {
           return res.status(400).json({ message: `PermisosEmpleado inválido. Valores permitidos: ${permisosValidos.join(', ')}` });
         }
