@@ -17,10 +17,10 @@ const router = Router();
 
 //Metodo get
 router.get("/", obtenerAsistencias);
-router.get("/rangoFechas", obtenerAsistenciasPorRango);           // ← Primero las rutas fijas
-router.get("/empleado/:idEmpleado", obtenerAsistenciasPorEmpleado);  // ← Rutas con palabra específica
+router.get("/rangoFechas", obtenerAsistenciasPorRango);           
+router.get("/empleado/:idEmpleado", obtenerAsistenciasPorEmpleado);  
 router.get("/fecha/:fecha", obtenerAsistenciasPorFecha);
-router.get("/:idAsistencia", obtenerAsistenciaPorId);             // ← Al final la ruta genérica
+router.get("/:idAsistencia", obtenerAsistenciaPorId);            
 
 // Metodo post
 router.post("/", crearAsistencia);

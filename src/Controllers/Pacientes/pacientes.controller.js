@@ -320,7 +320,7 @@ export const obtenerTurnosPorIdPaciente = (req, res) => {
     res.status(500).json({ message: "Error en el servidor" });
   }
 };
-//obtener detalles del turno de un paciente (estado , fecha requerida, hora requerida)
+//obtener detalles del turno de un paciente 
 export const obtenerDetallesTurno = (req, res) => {
  try {
   const {idPaciente} = req.params;

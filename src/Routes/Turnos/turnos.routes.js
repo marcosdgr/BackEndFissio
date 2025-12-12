@@ -22,10 +22,10 @@ router.post("/solicitar", upload.single("ordenMedica"), solicitarTurno);
 // Ruta para solicitar turno (Secretaria - sin orden médica)
 router.post("/solicitar-secretaria", solicitarTurnoSecretaria);
 
-// Ruta para cancelar turno (Secretaria)
+// Ruta para cancelar turno 
 router.put("/cancelar/:idTurno", cancelarTurno);
 
-// Rutas para gestión de turnos (Secretaria)
+// Rutas para gestión de turnos 
 router.get("/turnos-del-dia", listarTurnosDelDia); // Para ver quién viene HOY
 router.get("/solicitudes-pendientes", listarSolicitudesPendientes); // Historial
 router.get("/detalles/:idTurno", obtenerDetallesTurno); // Ver detalles completos de un turno

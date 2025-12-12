@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import db from "./db.js"; // importa tu conexión a la base de datos
+import db from "./db.js"; 
 
 const crearAdmin = async () => {
   try {
@@ -8,7 +8,7 @@ const crearAdmin = async () => {
     const nuevoAdmin = {
       MailUsuario: "admin@fissio.com",
       PasswordUsuario: passwordHash,
-      idRol: 1, // suponiendo que el rol 1 es 'Administrador'
+      idRol: 1, 
       IsActive: 1
     };
 

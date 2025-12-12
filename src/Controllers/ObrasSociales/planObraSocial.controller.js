@@ -53,7 +53,7 @@ export const obtenerPlanObraPorId = (req, res) => {
 // Crear un nuevo plan de obra social
 export const crearPlanObra = (req, res) => {
   try {
-    // Campos esperados en body: idObraSocial, NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan (opcional), EstadoPlan (opcional)
+   
     const { idObraSocial, NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan, EstadoPlan } = req.body;
     const obraId = idObraSocial || req.body.idObrasocial;
 
@@ -72,7 +72,7 @@ export const crearPlanObra = (req, res) => {
       return res.status(400).json({ error: 'Faltan datos obligatorios: NombraPlan o idObraSocial' });
     }
 
-    // Verificar que la obra social existe (callback)
+    // Verificar que la obra social existe 
     const verificarObraSocial = 'SELECT * FROM obraSociales WHERE idObraSocial = ?';
     db.query(verificarObraSocial, [idObraSocial], (err, obraResults) => {
       if (err) {
@@ -84,7 +84,7 @@ export const crearPlanObra = (req, res) => {
         return res.status(404).json({ error: 'Obra social no encontrada' });
       }
 
-      // Crear el nuevo plan de obra social (callback)
+      // Crear el nuevo plan de obra social
       const crearNuevoPlanObra = 'INSERT INTO planObraSocial (idObraSocial, NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan, EstadoPlan) VALUES (?, ?, ?, ?, ?)';
       db.query(crearNuevoPlanObra, [obraId, NombraPlan, descripcionPlan, porcentajeDescuento, estadoPlanFinal], (Error, Result) => {
         if (Error) {
@@ -105,7 +105,7 @@ export const crearPlanObra = (req, res) => {
 export const actualizarPlanObra = (req, res) => {
   try {
     const { idPlanObra } = req.params;
-    // Campos esperados en body: idObraSocial, NombraPlan, DescripcionPlan, PorcentajeDescuentoPlan (opcional), EstadoPlan (opcional)
+    
     const { idObraSocial: idObraBody, NombraPlan: NP, DescripcionPlan: DP, PorcentajeDescuentoPlan: PDP, EstadoPlan: EP } = req.body;
     const obraIdUpdate = idObraBody || req.body.idObrasocial;
 
@@ -173,7 +173,7 @@ export const cambiarEstadoPlan = (req, res) => {
         if (String(current).trim() === 'Vigente') target = 'No vigente';
         else target = 'Vigente';
       } else {
-        // exigimos valor exacto (el botón en el front debe enviar 'Vigente' o 'No vigente')
+        // exigimos valor exacto 
         if (typeof targetRaw === 'string' && (targetRaw === 'Vigente' || targetRaw === 'No vigente')) {
           target = targetRaw;
         } else {

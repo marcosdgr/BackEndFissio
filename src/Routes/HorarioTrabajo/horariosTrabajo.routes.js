@@ -15,7 +15,7 @@ const router = Router();
 
 //Rutas para horarios de trabajo
 
-//Metodo get - RUTAS ESPECÍFICAS PRIMERO
+//Metodo get 
 router.get("/activos", obtenerHorariosActivos);
 router.get("/inactivos", obtenerHorariosInactivos);
 router.get("/", obtenerHorariosTrabajo);
@@ -24,7 +24,7 @@ router.get("/:idHorario", obtenerHorarioPorId);
 //Metodo post
 router.post("/", crearHorarioTrabajo);
 
-//Metodo put - RUTAS ESPECÍFICAS PRIMERO
+//Metodo put -
 router.put("/:idHorario/desactivar", borradoLogicoHorarioTrabajo);
 router.put("/:idHorario/activar", activacionLogicaHorarioTrabajo);
 router.put("/:idHorario", actualizarHorarioTrabajo);

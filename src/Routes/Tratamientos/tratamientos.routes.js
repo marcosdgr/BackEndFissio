@@ -15,8 +15,8 @@ const router = Router();
 
 //Metodo get
 router.get("/", obtenerTodosLosTratamientos);
-router.get("/estado/:estado", obtenerTratamientosPorEstado); // Cambiar :isActive a :estado
-router.get("/nombre/:nombre", obtenerTratamientoPorNombre); // Cambiar :nombreTratamiento a :nombre y mover ANTES de :idTratamiento
+router.get("/estado/:estado", obtenerTratamientosPorEstado); 
+router.get("/nombre/:nombre", obtenerTratamientoPorNombre); 
 router.get("/:idTratamiento", obtenerTratamientoPorId);
 
 //Metodo post

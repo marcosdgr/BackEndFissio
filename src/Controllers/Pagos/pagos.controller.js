@@ -1,6 +1,6 @@
 import db from "../../Config/db.js";
 
-// === OBTENER TODOS LOS PAGOS ===
+//  OBTENER TODOS LOS PAGOS 
 export const obtenerPagos = (req, res) => {
   const query = `
     SELECT 
@@ -31,7 +31,7 @@ export const obtenerPagos = (req, res) => {
   });
 };
 
-// === OBTENER PAGO POR ID ===
+//  OBTENER PAGO POR ID 
 export const obtenerPagoPorId = (req, res) => {
   const { idPago } = req.params;
   const query = `
@@ -60,7 +60,7 @@ export const obtenerPagoPorId = (req, res) => {
   });
 };
 
-// === CREAR PAGO ===
+//  CREAR PAGO 
 export const crearPago = (req, res) => {
   const {
     FechaPago, idTipoPago, Descripcion, idMedioPago, MontoPago, EstadoPago = "Pendiente"
@@ -91,7 +91,7 @@ export const crearPago = (req, res) => {
   });
 };
 
-// === ACTUALIZAR PAGO ===
+//  ACTUALIZAR PAGO 
 export const actualizarPago = (req, res) => {
   const { idPago } = req.params;
   const { FechaPago, idTipoPago, Descripcion, idMedioPago, MontoPago, EstadoPago } = req.body;
@@ -125,7 +125,7 @@ export const actualizarPago = (req, res) => {
   });
 };
 
-// === ELIMINAR PAGO ===
+//  ELIMINAR PAGO 
 export const eliminarPago = (req, res) => {
   const { idPago } = req.params;
   db.query("DELETE FROM pagos WHERE idPago = ?", [idPago], (error, result) => {

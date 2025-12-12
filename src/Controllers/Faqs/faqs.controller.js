@@ -1,6 +1,6 @@
 import db from "../../Config/db.js";
 
-// === CREAR FAQ ===
+//  CREAR FAQ 
 export const crearFaq = async (req, res) => {
   try {
     const { Pregunta, Respuesta, Categoria, idCatFAQ } = req.body;
@@ -33,7 +33,7 @@ export const crearFaq = async (req, res) => {
   }
 };
 
-// === LISTAR ACTIVAS ===
+//  LISTAR ACTIVAS 
 export const traerFaqsActivas = async (req, res) => {
   try {
     const ListarQuery = `
@@ -52,7 +52,7 @@ export const traerFaqsActivas = async (req, res) => {
   }
 };
 
-// === POR ID ===
+//  POR ID 
 export const traerFaqPorId = async (req, res) => {
   try {
     const { id } = req.params;
@@ -71,7 +71,7 @@ export const traerFaqPorId = async (req, res) => {
   }
 };
 
-// === ACTUALIZAR FAQ (NUEVO) ===
+//  ACTUALIZAR FAQ 
 export const actualizarFaq = async (req, res) => {
   try {
     const { id } = req.params;
@@ -111,7 +111,7 @@ export const actualizarFaq = async (req, res) => {
   }
 };
 
-// === CAMBIAR ESTADO (NUEVO) ===
+//  CAMBIAR ESTADO 
 export const cambiarEstadoFaq = async (req, res) => {
   try {
     const { id } = req.params;

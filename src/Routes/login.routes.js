@@ -9,7 +9,7 @@ router.post("/login", login);
 
 // Rutas protegidas - requieren token
 router.get("/verificar", autenticar, (req, res) => {
-  // Si llegó aquí, el token es válido
+  
   res.status(200).json({
     message: "Token válido",
     usuario: req.usuarioAutenticado
@@ -17,7 +17,7 @@ router.get("/verificar", autenticar, (req, res) => {
 });
 
 router.post("/logout", autenticar, (req, res) => {
-  // En JWT el logout se maneja en el cliente eliminando el token
+  
   res.status(200).json({
     message: "Logout exitoso. Elimina el token del cliente"
   });

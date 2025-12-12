@@ -34,7 +34,7 @@ export const obtenerCobros = (req, res) => {
   });
 };
 
-// === OBTENER POR ID ===
+//  OBTENER POR ID 
 export const obtenerCobroPorId = (req, res) => {
   const { idCobro } = req.params;
   const query = `
@@ -60,7 +60,7 @@ export const obtenerCobroPorId = (req, res) => {
   });
 };
 
-// === CREAR COBRO ===
+//  CREAR COBRO 
 
 export const crearCobro = (req, res) => {
   const {
@@ -87,7 +87,7 @@ export const crearCobro = (req, res) => {
 };
 
 
-// === ACTUALIZAR COBRO ===
+//  ACTUALIZAR COBRO 
 export const actualizarCobro = (req, res) => {
   const { idCobro } = req.params;
   const { FechaCobro, idTurno, TipoCobro, idMedioPago, MontoCobro, EstadoCobro, Descripcion } = req.body;
@@ -106,7 +106,7 @@ export const actualizarCobro = (req, res) => {
   );
 };
 
-// === CAMBIAR ESTADO ===
+//  CAMBIAR ESTADO 
 export const cambiarEstadoCobro = (req, res) => {
   const { idCobro } = req.params;
   const { EstadoCobro } = req.body;
@@ -125,7 +125,7 @@ export const cambiarEstadoCobro = (req, res) => {
   );
 };
 
-// === ELIMINAR COBRO ===
+//  ELIMINAR COBRO 
 export const eliminarCobro = (req, res) => {
   const { idCobro } = req.params;
   db.query("DELETE FROM cobros WHERE idCobro = ?", [idCobro], (err, result) => {

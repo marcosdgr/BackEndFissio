@@ -7,7 +7,7 @@ const router = Router();
 // Importo controladores
 
 
-// Rutas (ordenadas por prioridad: rutas estáticas antes de las paramétricas)
+// Rutas 
 router.get("/activos", obtenerPlanesActivos);
 router.get("/inactivos", obtenerPlanesInactivos);
 router.get("/", obtenerPlanesObra);
