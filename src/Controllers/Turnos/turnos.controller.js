@@ -228,10 +228,10 @@ export const solicitarTurnoSecretaria = (req, res) => {
       FechaRequeridaTurno,
       HorarioRequeridoTurno,
       InformeTurno,
-      DNIPaciente, // Cambiado de idPaciente a DNIPaciente
+      DNIPaciente, 
     } = req.body;
 
-    // validaciones similares al método anterior.
+    
     if (
       !FechaRequeridaTurno ||
       !HorarioRequeridoTurno ||
@@ -353,7 +353,7 @@ export const asignarRecursosDelDia = (req, res) => {
   const {
     HorarioInicioTurno,
     HorarioFinTurno,
-    idEmpleado, // Kinesiólogo asignado
+    idEmpleado, 
     ObservacionesSecretaria,
   } = req.body;
 console.log(req.body);
@@ -575,7 +575,7 @@ export const listarTurnosDelDia = (req, res) => {
   });
 };
 
-// PASO 3B: Listar solicitudes pendientes históricas (Para la secretaria)
+// PASO 3B: Listar solicitudes pendientes históricas
 export const listarSolicitudesPendientes = (req, res) => {
   const solicitudesPendientesQuery = `
     SELECT 
@@ -653,9 +653,9 @@ export const obtenerKinesiologosDisponibles = (req, res) => {
   });
 };
 
-// PASO 5: Verificar disponibilidad de horarios para una fecha (usa tabla horarios_turnos)
+// PASO 5: Verificar disponibilidad de horarios para una fecha 
 export const verificarDisponibilidadHorarios = (req, res) => {
-  const { fecha } = req.params; // Formato: YYYY-MM-DD
+  const { fecha } = req.params; 
 
   // Validar formato de fecha
   if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
@@ -664,10 +664,10 @@ export const verificarDisponibilidadHorarios = (req, res) => {
     });
   }
 
-  // Calcular el día de la semana (1=Lunes, 7=Domingo)
+  // Calcular el día de la semana 
   const fechaObj = new Date(fecha + 'T00:00:00');
-  const diaSemana = fechaObj.getDay(); // 0=Domingo, 1=Lunes, ..., 6=Sábado
-  const diaSemanaAjustado = diaSemana === 0 ? 7 : diaSemana; // Convertir a 1-7
+  const diaSemana = fechaObj.getDay(); 
+  const diaSemanaAjustado = diaSemana === 0 ? 7 : diaSemana; 
 
   // Obtener los horarios configurados para ese día de la semana
   const obtenerHorariosQuery = `
@@ -702,8 +702,7 @@ export const verificarDisponibilidadHorarios = (req, res) => {
       });
     }
 
-    // Generar todos los horarios hora por hora según la configuración
-    // Usar un Map para evitar duplicados (sin sumar cupos)
+   
     const horariosMap = new Map();
     
     horariosConfig.forEach((config) => {
@@ -713,7 +712,7 @@ export const verificarDisponibilidadHorarios = (req, res) => {
       for (let hora = horaInicio; hora < horaFin; hora++) {
         const horarioFormateado = `${hora.toString().padStart(2, "0")}:00`;
         
-        // Solo agregar si no existe (ignora duplicados)
+        // Solo agregar si no existe 
         if (!horariosMap.has(horarioFormateado)) {
           horariosMap.set(horarioFormateado, {
             horario: horarioFormateado,
@@ -748,7 +747,7 @@ export const verificarDisponibilidadHorarios = (req, res) => {
       // Crear mapa de horarios ocupados
       const horariosOcupados = {};
       results.forEach((row) => {
-        const horarioKey = row.horario.substring(0, 5); // Formato HH:mm
+        const horarioKey = row.horario.substring(0, 5); 
         horariosOcupados[horarioKey] = row.totalTurnos;
       });
 
@@ -796,7 +795,7 @@ export const verificarDisponibilidadHorarios = (req, res) => {
   });
 };
 
-// FUNCIÓN: Finalizar turno (cambiar estado a finalizado)
+// FUNCIÓN: Finalizar turno 
 export const finalizarTurno = (req, res) => {
   const { idTurno } = req.params;
   const { observacionesFinal, idEmpleado } = req.body;

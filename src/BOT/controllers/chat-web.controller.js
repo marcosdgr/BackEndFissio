@@ -2,7 +2,7 @@ import db from "../../Config/db.js";
 import { chatPrincipal } from "../services/chatPrincipal.service.js";
 import { v4 as uuidv4 } from "uuid";
 
-// Estado temporal de usuarios (guarda las conversaciones en memoria)
+// Estado temporal de usuarios
 const estadosChat = {};
 
 // Función para responder al chat web
@@ -11,7 +11,7 @@ export const responderChatWeb = (req, res) => {
   let sessionId = req.body.sessionId;
   const message = req.body.message;
 
-  // 2. Generar sessionId si no existe (para usuarios anónimos/no logueados)
+  // 2. Generar sessionId si no existe 
   if (!sessionId) {
     sessionId = uuidv4();
     console.log(" Nuevo usuario anónimo. SessionId generado:", sessionId);
@@ -40,13 +40,13 @@ export const responderChatWeb = (req, res) => {
     });
   }
 
-  // 6. Enviar respuesta INMEDIATAMENTE al cliente (no esperar a que se guarde en BD)
+  // 6. Enviar respuesta INMEDIATAMENTE al cliente 
   res.json({ 
     reply: respuesta,
     sessionId: sessionId
   });
 
-  // 7. Guardar la conversación en segundo plano (no bloquea la respuesta al usuario)
+  // 7. Guardar la conversación en segundo plano 
   const query = "INSERT INTO chatbot (sessionId, preguntaUsuario, respuestaBot, origen) VALUES (?, ?, ?, ?)";
   const valores = [sessionId, message, respuesta, "usuario"];
 

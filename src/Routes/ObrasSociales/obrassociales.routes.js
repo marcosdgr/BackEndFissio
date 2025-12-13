@@ -6,7 +6,7 @@ import { actualizarObraSocial, cambiarEstadoObraSocial, crearObraSocial, obtener
 const router = Router();
 
 router.get('/', obtenerObrasSociales);
-// Rutas específicas primero para evitar que sean capturadas por el parámetro dinámico
+
 router.get('/activos', obtenerObraSocialActiva);
 router.get('/inactivos', obtenerObraSocialInactiva);
 router.get('/:idObraSocial', obtenerObraSocialPorId);

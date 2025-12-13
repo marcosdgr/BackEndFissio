@@ -314,7 +314,7 @@ export const crearEmpleado = async (req, res) => {
     return res.status(500).json({ message: 'Error en el servidor' });
   }
 };
-// Actualizar empleado (permite editar los mismos campos que devuelve obtenerEmpleados)
+// Actualizar empleado 
 export const actualizarEmpleado = (req, res) => {
   try {
     const { idEmpleado } = req.params;

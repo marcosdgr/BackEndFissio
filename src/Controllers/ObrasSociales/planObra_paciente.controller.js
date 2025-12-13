@@ -39,7 +39,7 @@ export const obtenerPlanesPacientePorId = async (req, res) => {
 
 export const crearPlanPaciente = async (req, res) => {
     try {
-        // Ahora esperamos idPlanObra (FK a planObraSocial) en lugar de PlanObraSocial
+       
         const { idPaciente, idPlanObra, NumeroAfiliado, EstadoPlan } = req.body;
 
         // 1. Validar campos obligatorios

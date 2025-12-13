@@ -17,11 +17,11 @@ import {
 
 const router = Router();
 
-// Rutas específicas primero (antes de los parámetros dinámicos)
+// Rutas específicas primero 
 router.get("/", traerPacientes);
 router.get("/localidades", traerLocalidades);
 
-// Rutas con parámetros dinámicos
+// Rutas 
 router.get("/:idPaciente/turnos/detalles", obtenerDetallesTurno);
 router.get("/:idPaciente/mail", obtenerMailPacientePorId);
 router.get("/:idPaciente/turnos", obtenerTurnosPorIdPaciente);

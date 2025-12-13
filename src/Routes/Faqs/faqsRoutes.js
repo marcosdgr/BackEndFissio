@@ -17,7 +17,7 @@ const router = express.Router();
 router.get("/", traerFaqsActivas);
 router.get("/:id", traerFaqPorId);
 router.post("/", validarCrearFaq, crearFaq);
-router.put("/:id", validarActualizarFaq, actualizarFaq);           // NUEVO
-router.put("/cambiarEstado/:id", cambiarEstadoFaq);               // NUEVO
+router.put("/:id", validarActualizarFaq, actualizarFaq);           
+router.put("/cambiarEstado/:id", cambiarEstadoFaq);              
 
 export default router;

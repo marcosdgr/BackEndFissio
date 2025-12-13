@@ -47,7 +47,7 @@ export const crearTratamiento = async (req, res) => {
     });
 };
 
-// === ACTUALIZAR 
+//  ACTUALIZAR 
 export const actualizarTratamiento = async (req, res) => {
     const id = parseInt(req.params.idTratamiento, 10);
     if (isNaN(id)) return res.status(400).json({ message: "ID inválido" });
@@ -66,7 +66,7 @@ export const actualizarTratamiento = async (req, res) => {
     });
 };
 
-// === CAMBIAR ESTADO 
+//  CAMBIAR ESTADO 
 export const cambiarEstadoTratamiento = async (req, res) => {
     console.log("cambiarEstado →", req.params, req.body);
     const id = parseInt(req.params.idTratamiento, 10);

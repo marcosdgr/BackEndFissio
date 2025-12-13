@@ -138,7 +138,7 @@ const procesarRecordatorios24h = async () => {
 };
 
 // Configurar cron job - Se ejecuta todos los días a las 10:00 AM
-// Formato: segundos minutos horas día_mes mes día_semana
+
 const iniciarCronRecordatorios = () => {
   // Ejecutar todos los días a las 10:00 AM
   cron.schedule('0 10 * * *', () => {

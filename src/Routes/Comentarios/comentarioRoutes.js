@@ -6,7 +6,7 @@ import { validarCrearComentario, validarActualizarComentario } from '../../Middl
 const router = express.Router();
 
 router.get('/', traerComentariosActivos);  // Todos activos
-router.get('/publicados', traerComentariosPublicados);  // Comentarios publicados para HomePage - DEBE IR ANTES de /:id
+router.get('/publicados', traerComentariosPublicados);  // Comentarios publicados para HomePage 
 router.get('/:id', traerComentarioPorId);  // Por ID
 router.post('/crear', validarCrearComentario, crearComentario);  // Crear con validación
 router.put('/actualizar/:id', validarActualizarComentario, actualizarComentario);  // Actualizar con validación

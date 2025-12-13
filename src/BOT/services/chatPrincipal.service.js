@@ -7,7 +7,7 @@ export function chatPrincipal(usuario, mensaje) {
     return `${usuario.name}, te muestro el menú nuevamente:\n\n1️⃣ Servicios de Kinesiología\n2️⃣ Hablar con un Asesor\n3️⃣ Productos Ergonómicos\n4️⃣ Soporte Técnico`;
   }
 
-  // ========== PRIMERA INTERACCIÓN: PEDIR NOMBRE ==========
+  //  PRIMERA INTERACCIÓN: PEDIR NOMBRE 
   if (!usuario.step) {
     if (mensajeLower === "hola" || mensajeLower === "hey" || mensajeLower === "hi") {
       return "¡Hola! 👋\n\nPor favor, decime tu nombre para poder ayudarte mejor.";
@@ -18,7 +18,7 @@ export function chatPrincipal(usuario, mensaje) {
     return `¡Perfecto ${usuario.name}! 😊\n\n¿En qué puedo ayudarte hoy?\n\n1️⃣ Servicios de Kinesiología\n2️⃣ Hablar con un Asesor\n3️⃣ Productos Ergonómicos\n4️⃣ Soporte Técnico`;
   }
 
-  // ========== MENÚ PRINCIPAL ==========
+  //  MENÚ PRINCIPAL 
   if (usuario.step === "waiting_option") {
     switch (mensaje) {
       case "1": 
@@ -42,7 +42,7 @@ export function chatPrincipal(usuario, mensaje) {
     }
   }
 
-  // ========== SUBMENÚ: SERVICIOS ==========
+  //  SUBMENÚ: SERVICIOS 
   if (usuario.step === "servicios_submenu") {
     if (mensaje === "0") {
       usuario.step = "waiting_option";
@@ -80,7 +80,7 @@ export function chatPrincipal(usuario, mensaje) {
     }
   }
 
-  // ========== AGENDAR SERVICIO ==========
+  //  AGENDAR SERVICIO 
   if (usuario.step === "servicio_agendar") {
     if (mensaje === "0") {
       usuario.step = "waiting_option";
@@ -100,7 +100,7 @@ export function chatPrincipal(usuario, mensaje) {
     return `Por favor elegí:\n\n1️⃣ Sí, agendar ahora\n2️⃣ Ver otros servicios\n0️⃣ Volver al menú`;
   }
 
-  // ========== CONTACTO ASESOR ==========
+  //  CONTACTO ASESOR 
   if (usuario.step === "asesor_contacto") {
     if (mensaje === "0") {
       usuario.step = "waiting_option";
@@ -125,7 +125,7 @@ export function chatPrincipal(usuario, mensaje) {
     }
   }
 
-  // ========== PRODUCTOS ==========
+  //  PRODUCTOS 
   if (usuario.step === "productos_submenu") {
     if (mensaje === "0") {
       usuario.step = "waiting_option";
@@ -154,7 +154,7 @@ export function chatPrincipal(usuario, mensaje) {
     }
   }
 
-  // ========== SOPORTE ==========
+  //  SOPORTE 
   if (usuario.step === "soporte_problema") {
     if (mensaje === "0") {
       usuario.step = "waiting_option";
@@ -180,12 +180,12 @@ export function chatPrincipal(usuario, mensaje) {
     }
   }
 
-  // ========== CONVERSACIÓN COMPLETADA ==========
+  //  CONVERSACIÓN COMPLETADA 
   if (usuario.step === "completed") {
     return `Gracias por contactarnos, ${usuario.name} 😊\n\n¿Necesitás algo más?\n\nEscribí **"menu"** para ver las opciones nuevamente.`;
   }
 
-  // ========== FALLBACK ==========
+  //  FALLBACK 
   delete usuario.step;
   delete usuario.name;
   return "Disculpá, hubo un error. Escribí tu nombre para comenzar de nuevo.";

@@ -28,7 +28,7 @@ router.get("/conversacion/:idUser1/:idUser2", validarAccesoMensaje, obtenerConve
 // Marcar como leído
 router.put("/leido", validarMarcarLeido, marcarLeido);
 
-// Registrar actividad del usuario (heartbeat)
+// Registrar actividad del usuario 
 router.post("/heartbeat", registrarHeartbeat);
 
 export default router;

@@ -24,6 +24,8 @@ export const login = (req, res) => {
         r.NombreRol,
         e.idEmpleado,
         e.PermisosEmpleado,
+        e.NombreEmpleado,
+        e.ApellidoEmpleado,
         p.idPaciente,
         p.NombrePaciente,
         p.ApellidoPaciente,
@@ -95,6 +97,8 @@ export const login = (req, res) => {
             PermisosEmpleado: user.PermisosEmpleado || null,
             NombrePaciente: user.NombrePaciente || null,
             ApellidoPaciente: user.ApellidoPaciente || null,
+            NombreEmpleado: user.NombreEmpleado || null,
+            ApellidoEmpleado: user.ApellidoEmpleado || null,
             DNI: user.DNI || null,
           },
         });

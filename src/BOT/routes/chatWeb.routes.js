@@ -3,10 +3,10 @@ import { responderChatWeb } from "../controllers/chat-web.controller.js";
 
 const router = Router();
 
-// Endpoint POST para el chatbot (producción)
+// Endpoint POST para el chatbot 
 router.post("/chat", responderChatWeb);
 
-// Endpoint GET para verificar que el servicio está funcionando (opcional)
+// Endpoint GET para verificar que el servicio está funcionando
 router.get("/chat", (req, res) => {
   res.json({ 
     message: "✅ Chatbot API funcionando correctamente",
