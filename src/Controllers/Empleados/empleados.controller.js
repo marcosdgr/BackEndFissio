@@ -1,6 +1,5 @@
 import db from '../../Config/db.js';
 import bcrypt from 'bcryptjs';
-import { enviarEmailBienvenida } from '../../Config/mailer.js';
 
 
 
@@ -304,19 +303,6 @@ export const crearEmpleado = async (req, res) => {
             }
 
             return res.status(500).json({ message: 'Error al crear el empleado' });
-          }
-
-          // Enviar correo de bienvenida si se creó un nuevo usuario
-          if (createdUserFlag && MailUsuario) {
-            const datosEmail = {
-              nombreCompleto: `${NombreEmpleado} ${ApellidoEmpleado}`,
-              tipoUsuario: 'Empleado',
-              passwordTemporal: null // No revelamos la contraseña en el correo
-            };
-            
-            enviarEmailBienvenida(MailUsuario, datosEmail).catch(err => {
-              console.error('Error al enviar correo de bienvenida:', err);
-            });
           }
 
           return res.status(201).json({ message: 'Empleado creado exitosamente', idEmpleado: insertResults.insertId, idUsuario: finalIdUsuario });
