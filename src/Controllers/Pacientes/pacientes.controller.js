@@ -1,6 +1,7 @@
 import e from "express";
 import db from "../../Config/db.js";
-import bcrypt from "bcryptjs"; 
+import bcrypt from "bcryptjs";
+import { enviarEmailBienvenida } from "../../Config/mailer.js"; 
 
 export const traerPacientes = (req, res) => {
   const traerPacientesQuery = `
@@ -248,11 +249,22 @@ export const crearPaciente = (req, res) => {
                             TelefonoPaciente, DireccionPaciente, sexoNormalizado, idLocalidad, idUsuarioNuevo
                         ];
 
-                        db.query(crearPacienteQuery, paramsPaciente, (error, resultPaciente) => {
+                        db.query(crearPacienteQuery, paramsPaciente, async (error, resultPaciente) => {
                             if (error) {
                                 db.query("DELETE FROM usuarios WHERE idUsuario = ?", [idUsuarioNuevo], () => {});
                                 return res.status(500).json({ message: 'Error al crear paciente' });
                             }
+
+                            // Enviar correo de bienvenida
+                            const datosEmail = {
+                                nombreCompleto: `${NombrePaciente} ${ApellidoPaciente}`,
+                                tipoUsuario: 'Paciente',
+                                passwordTemporal: passwordFinal === "1234" ? "1234" : null
+                            };
+                            
+                            enviarEmailBienvenida(emailFinal, datosEmail).catch(err => {
+                                console.error('Error al enviar correo de bienvenida:', err);
+                            });
 
                             res.status(201).json({
                                 message: "Paciente creado correctamente",

@@ -1,5 +1,6 @@
 import db from "../../Config/db.js";
 import bcrypt from "bcryptjs";
+import { enviarEmailBienvenida } from "../../Config/mailer.js";
 
 export const register = (req, res) => {
   // traigo los datos del body
@@ -193,7 +194,18 @@ export const register = (req, res) => {
                           });
                       }
 
-                      // 9- si todo está bien, retorno un mensaje de éxito
+                      // 9- Enviar correo de bienvenida
+                      const datosEmail = {
+                        nombreCompleto: `${NombrePaciente} ${ApellidoPaciente}`,
+                        tipoUsuario: 'Paciente',
+                        passwordTemporal: null
+                      };
+                      
+                      enviarEmailBienvenida(MailUsuario, datosEmail).catch(err => {
+                        console.error('Error al enviar correo de bienvenida:', err);
+                      });
+
+                      // 10- si todo está bien, retorno un mensaje de éxito
                       return res.status(201).json({
                         message: "Usuario registrado con éxito",
                         idUsuario: idUsuarioCreado,

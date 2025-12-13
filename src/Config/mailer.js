@@ -271,4 +271,84 @@ export const enviarEmailRecuperacion = async (emailUsuario, link) => {
   }
 };
 
+// Función para enviar email de bienvenida
+export const enviarEmailBienvenida = async (emailUsuario, datosUsuario) => {
+  const { nombreCompleto, tipoUsuario, passwordTemporal } = datosUsuario;
+  
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #2c3e50;">🎉 ¡Bienvenido a Fissio!</h2>
+      
+      <div style="background-color: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4caf50;">
+        <h3 style="color: #2e7d32;">Hola ${nombreCompleto},</h3>
+        <p>¡Bienvenido al Sistema de Gestión de Fissio - Centro de Kinesiología!</p>
+        <p>Tu cuenta ha sido creada exitosamente como <strong>${tipoUsuario}</strong>.</p>
+      </div>
+      
+      <div style="background-color: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h4 style="color: #34495e;">📧 Datos de acceso:</h4>
+        <ul style="list-style-type: none; padding: 0;">
+          <li style="margin: 10px 0;"><strong>👤 Usuario:</strong> ${emailUsuario}</li>
+          ${passwordTemporal ? `<li style="margin: 10px 0;"><strong>🔑 Contraseña temporal:</strong> ${passwordTemporal}</li>` : ''}
+        </ul>
+        ${passwordTemporal ? `
+        <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 3px solid #ffc107;">
+          <p style="color: #856404; margin: 0; font-weight: bold;">⚠️ Importante:</p>
+          <p style="color: #856404; margin: 5px 0;">Por seguridad, te recomendamos cambiar tu contraseña en tu primer ingreso al sistema.</p>
+        </div>
+        ` : ''}
+      </div>
+
+      <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="color: #34495e;">🌟 ¿Qué puedes hacer en Fissio?</h4>
+        ${tipoUsuario === 'Paciente' ? `
+        <ul style="color: #555;">
+          <li>📅 Solicitar y gestionar tus turnos online</li>
+          <li>📋 Consultar tu historial de atención</li>
+          <li>💬 Dejar comentarios sobre tu experiencia</li>
+          <li>👤 Actualizar tus datos personales</li>
+        </ul>
+        ` : `
+        <ul style="color: #555;">
+          <li>📋 Gestionar turnos y pacientes</li>
+          <li>⏰ Administrar horarios de trabajo</li>
+          <li>📊 Acceder a reportes y métricas</li>
+          <li>💬 Comunicación interna con el equipo</li>
+        </ul>
+        `}
+      </div>
+
+      <div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <p style="color: #1565c0; margin: 0; text-align: center;">
+          <strong>¿Necesitas ayuda?</strong><br>
+          Nuestro equipo está disponible para asistirte.
+        </p>
+      </div>
+      
+      <div style="text-align: center; margin-top: 30px; color: #7f8c8d; font-size: 12px;">
+        <p>--</p>
+        <p><strong>Fissio - Centro de Kinesiología</strong></p>
+        <p>Tu salud es nuestra prioridad</p>
+        <p style="margin-top: 15px; font-size: 11px;">Este es un email automático, por favor no respondas a este mensaje.</p>
+      </div>
+    </div>
+  `;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: emailUsuario,
+    subject: '🎉 ¡Bienvenido a Fissio!',
+    html: htmlContent
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Email de bienvenida enviado a ${emailUsuario}:`, info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error(`❌ Error al enviar email de bienvenida a ${emailUsuario}:`, error);
+    return { success: false, error: error.message };
+  }
+};
+
 export default transporter;
