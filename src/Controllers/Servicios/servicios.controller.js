@@ -2,7 +2,7 @@ import db from '../../Config/db.js';
 
 export const obtenerServicios = (req, res) => {
     try {
-        const obtenerTodosLosServicios = 'SELECT * FROM servicios';
+        const obtenerTodosLosServicios = 'SELECT * FROM servicios where IsActive = 1';
         db.query(obtenerTodosLosServicios, (error, results) => {
             if (error) {
                 console.error('Error al obtener servicios:', error);
