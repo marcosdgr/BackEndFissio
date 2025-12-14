@@ -187,9 +187,6 @@ export const solicitarTurno = async (req, res) => {
 
                     try {
                       await enviarEmailConfirmacion(emailPaciente, datosTurno);
-                      console.log(
-                        `✅ Email de confirmación enviado a: ${emailPaciente}`
-                      );
                     } catch (emailError) {
                       console.error(
                         "Error al enviar email de confirmación:",
@@ -228,10 +225,9 @@ export const solicitarTurnoSecretaria = (req, res) => {
       FechaRequeridaTurno,
       HorarioRequeridoTurno,
       InformeTurno,
-      DNIPaciente, 
+      DNIPaciente,
     } = req.body;
 
-    
     if (
       !FechaRequeridaTurno ||
       !HorarioRequeridoTurno ||
@@ -349,14 +345,13 @@ export const solicitarTurnoSecretaria = (req, res) => {
 // PASO 2: Asignar recursos el día del turno (Secretaria - cuando paciente se presenta)
 export const asignarRecursosDelDia = (req, res) => {
   const { idTurno } = req.params;
-  console.log(idTurno);
   const {
     HorarioInicioTurno,
     HorarioFinTurno,
     idEmpleado, 
     ObservacionesSecretaria,
   } = req.body;
-console.log(req.body);
+  
   // Validación de campos obligatorios
   if (!HorarioInicioTurno || !HorarioFinTurno || !idEmpleado) {
     return res.status(400).json({
@@ -430,6 +425,7 @@ console.log(req.body);
             (HorarioInicioTurno >= ? AND HorarioFinTurno <= ?)
           )
       `;
+      
       db.query(
         verificarDisponibilidadEmpleado,
         [
@@ -444,17 +440,13 @@ console.log(req.body);
         ],
         (err, empleadoDisponibleResults) => {
           if (err) {
-            console.error(
-              "Error al verificar disponibilidad del empleado:",
-              err
-            );
+            console.error("Error al verificar disponibilidad del empleado:", err);
             return res.status(500).json({ message: "Error en el servidor" });
           }
 
-          if (empleadoDisponibleResults.length > 0) {
+          if (empleadoDisponibleResults.length > 5) {
             return res.status(400).json({
-              message:
-                "El kinesiólogo no está disponible en el horario seleccionado",
+              message: "El kinesiólogo no está disponible en el horario seleccionado",
             });
           }
 
@@ -464,12 +456,12 @@ console.log(req.body);
             SET HorarioInicioTurno = ?,
                 HorarioFinTurno = ?,
                 idEmpleado = ?,
+                ObservacionesSecretaria = ?,
                 EstadoTurno = 'Pendiente',
                 InformeTurno = CONCAT(
                   COALESCE(InformeTurno, ''), 
                   CASE WHEN InformeTurno IS NOT NULL THEN ' | ' ELSE '' END,
-                  'Procesado por secretaria',
-                  CASE WHEN ? IS NOT NULL THEN CONCAT(' | Obs. secretaria: ', ?) ELSE '' END
+                  'Procesado por secretaria'
                 )
             WHERE idTurno = ?
           `;
@@ -481,15 +473,12 @@ console.log(req.body);
               HorarioFinTurno,
               idEmpleado,
               ObservacionesSecretaria,
-              ObservacionesSecretaria,
               idTurno,
             ],
             (err, results) => {
               if (err) {
                 console.error("Error al procesar turno:", err);
-                return res
-                  .status(500)
-                  .json({ message: "Error al procesar turno" });
+                return res.status(500).json({ message: "Error al procesar turno" });
               }
 
               res.status(200).json({
@@ -653,9 +642,9 @@ export const obtenerKinesiologosDisponibles = (req, res) => {
   });
 };
 
-// PASO 5: Verificar disponibilidad de horarios para una fecha 
+// PASO 5: Verificar disponibilidad de horarios para una fecha
 export const verificarDisponibilidadHorarios = (req, res) => {
-  const { fecha } = req.params; 
+  const { fecha } = req.params;
 
   // Validar formato de fecha
   if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
@@ -664,10 +653,10 @@ export const verificarDisponibilidadHorarios = (req, res) => {
     });
   }
 
-  // Calcular el día de la semana 
-  const fechaObj = new Date(fecha + 'T00:00:00');
-  const diaSemana = fechaObj.getDay(); 
-  const diaSemanaAjustado = diaSemana === 0 ? 7 : diaSemana; 
+  // Calcular el día de la semana
+  const fechaObj = new Date(fecha + "T00:00:00");
+  const diaSemana = fechaObj.getDay();
+  const diaSemanaAjustado = diaSemana === 0 ? 7 : diaSemana;
 
   // Obtener los horarios configurados para ese día de la semana
   const obtenerHorariosQuery = `
@@ -702,28 +691,27 @@ export const verificarDisponibilidadHorarios = (req, res) => {
       });
     }
 
-   
     const horariosMap = new Map();
-    
+
     horariosConfig.forEach((config) => {
-      const horaInicio = parseInt(config.HoraInicio.split(':')[0]);
-      const horaFin = parseInt(config.HoraFin.split(':')[0]);
-      
+      const horaInicio = parseInt(config.HoraInicio.split(":")[0]);
+      const horaFin = parseInt(config.HoraFin.split(":")[0]);
+
       for (let hora = horaInicio; hora < horaFin; hora++) {
         const horarioFormateado = `${hora.toString().padStart(2, "0")}:00`;
-        
-        // Solo agregar si no existe 
+
+        // Solo agregar si no existe
         if (!horariosMap.has(horarioFormateado)) {
           horariosMap.set(horarioFormateado, {
             horario: horarioFormateado,
-            cupoMaximo: config.CupoPorHora
+            cupoMaximo: config.CupoPorHora,
           });
         }
       }
     });
-    
+
     // Convertir el Map a array y ordenar por horario
-    const horariosCompletos = Array.from(horariosMap.values()).sort((a, b) => 
+    const horariosCompletos = Array.from(horariosMap.values()).sort((a, b) =>
       a.horario.localeCompare(b.horario)
     );
 
@@ -747,7 +735,7 @@ export const verificarDisponibilidadHorarios = (req, res) => {
       // Crear mapa de horarios ocupados
       const horariosOcupados = {};
       results.forEach((row) => {
-        const horarioKey = row.horario.substring(0, 5); 
+        const horarioKey = row.horario.substring(0, 5);
         horariosOcupados[horarioKey] = row.totalTurnos;
       });
 
@@ -764,7 +752,9 @@ export const verificarDisponibilidadHorarios = (req, res) => {
           cupoMaximo: item.cupoMaximo,
           disponibles: disponibles > 0 ? disponibles : 0,
           disponible: disponible,
-          label: `${item.horario} (${disponibles > 0 ? disponibles : 0} disponibles)`,
+          label: `${item.horario} (${
+            disponibles > 0 ? disponibles : 0
+          } disponibles)`,
         };
       });
 
@@ -776,7 +766,7 @@ export const verificarDisponibilidadHorarios = (req, res) => {
           label: h.label,
           horario: h.horario,
           cupoMaximo: h.cupoMaximo,
-          disponibles: h.disponibles
+          disponibles: h.disponibles,
         }));
 
       res.status(200).json({
@@ -787,15 +777,18 @@ export const verificarDisponibilidadHorarios = (req, res) => {
         horariosDisponibles: horariosParaSelect,
         resumen: {
           totalHorarios: horariosCompletos.length,
-          horariosDisponibles: horariosDisponibilidad.filter((h) => h.disponible).length,
-          horariosCompletos: horariosDisponibilidad.filter((h) => !h.disponible).length,
+          horariosDisponibles: horariosDisponibilidad.filter(
+            (h) => h.disponible
+          ).length,
+          horariosCompletos: horariosDisponibilidad.filter((h) => !h.disponible)
+            .length,
         },
       });
     });
   });
 };
 
-// FUNCIÓN: Finalizar turno 
+// FUNCIÓN: Finalizar turno
 export const finalizarTurno = (req, res) => {
   const { idTurno } = req.params;
   const { observacionesFinal, idEmpleado } = req.body;
@@ -833,17 +826,17 @@ export const finalizarTurno = (req, res) => {
       UPDATE turnos 
       SET 
         EstadoTurno = 'Finalizado',
+        ObservacionesFinal = ?,
         InformeTurno = CONCAT(
           COALESCE(InformeTurno, ''), 
-          ' | Finalizado el ', NOW(),
-          CASE WHEN ? IS NOT NULL THEN CONCAT(' | Observaciones finales: ', ?) ELSE '' END
+          ' | Finalizado el ', NOW()
         )
       WHERE idTurno = ?
     `;
 
     db.query(
       finalizarQuery,
-      [observacionesFinal, observacionesFinal, idTurno],
+      [observacionesFinal, idTurno],
       (err, updateResults) => {
         if (err) {
           console.error("Error al finalizar turno:", err);
@@ -891,11 +884,9 @@ export const cancelarTurno = (req, res) => {
       }
       const estadoActual = results[0].EstadoTurno;
       if (estadoActual === "Finalizado" || estadoActual === "Cancelado") {
-        return res
-          .status(400)
-          .json({
-            message: `No se puede cancelar un turno que ya está ${estadoActual}`,
-          });
+        return res.status(400).json({
+          message: `No se puede cancelar un turno que ya está ${estadoActual}`,
+        });
       }
       // Actualizar el estado del turno a 'Cancelado'
       const cancelarTurnoQuery = `
@@ -930,16 +921,21 @@ export const obtenerDetallesTurno = (req, res) => {
     SELECT 
       t.idTurno,
       t.EstadoTurno,
+      t.ObservacionesSecretaria,
+      t.ObservacionesFinal,
       p.NombrePaciente,
       p.ApellidoPaciente,
       p.DNI,
       ep.ArchivoURL as OrdenMedicaURL,
       ep.FechaEstudio as FechaOrdenMedica,
-      ep.Descripcion as DescripcionOrdenMedica
+      ep.Descripcion as DescripcionOrdenMedica,
+      tr.NombreTratamiento,
+      tr.DescripcionTratamiento
     FROM turnos t
     INNER JOIN pacientes p ON t.idPaciente = p.idPaciente
     LEFT JOIN estudios_paciente ep ON p.idPaciente = ep.idPaciente 
       AND ep.Descripcion LIKE CONCAT('%Solicitud de turno #', t.idTurno, '%')
+    LEFT JOIN tratamientos tr ON t.idTratamiento = tr.idTratamiento
     WHERE t.idTurno = ?
     LIMIT 1
   `;
@@ -952,7 +948,7 @@ export const obtenerDetallesTurno = (req, res) => {
 
     if (results.length === 0) {
       return res.status(404).json({
-        message: "Turno no encontrado"
+        message: "Turno no encontrado",
       });
     }
 
@@ -966,12 +962,22 @@ export const obtenerDetallesTurno = (req, res) => {
         nombre: turno.NombrePaciente,
         apellido: turno.ApellidoPaciente,
         dni: turno.DNI,
-        ordenMedica: turno.OrdenMedicaURL ? {
-          url: turno.OrdenMedicaURL,
-          fechaSubida: turno.FechaOrdenMedica,
-          descripcion: turno.DescripcionOrdenMedica
-        } : null
-      }
+        observacionesSecretaria: turno.ObservacionesSecretaria,
+        ObservacionesFinal: turno.ObservacionesFinal,
+        ordenMedica: turno.OrdenMedicaURL
+          ? {
+              url: turno.OrdenMedicaURL,
+              fechaSubida: turno.FechaOrdenMedica,
+              descripcion: turno.DescripcionOrdenMedica,
+            }
+          : null,
+        tratamiento: turno.NombreTratamiento
+          ? {
+              nombre: turno.NombreTratamiento,
+              descripcion: turno.DescripcionTratamiento,
+            }
+          : null,
+      },
     });
   });
 };
