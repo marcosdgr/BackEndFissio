@@ -23,10 +23,20 @@ export const crearCategoriaFaq = async (req, res) => {
   }
 };
 
-// Listar activas
+// Listar categorías (activas o todas)
 export const traerCategoriasActivas = async (req, res) => {
   try {
-    const ListarActivasQuery = `SELECT * FROM cat_faqs WHERE IsActive = 1 ORDER BY NombreCategoria`;
+    const { includeInactive } = req.query;
+    const mostrarInactivas = includeInactive === 'true';
+
+    let ListarActivasQuery = `SELECT * FROM cat_faqs`;
+
+    if (!mostrarInactivas) {
+      ListarActivasQuery += ` WHERE IsActive = 1`;
+    }
+
+    ListarActivasQuery += ` ORDER BY NombreCategoria`;
+
     db.query(ListarActivasQuery, (err, cats) => {
       if (err) return res.status(500).json({ message: "Error al listar categorías" });
       res.json(cats);

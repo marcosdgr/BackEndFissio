@@ -14,10 +14,12 @@ import {
 
 const router = express.Router();
 
+router.get("/public", traerFaqsActivas);      // Nueva ruta pública para listar
+router.get("/public/:id", traerFaqPorId);     // Nueva ruta pública para obtener por ID
 router.get("/", traerFaqsActivas);
 router.get("/:id", traerFaqPorId);
 router.post("/", validarCrearFaq, crearFaq);
-router.put("/:id", validarActualizarFaq, actualizarFaq);           
-router.put("/cambiarEstado/:id", cambiarEstadoFaq);              
+router.put("/:id", validarActualizarFaq, actualizarFaq);
+router.put("/cambiarEstado/:id", cambiarEstadoFaq);
 
 export default router;
