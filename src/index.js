@@ -73,14 +73,13 @@ import chatWebRoutes from "./BOT/routes/chatWeb.routes.js";
 
 dotenv.config();
 
-// Verificar conexión del pool de base de datos
-db.getConnection((err, connection) => {
+// realizo conexion a la base de datos
+db.connect((err) => {
   if (err) {
     console.error("Error al conectar a la base de datos:", err.message);
     process.exit(1);
   }
   console.log("Conexión exitosa a la base de datos MySQL");
-  connection.release(); // Liberar la conexión de vuelta al pool
 });
 
 // inicializo express
