@@ -11,6 +11,7 @@ import {
 
 const router = express.Router();
 
+router.get("/public", traerCategoriasActivas); // Nueva ruta pública
 router.get("/", traerCategoriasActivas);
 router.post("/", validarCrearCategoria, crearCategoriaFaq);
 router.put("/:id", validarActualizarCategoria, actualizarCategoriaFaq);

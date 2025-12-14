@@ -33,16 +33,24 @@ export const crearFaq = async (req, res) => {
   }
 };
 
-//  LISTAR ACTIVAS 
+//  LISTAR FAQs (activas o todas) 
 export const traerFaqsActivas = async (req, res) => {
   try {
-    const ListarQuery = `
+    const { includeInactive } = req.query;
+    const mostrarInactivas = includeInactive === 'true';
+
+    let ListarQuery = `
       SELECT f.*, c.NombreCategoria 
       FROM faqs f 
       LEFT JOIN cat_faqs c ON f.idCatFAQ = c.idCatFAQ 
-      WHERE f.IsActive = 1 
-      ORDER BY f.FechaCreacion DESC
     `;
+
+    if (!mostrarInactivas) {
+      ListarQuery += `WHERE f.IsActive = 1 `;
+    }
+
+    ListarQuery += `ORDER BY f.FechaCreacion DESC`;
+
     db.query(ListarQuery, (err, faqs) => {
       if (err) return res.status(500).json({ message: "Error al listar FAQs" });
       res.json(faqs);
