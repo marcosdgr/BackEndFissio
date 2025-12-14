@@ -4,20 +4,22 @@ import dotenv from "dotenv";
 // inicializo dotenv para leer las variables de entorno
 dotenv.config();
 
-// Crear una conexión única (createConnection)
-const db = mysql.createConnection({
+// Crear un pool de conexiones
+const db = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-// Prevenir "Unhandled 'error' event" en conexión
+// Prevenir "Unhandled 'error' event" en el pool
 db.on('error', (err) => {
-  console.error('MySQL connection error (caught in db.js):', err);
-  // Nota: no hacemos process.exit aquí para que el caller pueda decidir qué hacer.
+  console.error('MySQL pool error (caught in db.js):', err);
 });
 
-// Exportamos la conexión
+// Exportamos el pool
 export default db;
