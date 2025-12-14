@@ -791,7 +791,7 @@ export const verificarDisponibilidadHorarios = (req, res) => {
 // FUNCIÓN: Finalizar turno
 export const finalizarTurno = (req, res) => {
   const { idTurno } = req.params;
-  const { observacionesFinal, idEmpleado, idTratamiento } = req.body; // ✅ Agregado idTratamiento
+  const { observacionesFinal, idEmpleado, idTratamiento } = req.body; // 
 
   // Validar que el turno existe y está en estado 'Pendiente'
   const verificarTurno = `
@@ -837,7 +837,7 @@ export const finalizarTurno = (req, res) => {
 
     db.query(
       finalizarQuery,
-      [observacionesFinal, idTratamiento, idTurno], // ✅ Agregado idTratamiento
+      [observacionesFinal, idTratamiento, idTurno], 
       (err, updateResults) => {
         if (err) {
           console.error("Error al finalizar turno:", err);
