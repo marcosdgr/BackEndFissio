@@ -110,7 +110,7 @@ export function chatPrincipal(usuario, mensaje) {
     switch (mensaje) {
       case "1":
         usuario.step = "completed";
-        return `📱 **Contacto por WhatsApp**\n\n¡Perfecto ${usuario.name}! Comunicate con nosotros al:\n\n**+54 9 11 5555-1234**\n\nUn asesor te responderá en breve.\n\nEscribí **"menu"** si necesitás algo más.`;
+        return `📱 **Contacto por WhatsApp**\n\n¡Perfecto ${usuario.name}! Comunicate con nosotros al:\n\n** 3813541077 **\n\nUn asesor te responderá en breve.\n\nEscribí **"menu"** si necesitás algo más.`;
       
       case "2":
         usuario.step = "completed";
