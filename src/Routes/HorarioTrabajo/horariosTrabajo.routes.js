@@ -25,8 +25,8 @@ router.get("/:idHorario", obtenerHorarioPorId);
 router.post("/", crearHorarioTrabajo);
 
 //Metodo put -
-router.put("/:idHorario/desactivar", borradoLogicoHorarioTrabajo);
-router.put("/:idHorario/activar", activacionLogicaHorarioTrabajo);
+router.put("/desactivar/:idHorario", borradoLogicoHorarioTrabajo);
+router.put("/activar/:idHorario", activacionLogicaHorarioTrabajo);
 router.put("/:idHorario", actualizarHorarioTrabajo);
 
 export default router;
