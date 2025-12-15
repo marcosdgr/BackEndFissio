@@ -791,7 +791,7 @@ export const verificarDisponibilidadHorarios = (req, res) => {
 // FUNCIÓN: Finalizar turno
 export const finalizarTurno = (req, res) => {
   const { idTurno } = req.params;
-  const { observacionesFinal, idEmpleado } = req.body;
+  const { observacionesFinal, idEmpleado, idTratamiento } = req.body; // 
 
   // Validar que el turno existe y está en estado 'Pendiente'
   const verificarTurno = `
@@ -827,6 +827,7 @@ export const finalizarTurno = (req, res) => {
       SET 
         EstadoTurno = 'Finalizado',
         ObservacionesFinal = ?,
+        idTratamiento = ?,
         InformeTurno = CONCAT(
           COALESCE(InformeTurno, ''), 
           ' | Finalizado el ', NOW()
@@ -836,7 +837,7 @@ export const finalizarTurno = (req, res) => {
 
     db.query(
       finalizarQuery,
-      [observacionesFinal, idTurno],
+      [observacionesFinal, idTratamiento, idTurno], 
       (err, updateResults) => {
         if (err) {
           console.error("Error al finalizar turno:", err);
@@ -930,12 +931,16 @@ export const obtenerDetallesTurno = (req, res) => {
       ep.FechaEstudio as FechaOrdenMedica,
       ep.Descripcion as DescripcionOrdenMedica,
       tr.NombreTratamiento,
-      tr.DescripcionTratamiento
+      tr.DescripcionTratamiento,
+      s.NombreServicio,
+      s.DescripcionServicio
     FROM turnos t
     INNER JOIN pacientes p ON t.idPaciente = p.idPaciente
     LEFT JOIN estudios_paciente ep ON p.idPaciente = ep.idPaciente 
       AND ep.Descripcion LIKE CONCAT('%Solicitud de turno #', t.idTurno, '%')
     LEFT JOIN tratamientos tr ON t.idTratamiento = tr.idTratamiento
+    LEFT JOIN turno_servicios ts ON t.idTurno = ts.idTurno
+    LEFT JOIN servicios s ON ts.idServicio = s.idServicio
     WHERE t.idTurno = ?
     LIMIT 1
   `;
@@ -975,6 +980,13 @@ export const obtenerDetallesTurno = (req, res) => {
           ? {
               nombre: turno.NombreTratamiento,
               descripcion: turno.DescripcionTratamiento,
+            }
+          : null,
+        servicio: turno.NombreServicio
+          ? {
+              nombre: turno.NombreServicio,
+              descripcion: turno.DescripcionServicio
+              
             }
           : null,
       },
