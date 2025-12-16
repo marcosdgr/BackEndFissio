@@ -149,7 +149,6 @@ export const recuperarPassword = async (req, res) => {
       // Enviar email de recuperación
       try {
         await enviarEmailRecuperacion(MailUsuario, link);
-        console.log(`📧 Email de recuperación enviado a: ${MailUsuario}`);
       } catch (emailError) {
         console.error("Error al enviar email de recuperación:", emailError);
         return res.status(500).json({ 
