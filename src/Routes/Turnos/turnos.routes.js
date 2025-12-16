@@ -9,7 +9,8 @@ import {
   verificarDisponibilidadHorarios,
   finalizarTurno,
   cancelarTurno,
-  obtenerDetallesTurno
+  obtenerDetallesTurno,
+  turnosKinesiologo
 } from '../../Controllers/Turnos/turnos.controller.js';
 import { ejecutarRecordatoriosManual } from '../../Services/recordatorios.service.js';
 import upload from '../../Middlewares/images.js';
@@ -31,6 +32,7 @@ router.get("/solicitudes-pendientes", listarSolicitudesPendientes); // Historial
 router.get("/detalles/:idTurno", obtenerDetallesTurno); // Ver detalles completos de un turno
 router.put("/asignar-recursos/:idTurno", asignarRecursosDelDia); // Cuando paciente llega
 router.put("/finalizar/:idTurno", finalizarTurno); // Al terminar sesión
+router.get("/turnos-kinesiologo/:idEmpleado", turnosKinesiologo); // Ver turnos de un kinesiologo
 
 // Rutas de consulta para disponibilidad
 router.get("/kinesiologos-disponibles", obtenerKinesiologosDisponibles);

@@ -993,3 +993,71 @@ export const obtenerDetallesTurno = (req, res) => {
     });
   });
 };
+
+export const turnosKinesiologo = (req, res) => {
+  const { idEmpleado } = req.params;
+
+  // Primero verificar que el empleado existe, está activo y es kinesiólogo
+  const verificarEmpleadoQuery = `
+    SELECT idEmpleado, NombreEmpleado, ApellidoEmpleado, PermisosEmpleado, IsActive
+    FROM empleados
+    WHERE idEmpleado = ?
+  `;
+
+  db.query(verificarEmpleadoQuery, [idEmpleado], (err, empleadoResults) => {
+    if (err) {
+      console.error("Error al verificar empleado:", err);
+      return res.status(500).json({ message: "Error en el servidor" });
+    }
+
+    if (empleadoResults.length === 0) {
+      return res.status(404).json({ message: "Empleado no encontrado" });
+    }
+
+    const empleado = empleadoResults[0];
+
+    if (!empleado.IsActive) {
+      return res.status(400).json({ message: "Empleado inactivo" });
+    }
+
+    if (empleado.PermisosEmpleado !== 'Kinesiología') {
+      return res.status(403).json({ 
+        message: "El empleado no tiene permisos de kinesiología" 
+      });
+    }
+
+    // Si pasa las validaciones, obtener los turnos
+    const turnosKinesiologoQuery = `
+      SELECT 
+        t.idTurno,
+        t.FechaRequeridaTurno,
+        t.HorarioRequeridoTurno,
+        t.EstadoTurno,
+        p.NombrePaciente,
+        p.ApellidoPaciente,
+        p.DNI 
+      FROM turnos t
+      INNER JOIN pacientes p ON t.idPaciente = p.idPaciente
+      WHERE t.idEmpleado = ? 
+        AND t.EstadoTurno IN ('Pendiente', 'Finalizado')
+      ORDER BY t.FechaRequeridaTurno DESC, t.HorarioRequeridoTurno ASC
+    `;
+
+    db.query(turnosKinesiologoQuery, [idEmpleado], (err, results) => {
+      if (err) {
+        console.error("Error al obtener turnos del kinesiólogo:", err);
+        return res.status(500).json({ message: "Error en el servidor" });
+      }
+
+      res.status(200).json({
+        message: "Turnos del kinesiólogo obtenidos exitosamente",
+        kinesiologo: {
+          nombre: `${empleado.NombreEmpleado} ${empleado.ApellidoEmpleado}`,
+          idEmpleado: empleado.idEmpleado
+        },
+        turnos: results,
+        total: results.length,
+      });
+    });
+  });
+};
