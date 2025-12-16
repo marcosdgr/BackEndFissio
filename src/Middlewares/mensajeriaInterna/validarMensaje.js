@@ -85,10 +85,6 @@ export const validarMarcarLeido = (req, res, next) => {
   const { idNotificacion, idEmpleadoDestinatario } = req.body;
   const idEmpleadoAutenticado = req.usuarioAutenticado?.idEmpleado;
 
-  console.log('🔍 DEBUG validarMarcarLeido:');
-  console.log('  - idEmpleadoDestinatario (body):', idEmpleadoDestinatario);
-  console.log('  - idEmpleadoAutenticado (token):', idEmpleadoAutenticado);
-
   if (!idEmpleadoAutenticado) {
     return res.status(403).json({ 
       message: 'Solo empleados pueden marcar mensajes como leídos' 

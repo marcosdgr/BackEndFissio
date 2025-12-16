@@ -58,7 +58,6 @@ export const enviarEmailConfirmacion = async (emailPaciente, datosTurno) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email enviado a ${emailPaciente}:`, info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error(`❌ Error al enviar email a ${emailPaciente}:`, error);
@@ -263,7 +262,6 @@ export const enviarEmailRecuperacion = async (emailUsuario, link) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email de recuperación enviado a ${emailUsuario}:`, info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error(`❌ Error al enviar email de recuperación a ${emailUsuario}:`, error);
@@ -343,7 +341,6 @@ export const enviarEmailBienvenida = async (emailUsuario, datosUsuario) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email de bienvenida enviado a ${emailUsuario}:`, info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error(`❌ Error al enviar email de bienvenida a ${emailUsuario}:`, error);

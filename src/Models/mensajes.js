@@ -89,8 +89,6 @@ const mensajesInternos = {
   },
 
   marcarLeido(idNotificacion, idEmpleadoDest, callback) {
-    console.log('🔵 DB: Intentando marcar como leído:', { idNotificacion, idEmpleadoDest });
-    
     const sql = `
       UPDATE notificaciones n
       JOIN notificaciones_destinatarios nd ON n.idNotificacion = nd.idNotificacion
@@ -103,10 +101,6 @@ const mensajesInternos = {
         console.error('❌ DB: Error al marcar como leído:', err);
         return callback(err);
       }
-      
-      console.log('✅ DB: Resultado del UPDATE:', result);
-      console.log(`   - Filas afectadas: ${result.affectedRows}`);
-      console.log(`   - Filas cambiadas: ${result.changedRows}`);
       
       callback(null, result);
     });
