@@ -1026,7 +1026,7 @@ export const turnosKinesiologo = (req, res) => {
       });
     }
 
-    // Si pasa las validaciones, obtener los turnos
+    // Si pasa las validaciones, obtener los turnos .
     const turnosKinesiologoQuery = `
       SELECT 
         t.idTurno,
